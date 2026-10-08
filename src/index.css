@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply min-h-screen; overflow-x: hidden; }
+  /* Never allow the page itself to scroll sideways; wide tables scroll inside their own container. */
+  #root { @apply min-h-screen; }
+  input[type='number'] { -moz-appearance: textfield; }
+}
