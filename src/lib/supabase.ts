@@ -8,6 +8,8 @@ export const supabase = createClient<Database>(
   env.supabaseUrl || 'http://localhost:0',
   env.supabaseAnonKey || 'missing-anon-key',
   {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+    // detectSessionInUrl: invitation and password-reset e-mails return the user here with a one-time
+    // token in the URL; supabase-js exchanges it for a session and removes it from the address bar.
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
   },
 )

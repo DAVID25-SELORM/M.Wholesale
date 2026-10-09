@@ -63,6 +63,7 @@ export function LoginPage() {
             <Input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </Field>
           <Button type="submit" className="w-full" loading={submitting} disabled={Boolean(envProblem)}>Sign in</Button>
+          <p className="text-center text-sm"><Link to="/forgot-password" className="font-medium text-brand-700 hover:underline">Forgot your password?</Link></p>
           <p className="text-center text-xs text-slate-400">Accounts are created by your administrator.</p>
         </form>
       </div>

@@ -53,11 +53,29 @@ characters with upper/lower/digit, secure password change. Supabase-js keeps the
 The branch selector's `localStorage` value is a UI preference only and is re-validated against the server's
 branch list.
 
-## Provisioning (no insecure user creation)
-There is no browser path that creates users. `provision_organization` / `provision_user` exist for trusted
-servers (and the dev seed script). A production **invitation flow** (Edge Function: verify caller's JWT →
-check `users.invite` through the database → `auth.admin.inviteUserByEmail` → `provision_user`) is intentionally
-**not built in Phase 0**; the UI says so and `users.invite` is reserved.
+## Inviting users (Edge Function `invite-user`)
+Sign-up is disabled, so people join by invitation. Sending an invitation needs the service-role key, which must
+never reach a browser, so it runs in `supabase/functions/invite-user`:
+
+1. **Pre-check with the caller's own JWT** — `prepare_invitation(role, branch)` (database) requires `users.invite`
+   organization-wide, validates role/branch against the *caller's* organization and applies the same
+   anti-escalation rule as `assign_user_role` (you cannot invite someone into a role stronger than your own).
+   `organization_id` is never read from the request.
+2. `auth.admin.inviteUserByEmail` (service role) creates the auth user and sends the e-mail. Existing accounts are
+   rejected (409): inviting never attaches someone else's account to your organization.
+3. `complete_invitation(...)` — executable by `service_role` only — creates the profile, the role assignment
+   and a `user.invited` audit entry **attributed to the inviter**. If this step fails the auth user is deleted again.
+4. **Resend** re-runs `prepare_resend` and only works until the invitation is accepted.
+
+The e-mail link lands on `/accept-invite`, where supabase-js exchanges the one-time token for a session and the
+person chooses a password (12+ chars, upper, lower, digit). **Forgot password** (`/forgot-password` →
+`/reset-password`) is the recovery path if they leave before choosing one; it answers identically whether or not the
+account exists. The function only redirects to allow-listed origins (`SITE_URL`, `ALLOWED_ORIGINS`, localhost dev),
+never to a caller-supplied URL, returns generic messages for server failures, and is covered by unit tests with
+fakes (`tests/unit/invite-function.test.ts`) and database tests (`tests/security/invitations.test.ts`).
+
+`provision_organization` / `provision_user` remain service-role-only helpers for bootstrapping the first owner.
+Supabase's built-in mailer is rate-limited (a few e-mails per hour): configure custom SMTP before inviting at scale.
 
 ## Verified by tests (see TEST report)
 Anonymous denial · inactive user/organization denial · cross-tenant read and write attempts · organization_id

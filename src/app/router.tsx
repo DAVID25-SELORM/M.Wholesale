@@ -3,6 +3,7 @@ import { AppShell } from '@/layouts/AppShell'
 import { AuditLogPage } from '@/modules/audit/AuditLogPage'
 import { RequireAuth, RequirePermission } from '@/modules/auth/guards'
 import { AccessDisabledPage, LoginPage, NoAccessPage, NotFoundPage, UnauthorizedPage } from '@/modules/auth/pages'
+import { ForgotPasswordPage, SetPasswordPage } from '@/modules/auth/PasswordPages'
 import { BranchesPage } from '@/modules/branches/BranchesPage'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { OrganizationPage } from '@/modules/organization/OrganizationPage'
@@ -14,6 +15,10 @@ import { WarehousesPage } from '@/modules/warehouses/WarehousesPage'
 // Route guards are UX. The database is the security boundary (RLS + guarded RPCs).
 export const routes = [
   { path: '/login', element: <LoginPage /> },
+  // Public pages reached from e-mail links (invitation / password reset) or the login form.
+  { path: '/accept-invite', element: <SetPasswordPage mode="invite" /> },
+  { path: '/reset-password', element: <SetPasswordPage mode="reset" /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/access-disabled', element: <AccessDisabledPage /> },
   { path: '/no-access', element: <NoAccessPage /> },
   {

@@ -1,3 +1,5 @@
+import { FunctionsHttpError } from '@supabase/supabase-js'
+import { AppError, logError, type AppErrorKind } from '@/lib/errors'
 import { supabase } from '@/lib/supabase'
 import { sanitizeForOrFilter } from '@/lib/utils'
 import type { PageParams, Paged, Tables } from '@/types/domain'
@@ -52,6 +54,48 @@ export async function updateProfile(id: string, i: ProfileInput, canEditEmployee
     }).eq('id', id).select('id').single(),
     'users.update',
   )
+}
+
+// ---- invitations (Edge Function `invite-user`: the database decides who may invite whom) -----
+
+export interface InviteInput {
+  email: string
+  first_name: string
+  last_name: string
+  role_id: string
+  branch_id: string | null
+  job_title?: string | undefined
+}
+
+const kindForStatus = (s: number): AppErrorKind =>
+  s === 403 ? 'permission' : s === 404 ? 'not_found' : s === 409 ? 'duplicate' : s === 400 ? 'validation' : s === 401 ? 'auth' : 'unknown'
+
+async function callInviteFunction(body: Record<string, unknown>): Promise<void> {
+  const { error } = await supabase.functions.invoke('invite-user', { body })
+  if (!error) return
+  logError('invite-user', error)
+  if (error instanceof FunctionsHttpError) {
+    const res = error.context as Response
+    const detail = (await res.json().catch(() => null)) as { error?: string } | null
+    throw new AppError(kindForStatus(res.status), detail?.error ?? 'The invitation could not be sent.', { code: String(res.status) })
+  }
+  throw new AppError('network', 'Cannot reach the server. Check your connection and try again.', { cause: error })
+}
+
+export function inviteUser(i: InviteInput): Promise<void> {
+  return callInviteFunction({
+    action: 'invite',
+    email: i.email.trim(),
+    first_name: i.first_name.trim(),
+    last_name: i.last_name.trim(),
+    role_id: i.role_id,
+    branch_id: i.branch_id,
+    job_title: i.job_title?.trim() || undefined,
+  })
+}
+
+export function resendInvitation(userId: string): Promise<void> {
+  return callInviteFunction({ action: 'resend', user_id: userId })
 }
 
 // ---- guarded RPCs (authorization + anti-escalation + audit happen in the database) ----------

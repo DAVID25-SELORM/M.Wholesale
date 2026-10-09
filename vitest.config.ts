@@ -5,7 +5,13 @@ import { defineConfig } from 'vitest/config'
 // Frontend unit/component tests (jsdom). Database tests use vitest.db.config.ts.
 export default defineConfig({
   plugins: [react()],
-  resolve: { alias: { '@': path.resolve(import.meta.dirname, 'src') } },
+  resolve: {
+    alias: [
+      { find: '@', replacement: path.resolve(import.meta.dirname, 'src') },
+      // Deno-style `npm:` imports in supabase/functions (see tests/stubs/deno-npm-stub.ts)
+      { find: /^npm:.*/, replacement: path.resolve(import.meta.dirname, 'tests/stubs/deno-npm-stub.ts') },
+    ],
+  },
   test: {
     environment: 'jsdom',
     globals: false,

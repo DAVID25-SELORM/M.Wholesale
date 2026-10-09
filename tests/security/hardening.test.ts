@@ -90,13 +90,14 @@ describe('catalog hardening', () => {
       'private.actor_covers_role', 'private.can_access_branch', 'private.can_access_warehouse',
       'private.current_organization_id', 'private.current_profile_id', 'private.has_permission',
       'private.has_permission_anywhere', 'private.warehouse_branch_id', 'public.assign_user_role', 'public.get_session_context',
-      'public.revoke_user_role', 'public.set_user_active',
+      'public.prepare_invitation', 'public.prepare_resend', 'public.revoke_user_role', 'public.set_user_active',
     ])
     const service = rows.filter((r) => r.service).map((r) => r.fn)
-    expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user']))
+    expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))
     // provisioning is NOT available to signed-in users
-    expect(authed).not.toContain('public.provision_organization')
-    expect(authed).not.toContain('public.provision_user')
+    for (const fn of ['public.provision_organization', 'public.provision_user', 'public.complete_invitation']) {
+      expect(authed).not.toContain(fn)
+    }
   })
 
   it('trigger functions are not directly executable by clients', async () => {

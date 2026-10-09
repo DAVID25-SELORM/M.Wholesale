@@ -37,6 +37,15 @@ tenant `owner@other.test` for isolation checks. `supabase/config.toml` is also p
 * After schema changes: `npm run test:db -- --migrate-only` then `npm run db:types` (regenerates
   `src/types/database.ts`).
 
+## Edge Function deployment (`invite-user`)
+Code: `supabase/functions/invite-user/index.ts` (single self-contained file). Supabase injects `SUPABASE_URL`,
+`SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`; optional secrets: `SITE_URL` (default
+`https://m-wholesale.vercel.app`) and `ALLOWED_ORIGINS` (comma-separated extra origins).
+Deploy with `npx supabase functions deploy invite-user` (after `supabase login` + `link`) or paste the file into
+Dashboard → Edge Functions → *Deploy a new function → Via Editor*. Keep **Verify JWT** on. Also add your site to
+Authentication → URL Configuration (Site URL + Redirect URLs `https://<site>/**`), otherwise invitation links are
+rejected. The local lightweight stack has no mailer, so invitations are exercised through unit tests, not end to end.
+
 ## Tests
 ```bash
 npm run typecheck     # tsc strict (noUncheckedIndexedAccess)

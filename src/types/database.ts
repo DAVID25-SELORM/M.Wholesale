@@ -278,8 +278,17 @@ isOneToOne: false
             "assign_user_role":
 { Args: { "p_branch_id"?: string,"p_reason"?: string,"p_role_id": string,"p_user_id": string }; Returns: string
                            },
+"complete_invitation":
+{ Args: { "p_actor_id": string,"p_branch_id"?: string,"p_first_name": string,"p_job_title"?: string,"p_last_name": string,"p_organization_id": string,"p_role_id": string,"p_user_id": string }; Returns: undefined
+                           },
 "get_session_context":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"prepare_invitation":
+{ Args: { "p_branch_id"?: string,"p_role_id": string }; Returns: Json
+                           },
+"prepare_resend":
+{ Args: { "p_user_id": string }; Returns: Json
                            },
 "provision_organization":
 { Args: { "p_branch_code"?: string,"p_branch_name"?: string,"p_country"?: string,"p_currency_code"?: string,"p_first_name": string,"p_last_name": string,"p_legal_name"?: string,"p_name": string,"p_timezone"?: string,"p_user_id": string }; Returns: string

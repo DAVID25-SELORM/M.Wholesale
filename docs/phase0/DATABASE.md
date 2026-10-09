@@ -14,6 +14,7 @@ Migrations (`supabase/migrations`, applied in order; reviewed SQL, no dashboard 
 | 08 | `rpc` | `get_session_context`, `assign_user_role`, `revoke_user_role`, `set_user_active`, `provision_organization`, `provision_user` |
 | 09 | `reference_data` | 21 permissions, 20 system roles, role→permission matrix |
 | 10 | `hardening` | revoke default EXECUTE on functions, re-grant the exact allow-list |
+| 11 | `invitations` | `prepare_invitation`, `prepare_resend` (caller JWT), `complete_invitation` (service role only) for the `invite-user` Edge Function |
 
 Rules for future migrations: never edit an applied migration; add a new one. Every new tenant table needs
 RLS + policies + explicit grants + `updated_at` trigger + audit trigger, and `tests/security/hardening.test.ts`
