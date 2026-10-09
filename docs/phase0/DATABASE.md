@@ -15,6 +15,7 @@ Migrations (`supabase/migrations`, applied in order; reviewed SQL, no dashboard 
 | 09 | `reference_data` | 21 permissions, 20 system roles, role→permission matrix |
 | 10 | `hardening` | revoke default EXECUTE on functions, re-grant the exact allow-list |
 | 11 | `invitations` | `prepare_invitation`, `prepare_resend` (caller JWT), `complete_invitation` (service role only) for the `invite-user` Edge Function |
+| P1-1…3 | `catalog_permissions`, `suppliers`, `catalog` | Phase 1 - see [../phase1/CATALOG_AND_SUPPLIERS.md](../phase1/CATALOG_AND_SUPPLIERS.md) |
 
 Rules for future migrations: never edit an applied migration; add a new one. Every new tenant table needs
 RLS + policies + explicit grants + `updated_at` trigger + audit trigger, and `tests/security/hardening.test.ts`

@@ -41,7 +41,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'users', label: 'Users', to: '/admin/users', anyOf: ['users.view'] },
       { id: 'roles', label: 'Roles & permissions', to: '/admin/roles', anyOf: ['roles.view'] },
       { id: 'audit', label: 'Audit log', to: '/admin/audit', anyOf: ['audit.view'] },
-      planned('products', 'Products'),
+      { id: 'products', label: 'Products', to: '/catalog/products', anyOf: ['products.view'] },
+      { id: 'catalog-setup', label: 'Catalogue setup', to: '/catalog/setup', anyOf: ['products.view'] },
       planned('approvals', 'Approvals'),
       planned('integrations', 'Integrations'),
       planned('settings', 'Settings'),
@@ -56,9 +57,12 @@ export const NAV_GROUPS: NavGroup[] = [
     items: ['Picking', 'Packing', 'Dispatch', 'Inventory', 'Batches', 'Stock count', 'Transfers'].map((l) => planned(`wh-${l}`, l)),
   },
   {
-    id: 'purchasing', label: 'Purchasing', icon: Boxes, collapsedByDefault: true,
-    items: ['Purchase requests', 'Supplier quotations', 'Purchase orders', 'Goods received', 'Suppliers', 'Purchase returns']
-      .map((l) => planned(`pur-${l}`, l)),
+    id: 'purchasing', label: 'Purchasing', icon: Boxes,
+    items: [
+      { id: 'suppliers', label: 'Suppliers', to: '/purchasing/suppliers', anyOf: ['suppliers.view'] },
+      ...['Purchase requests', 'Supplier quotations', 'Purchase orders', 'Goods received', 'Purchase returns']
+        .map((l) => planned(`pur-${l}`, l)),
+    ],
   },
   {
     id: 'finance', label: 'Finance', icon: Landmark, collapsedByDefault: true,

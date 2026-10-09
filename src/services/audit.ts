@@ -54,4 +54,6 @@ function nextDay(isoDate: string): string {
 
 export const AUDIT_ENTITY_TYPES = [
   'organization', 'branch', 'warehouse', 'warehouse_location', 'user', 'user_role', 'system_setting',
+  'product', 'product_identity', 'product_unit', 'product_barcode', 'product_alias', 'manufacturer', 'product_category',
+  'supplier', 'supplier_product',
 ] as const

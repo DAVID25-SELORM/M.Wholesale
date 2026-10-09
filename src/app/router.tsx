@@ -6,8 +6,12 @@ import { AccessDisabledPage, LoginPage, NoAccessPage, NotFoundPage, Unauthorized
 import { ForgotPasswordPage, SetPasswordPage } from '@/modules/auth/PasswordPages'
 import { BranchesPage } from '@/modules/branches/BranchesPage'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
+import { CatalogSetupPage } from '@/modules/catalog/CatalogSetupPage'
+import { ProductDetailPage } from '@/modules/catalog/ProductDetailPage'
+import { ProductsPage } from '@/modules/catalog/ProductsPage'
 import { OrganizationPage } from '@/modules/organization/OrganizationPage'
 import { RolesPage } from '@/modules/roles/RolesPage'
+import { SuppliersPage } from '@/modules/suppliers/SuppliersPage'
 import { UsersPage } from '@/modules/users/UsersPage'
 import { LocationsPage } from '@/modules/warehouses/LocationsPage'
 import { WarehousesPage } from '@/modules/warehouses/WarehousesPage'
@@ -36,6 +40,15 @@ export const routes = [
           { element: <RequirePermission anyOf={['users.view']} />, children: [{ path: 'admin/users', element: <UsersPage /> }] },
           { element: <RequirePermission anyOf={['roles.view']} />, children: [{ path: 'admin/roles', element: <RolesPage /> }] },
           { element: <RequirePermission anyOf={['audit.view']} />, children: [{ path: 'admin/audit', element: <AuditLogPage /> }] },
+          {
+            element: <RequirePermission anyOf={['products.view']} />,
+            children: [
+              { path: 'catalog/products', element: <ProductsPage /> },
+              { path: 'catalog/products/:id', element: <ProductDetailPage /> },
+              { path: 'catalog/setup', element: <CatalogSetupPage /> },
+            ],
+          },
+          { element: <RequirePermission anyOf={['suppliers.view']} />, children: [{ path: 'purchasing/suppliers', element: <SuppliersPage /> }] },
         ],
       },
     ],

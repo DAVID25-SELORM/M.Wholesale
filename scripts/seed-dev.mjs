@@ -114,6 +114,64 @@ await ensureUser(orgA, { email: 'cashier@demo.test', first: 'Yaw', last: 'Darko'
 await ensureUser(orgA, { email: 'viewer@demo.test', first: 'Abena', last: 'Asante', role: 'READ_ONLY' })
 await ensureUser(orgA, { email: 'inactive@demo.test', first: 'Kwame', last: 'Former', role: 'READ_ONLY', inactive: true })
 
+// ---- Phase 1: catalogue and suppliers (idempotent) ------------------------------------------------
+async function one(path) { return (await rest('GET', path))[0] }
+async function ensure(table, findQuery, row) {
+  const found = await one(`/${table}?select=id&${findQuery}`)
+  if (found) return found.id
+  return (await rest('POST', `/${table}`, row, { Prefer: 'return=representation' }))[0].id
+}
+const unit = async (code) => (await one(`/units_of_measure?select=id&code=eq.${code}`)).id
+const form = async (code) => (await one(`/dosage_forms?select=id&code=eq.${code}`)).id
+
+async function seedCatalogue(orgId) {
+  const gsk = await ensure('manufacturers', `organization_id=eq.${orgId}&name=eq.GlaxoSmithKline`, { organization_id: orgId, name: 'GlaxoSmithKline', country: 'GB' })
+  const ernest = await ensure('manufacturers', `organization_id=eq.${orgId}&name=eq.Ernest Chemists`, { organization_id: orgId, name: 'Ernest Chemists', country: 'GH' })
+  const antibiotics = await ensure('product_categories', `organization_id=eq.${orgId}&code=eq.ANTIBIOTICS`, { organization_id: orgId, code: 'ANTIBIOTICS', name: 'Antibiotics' })
+  const analgesics = await ensure('product_categories', `organization_id=eq.${orgId}&code=eq.ANALGESICS`, { organization_id: orgId, code: 'ANALGESICS', name: 'Analgesics' })
+
+  const augIdentity = await ensure('product_identities', `organization_id=eq.${orgId}&generic_name=eq.Amoxicillin%20%2B%20Clavulanic%20acid`,
+    { organization_id: orgId, generic_name: 'Amoxicillin + Clavulanic acid', dosage_form_id: await form('TABLET'), strength_text: '500 mg + 125 mg' })
+  const pcmIdentity = await ensure('product_identities', `organization_id=eq.${orgId}&generic_name=eq.Paracetamol`,
+    { organization_id: orgId, generic_name: 'Paracetamol', dosage_form_id: await form('TABLET'), strength_text: '500 mg' })
+
+  const aug = await ensure('products', `organization_id=eq.${orgId}&sku=eq.AUG-625-14`, {
+    organization_id: orgId, sku: 'AUG-625-14', identity_id: augIdentity, brand_name: 'Augmentin 625', manufacturer_id: gsk, category_id: antibiotics,
+    product_class: 'POM', requires_prescription: true, base_unit_id: await unit('TABLET'), storage_condition: 'AMBIENT',
+  })
+  const augBox = await ensure('product_units', `product_id=eq.${aug}&unit_id=eq.${await unit('BOX')}`, { organization_id: orgId, product_id: aug, unit_id: await unit('BOX'), factor_to_base: 14 })
+  await ensure('product_barcodes', `organization_id=eq.${orgId}&barcode=eq.6001087000017`, { organization_id: orgId, product_id: aug, product_unit_id: augBox, barcode: '6001087000017', barcode_type: 'GTIN' })
+  await ensure('product_aliases', `organization_id=eq.${orgId}&normalized_alias=eq.augmentin%20625%20mg%2014%20s`, { organization_id: orgId, product_id: aug, alias: "AUGMENTIN 625MG 14'S" })
+  await ensure('product_aliases', `organization_id=eq.${orgId}&normalized_alias=eq.co%20amoxiclav%20625`, { organization_id: orgId, product_id: aug, alias: 'Co-amoxiclav 625' })
+
+  const pcm = await ensure('products', `organization_id=eq.${orgId}&sku=eq.PANADOL-500-100`, {
+    organization_id: orgId, sku: 'PANADOL-500-100', identity_id: pcmIdentity, brand_name: 'Panadol Tablets 500 mg', manufacturer_id: gsk, category_id: analgesics,
+    product_class: 'GSL', requires_prescription: false, base_unit_id: await unit('TABLET'),
+  })
+  const pcmBox = await ensure('product_units', `product_id=eq.${pcm}&unit_id=eq.${await unit('BOX')}`, { organization_id: orgId, product_id: pcm, unit_id: await unit('BOX'), factor_to_base: 100 })
+  await ensure('products', `organization_id=eq.${orgId}&sku=eq.PCM-ERN-500-100`, {
+    organization_id: orgId, sku: 'PCM-ERN-500-100', identity_id: pcmIdentity, brand_name: 'Ernest Paracetamol 500 mg', manufacturer_id: ernest, category_id: analgesics,
+    product_class: 'GSL', requires_prescription: false, base_unit_id: await unit('TABLET'),
+  })
+
+  const emp = await ensure('suppliers', `organization_id=eq.${orgId}&code=eq.EMP`, {
+    organization_id: orgId, code: 'EMP', name: 'Emmanuel Pharma Ltd', supplier_type: 'DISTRIBUTOR', licence_number: 'FDA/DIST/0412',
+    licence_expiry: '2027-03-31', payment_terms_days: 30, contact_name: 'Emmanuel Tetteh', phone: '0302123456', email: 'orders@emp.example', city: 'Accra', country: 'GH',
+  })
+  await ensure('suppliers', `organization_id=eq.${orgId}&code=eq.KOF`, {
+    organization_id: orgId, code: 'KOF', name: 'Kofi Medical Imports', supplier_type: 'IMPORTER', licence_number: 'FDA/IMP/0099',
+    licence_expiry: '2026-11-15', payment_terms_days: 14, city: 'Tema', country: 'GH',
+  })
+  await ensure('supplier_products', `supplier_id=eq.${emp}&product_id=eq.${aug}`, {
+    organization_id: orgId, supplier_id: emp, product_id: aug, product_unit_id: augBox, supplier_sku: 'EMP-AUG-14', supplier_product_name: 'AUGMENTIN 625 TAB 14S',
+    last_cost: 85.5, lead_time_days: 3, is_preferred: true,
+  })
+  await ensure('supplier_products', `supplier_id=eq.${emp}&product_id=eq.${pcm}`, {
+    organization_id: orgId, supplier_id: emp, product_id: pcm, product_unit_id: pcmBox, last_cost: 22, lead_time_days: 2,
+  })
+}
+await seedCatalogue(orgA)
+
 // ---- Organization B: proves tenant isolation in the browser -----------------------------------
 const orgB = await ensureOrg('Other Pharma Ltd', { email: 'owner@other.test', first: 'Nana', last: 'Other' })
 const hqB = (await rest('GET', `/branches?select=id&organization_id=eq.${orgB}&is_head_office=is.true`))[0].id

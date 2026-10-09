@@ -136,6 +136,53 @@ export async function roleId(code: string): Promise<string> {
   return (await admin.query('select id from public.roles where organization_id is null and code = $1', [code])).rows[0].id
 }
 
+// ---- Phase 1 fixtures (created as the trusted server role; tests then act as real users) ----------------
+
+export async function unitId(code: string): Promise<string> {
+  return (await admin.query('select id from public.units_of_measure where code = $1', [code])).rows[0].id
+}
+
+export async function formId(code: string): Promise<string> {
+  return (await admin.query('select id from public.dosage_forms where code = $1', [code])).rows[0].id
+}
+
+export async function addIdentity(orgId: string, generic = `Generic ${rand()}`, strength = '500 mg', form = 'TABLET'): Promise<string> {
+  const { rows } = await admin.query(
+    `insert into public.product_identities (organization_id, generic_name, dosage_form_id, strength_text)
+     values ($1, $2, $3, $4) returning id`,
+    [orgId, generic, await formId(form), strength])
+  return rows[0].id
+}
+
+export async function addProduct(
+  orgId: string,
+  o: { sku?: string; brand?: string; identityId?: string | null; cls?: string; baseUnit?: string } = {},
+): Promise<{ id: string; sku: string; baseUnitRowId: string }> {
+  const sku = o.sku ?? `SKU-${rand()}`
+  const cls = o.cls ?? 'POM'
+  const identityId = o.identityId === undefined ? await addIdentity(orgId) : o.identityId
+  const { rows } = await admin.query(
+    `insert into public.products (organization_id, sku, identity_id, brand_name, product_class, requires_prescription, is_controlled, base_unit_id)
+     values ($1, $2, $3, $4, $5, $6, $7, $8) returning id`,
+    [orgId, sku, identityId, o.brand ?? `Brand ${sku}`, cls, cls === 'POM' || cls === 'CONTROLLED', cls === 'CONTROLLED', await unitId(o.baseUnit ?? 'TABLET')])
+  const id = rows[0].id as string
+  const base = (await admin.query('select id from public.product_units where product_id = $1 and is_base', [id])).rows[0].id
+  return { id, sku, baseUnitRowId: base }
+}
+
+export async function addProductUnit(orgId: string, productId: string, unit: string, factor: number): Promise<string> {
+  const { rows } = await admin.query(
+    `insert into public.product_units (organization_id, product_id, unit_id, factor_to_base) values ($1, $2, $3, $4) returning id`,
+    [orgId, productId, await unitId(unit), factor])
+  return rows[0].id
+}
+
+export async function addSupplier(orgId: string, code = `SUP${rand()}`, name = `Supplier ${code}`): Promise<string> {
+  const { rows } = await admin.query(
+    `insert into public.suppliers (organization_id, code, name) values ($1, $2, $3) returning id`, [orgId, code, name])
+  return rows[0].id
+}
+
 export async function closePool() {
   await Promise.allSettled([admin.end(), app.end()])
 }

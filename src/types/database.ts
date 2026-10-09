@@ -45,6 +45,40 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"dosage_forms": {
+                  Row: {
+                    "code": string,"id": string,"is_active": boolean,"name": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"id"?: string,"is_active"?: boolean,"name": string
+                  }
+                  Update: {
+                    "code"?: string,"id"?: string,"is_active"?: boolean,"name"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"manufacturers": {
+                  Row: {
+                    "country": string | null,"created_at": string,"id": string,"is_active": boolean,"name": string,"notes": string | null,"organization_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "country"?: string | null,"created_at"?: string,"id"?: string,"is_active"?: boolean,"name": string,"notes"?: string | null,"organization_id"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "country"?: string | null,"created_at"?: string,"id"?: string,"is_active"?: boolean,"name"?: string,"notes"?: string | null,"organization_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "manufacturers_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"number_sequences": {
                   Row: {
                     "branch_id": string | null,"created_at": string,"current_period": string,"document_type": string,"id": string,"next_number": number,"organization_id": string,"padding": number,"prefix": string,"reset_period": string,"updated_at": string
@@ -98,6 +132,180 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"product_aliases": {
+                  Row: {
+                    "alias": string,"created_at": string,"id": string,"identity_id": string | null,"is_active": boolean,"normalized_alias": string,"organization_id": string,"product_id": string | null,"source": string,"supplier_id": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "alias": string,"created_at"?: string,"id"?: string,"identity_id"?: string | null,"is_active"?: boolean,"normalized_alias"?: string,"organization_id"?: string,"product_id"?: string | null,"source"?: string,"supplier_id"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "alias"?: string,"created_at"?: string,"id"?: string,"identity_id"?: string | null,"is_active"?: boolean,"normalized_alias"?: string,"organization_id"?: string,"product_id"?: string | null,"source"?: string,"supplier_id"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_aliases_identity_fk"
+      columns: ["identity_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "product_identities"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "product_aliases_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "product_aliases_product_fk"
+      columns: ["product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "product_aliases_supplier_fk"
+      columns: ["supplier_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
+                },"product_barcodes": {
+                  Row: {
+                    "barcode": string,"barcode_type": string,"created_at": string,"id": string,"is_active": boolean,"organization_id": string,"product_id": string,"product_unit_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "barcode": string,"barcode_type"?: string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"organization_id"?: string,"product_id": string,"product_unit_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "barcode"?: string,"barcode_type"?: string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"organization_id"?: string,"product_id"?: string,"product_unit_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_barcodes_unit_fk"
+      columns: ["product_unit_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "product_units"
+      referencedColumns: ["id","product_id","organization_id"]
+    }
+                  ]
+                },"product_categories": {
+                  Row: {
+                    "code": string,"created_at": string,"id": string,"is_active": boolean,"name": string,"organization_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"name": string,"organization_id"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "code"?: string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"name"?: string,"organization_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_categories_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"product_identities": {
+                  Row: {
+                    "created_at": string,"dosage_form_id": string,"generic_name": string,"id": string,"identity_key": string,"is_active": boolean,"notes": string | null,"organization_id": string,"strength_text": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"dosage_form_id": string,"generic_name": string,"id"?: string,"identity_key"?: string,"is_active"?: boolean,"notes"?: string | null,"organization_id"?: string,"strength_text": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"dosage_form_id"?: string,"generic_name"?: string,"id"?: string,"identity_key"?: string,"is_active"?: boolean,"notes"?: string | null,"organization_id"?: string,"strength_text"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_identities_dosage_form_id_fkey"
+      columns: ["dosage_form_id"]
+isOneToOne: false
+      referencedRelation: "dosage_forms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "product_identities_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"product_units": {
+                  Row: {
+                    "created_at": string,"factor_to_base": number,"id": string,"is_active": boolean,"is_base": boolean,"is_purchasable": boolean,"is_sellable": boolean,"organization_id": string,"product_id": string,"unit_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"factor_to_base": number,"id"?: string,"is_active"?: boolean,"is_base"?: boolean,"is_purchasable"?: boolean,"is_sellable"?: boolean,"organization_id"?: string,"product_id": string,"unit_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"factor_to_base"?: number,"id"?: string,"is_active"?: boolean,"is_base"?: boolean,"is_purchasable"?: boolean,"is_sellable"?: boolean,"organization_id"?: string,"product_id"?: string,"unit_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_units_product_fk"
+      columns: ["product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "product_units_unit_id_fkey"
+      columns: ["unit_id"]
+isOneToOne: false
+      referencedRelation: "units_of_measure"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"products": {
+                  Row: {
+                    "base_unit_id": string,"brand_name": string,"category_id": string | null,"created_at": string,"description": string | null,"fda_registration_expiry": string | null,"fda_registration_number": string | null,"id": string,"identity_id": string | null,"is_active": boolean,"is_controlled": boolean,"manufacturer_id": string | null,"organization_id": string,"product_class": string,"requires_prescription": boolean,"search_key": string,"sku": string,"storage_condition": string,"track_batches": boolean,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "base_unit_id": string,"brand_name": string,"category_id"?: string | null,"created_at"?: string,"description"?: string | null,"fda_registration_expiry"?: string | null,"fda_registration_number"?: string | null,"id"?: string,"identity_id"?: string | null,"is_active"?: boolean,"is_controlled"?: boolean,"manufacturer_id"?: string | null,"organization_id"?: string,"product_class"?: string,"requires_prescription"?: boolean,"search_key"?: string,"sku": string,"storage_condition"?: string,"track_batches"?: boolean,"updated_at"?: string
+                  }
+                  Update: {
+                    "base_unit_id"?: string,"brand_name"?: string,"category_id"?: string | null,"created_at"?: string,"description"?: string | null,"fda_registration_expiry"?: string | null,"fda_registration_number"?: string | null,"id"?: string,"identity_id"?: string | null,"is_active"?: boolean,"is_controlled"?: boolean,"manufacturer_id"?: string | null,"organization_id"?: string,"product_class"?: string,"requires_prescription"?: boolean,"search_key"?: string,"sku"?: string,"storage_condition"?: string,"track_batches"?: boolean,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "products_base_unit_id_fkey"
+      columns: ["base_unit_id"]
+isOneToOne: false
+      referencedRelation: "units_of_measure"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "products_category_fk"
+      columns: ["category_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "product_categories"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "products_identity_fk"
+      columns: ["identity_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "product_identities"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "products_manufacturer_fk"
+      columns: ["manufacturer_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "manufacturers"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "products_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"profiles": {
                   Row: {
@@ -171,6 +379,52 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"supplier_products": {
+                  Row: {
+                    "created_at": string,"id": string,"is_active": boolean,"is_preferred": boolean,"last_cost": number | null,"last_cost_at": string | null,"lead_time_days": number | null,"min_order_quantity": number | null,"organization_id": string,"product_id": string,"product_unit_id": string,"supplier_id": string,"supplier_product_name": string | null,"supplier_sku": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"is_active"?: boolean,"is_preferred"?: boolean,"last_cost"?: number | null,"last_cost_at"?: string | null,"lead_time_days"?: number | null,"min_order_quantity"?: number | null,"organization_id"?: string,"product_id": string,"product_unit_id": string,"supplier_id": string,"supplier_product_name"?: string | null,"supplier_sku"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"is_active"?: boolean,"is_preferred"?: boolean,"last_cost"?: number | null,"last_cost_at"?: string | null,"lead_time_days"?: number | null,"min_order_quantity"?: number | null,"organization_id"?: string,"product_id"?: string,"product_unit_id"?: string,"supplier_id"?: string,"supplier_product_name"?: string | null,"supplier_sku"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "supplier_products_supplier_fk"
+      columns: ["supplier_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "supplier_products_unit_fk"
+      columns: ["product_unit_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "product_units"
+      referencedColumns: ["id","product_id","organization_id"]
+    }
+                  ]
+                },"suppliers": {
+                  Row: {
+                    "address": string | null,"city": string | null,"code": string,"contact_name": string | null,"country": string | null,"created_at": string,"currency_code": string | null,"email": string | null,"id": string,"is_active": boolean,"licence_expiry": string | null,"licence_number": string | null,"name": string,"notes": string | null,"organization_id": string,"payment_terms_days": number,"phone": string | null,"region": string | null,"registration_number": string | null,"supplier_type": string,"tax_number": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "address"?: string | null,"city"?: string | null,"code": string,"contact_name"?: string | null,"country"?: string | null,"created_at"?: string,"currency_code"?: string | null,"email"?: string | null,"id"?: string,"is_active"?: boolean,"licence_expiry"?: string | null,"licence_number"?: string | null,"name": string,"notes"?: string | null,"organization_id"?: string,"payment_terms_days"?: number,"phone"?: string | null,"region"?: string | null,"registration_number"?: string | null,"supplier_type"?: string,"tax_number"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "address"?: string | null,"city"?: string | null,"code"?: string,"contact_name"?: string | null,"country"?: string | null,"created_at"?: string,"currency_code"?: string | null,"email"?: string | null,"id"?: string,"is_active"?: boolean,"licence_expiry"?: string | null,"licence_number"?: string | null,"name"?: string,"notes"?: string | null,"organization_id"?: string,"payment_terms_days"?: number,"phone"?: string | null,"region"?: string | null,"registration_number"?: string | null,"supplier_type"?: string,"tax_number"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "suppliers_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"system_settings": {
                   Row: {
                     "branch_id": string | null,"category": string,"created_at": string,"description": string | null,"id": string,"key": string,"organization_id": string,"updated_at": string,"updated_by": string | null,"value": NonNullable<Json>
@@ -196,6 +450,20 @@ isOneToOne: false
       referencedRelation: "organizations"
       referencedColumns: ["id"]
     }
+                  ]
+                },"units_of_measure": {
+                  Row: {
+                    "code": string,"id": string,"is_active": boolean,"kind": string,"name": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"id"?: string,"is_active"?: boolean,"kind": string,"name": string
+                  }
+                  Update: {
+                    "code"?: string,"id"?: string,"is_active"?: boolean,"kind"?: string,"name"?: string
+                  }
+                  Relationships: [
+                    
                   ]
                 },"user_roles": {
                   Row: {
@@ -298,6 +566,11 @@ isOneToOne: false
                            },
 "revoke_user_role":
 { Args: { "p_reason"?: string,"p_user_role_id": string }; Returns: undefined
+                           },
+"search_products":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_query": string }; Returns: {
+              "brand_name": string,"dosage_form": string,"generic_name": string,"is_active": boolean,"manufacturer_name": string,"matched_on": string,"product_class": string,"product_id": string,"sku": string,"strength_text": string
+            }[]
                            },
 "set_user_active":
 { Args: { "p_is_active": boolean,"p_reason"?: string,"p_user_id": string }; Returns: undefined

@@ -109,6 +109,9 @@ do $$ begin
   end if;
 end $$;
 grant anon, authenticated, service_role to wps_authenticator;
+-- Supabase keeps extensions in their own schema
+create schema if not exists extensions;
+grant usage on schema extensions to anon, authenticated, service_role;
 grant usage on schema auth to anon, authenticated, service_role;
 grant execute on all functions in schema auth to anon, authenticated, service_role;
 grant usage on schema public to anon, authenticated, service_role;
