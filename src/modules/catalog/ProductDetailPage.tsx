@@ -10,6 +10,7 @@ import {
   PRODUCT_CLASS_LABEL, STORAGE_LABEL, createBarcode, createProductAlias, createProductUnit, getProduct, listBarcodes, listProductAliases, listProductUnits,
   listUnitsOfMeasure, setAliasActive, setBarcodeActive, updateProductUnit, type ProductClass, type ProductDetail,
 } from '@/services/catalog'
+import { ProductStockTab } from '@/modules/inventory/ProductStockTab'
 import { listProductSuppliers } from '@/services/suppliers'
 import { ProductForm } from './ProductForm'
 
@@ -30,6 +31,7 @@ export function ProductDetailPage() {
     { id: 'packaging', label: 'Packaging & units' },
     { id: 'barcodes', label: 'Barcodes' },
     { id: 'aliases', label: 'Aliases' },
+    ...(ability.canAnywhere('inventory.view') ? [{ id: 'stock', label: 'Stock' }] : []),
     ...(ability.canAnywhere('suppliers.view') ? [{ id: 'suppliers', label: 'Suppliers' }] : []),
   ]
 
@@ -47,6 +49,7 @@ export function ProductDetailPage() {
         {tab === 'packaging' && <PackagingTab product={p} canEdit={canEdit} />}
         {tab === 'barcodes' && <BarcodesTab productId={p.id} canEdit={canEdit} />}
         {tab === 'aliases' && <AliasesTab productId={p.id} canEdit={canEdit} />}
+        {tab === 'stock' && <ProductStockTab productId={p.id} baseUnit={p.base_unit?.name ?? 'unit'} />}
         {tab === 'suppliers' && <SuppliersTab productId={p.id} />}
       </div>
       <ProductForm open={editing} product={p} canEdit={canEdit} canCreateIdentity={ability.can('products.create')} onClose={() => setEditing(false)} />

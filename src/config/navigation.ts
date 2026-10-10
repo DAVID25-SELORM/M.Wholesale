@@ -53,8 +53,13 @@ export const NAV_GROUPS: NavGroup[] = [
     items: ['Orders', 'Quotations', 'Invoices', 'Customers', 'Returns'].map((l) => planned(`sales-${l}`, l)),
   },
   {
-    id: 'warehouse', label: 'Warehouse', icon: Warehouse, collapsedByDefault: true,
-    items: ['Picking', 'Packing', 'Dispatch', 'Inventory', 'Batches', 'Stock count', 'Transfers'].map((l) => planned(`wh-${l}`, l)),
+    id: 'warehouse', label: 'Warehouse', icon: Warehouse,
+    items: [
+      { id: 'stock', label: 'Stock', to: '/inventory/stock', anyOf: ['inventory.view'] },
+      { id: 'expiry', label: 'Expiry', to: '/inventory/expiry', anyOf: ['inventory.view'] },
+      { id: 'stock-documents', label: 'Stock documents', to: '/inventory/documents', anyOf: ['inventory.view'] },
+      ...['Picking', 'Packing', 'Dispatch', 'Stock count'].map((l) => planned(`wh-${l}`, l)),
+    ],
   },
   {
     id: 'purchasing', label: 'Purchasing', icon: Boxes,

@@ -89,8 +89,9 @@ describe('catalog hardening', () => {
     expect(authed).toEqual([
       'private.actor_covers_role', 'private.can_access_branch', 'private.can_access_warehouse',
       'private.current_organization_id', 'private.current_profile_id', 'private.has_permission',
-      'private.has_permission_anywhere', 'private.normalize_text', 'private.warehouse_branch_id', 'public.assign_user_role', 'public.get_session_context',
-      'public.prepare_invitation', 'public.prepare_resend', 'public.revoke_user_role', 'public.search_products', 'public.set_user_active',
+      'private.has_permission_anywhere', 'private.normalize_text', 'private.warehouse_branch_id', 'public.assign_user_role', 'public.expiring_stock',
+      'public.get_session_context', 'public.post_stock_document', 'public.prepare_invitation', 'public.prepare_resend', 'public.revoke_user_role',
+      'public.search_products', 'public.set_user_active', 'public.stock_summary', 'public.suggest_fefo_allocation',
     ])
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))

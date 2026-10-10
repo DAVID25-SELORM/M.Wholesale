@@ -172,6 +172,52 @@ async function seedCatalogue(orgId) {
 }
 await seedCatalogue(orgA)
 
+// ---- Phase 2: opening stock, posted the real way (as the owner, through post_stock_document) ----------
+async function seedInventory(orgId) {
+  const have = await one(`/stock_documents?select=id&organization_id=eq.${orgId}&limit=1`)
+  if (have) return
+  const { anonKey } = JSON.parse(readFileSync(secretsFile, 'utf8'))
+  // the owner may have been created in an earlier run with another password: align it with this run's (local stack only)
+  const ownerId = await ensureAuthUser('owner@demo.test')
+  await fetch(`${authUrl}/admin/users/${ownerId}`, { method: 'PUT', headers: svc, body: JSON.stringify({ password }) })
+  const login = await fetch(`${authUrl}/token?grant_type=password`, {
+    method: 'POST', headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'owner@demo.test', password }),
+  })
+  if (!login.ok) throw new Error(`owner login failed: ${login.status}`)
+  const { access_token } = await login.json()
+  const call = async (fn, body) => {
+    const res = await fetch(`${restUrl}/rpc/${fn}`, {
+      method: 'POST', headers: { apikey: anonKey, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    })
+    if (!res.ok) throw new Error(`${fn} -> ${res.status} ${await res.text()}`)
+    return res.json()
+  }
+  const wh = (await one(`/warehouses?select=id&organization_id=eq.${orgId}&order=code&limit=1`)).id
+  const sku = async (s) => (await one(`/products?select=id&organization_id=eq.${orgId}&sku=eq.${s}`)).id
+  const day = (n) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10)
+  const aug = await sku('AUG-625-14')
+  const pcm = await sku('PANADOL-500-100')
+  const ern = await sku('PCM-ERN-500-100')
+  const augBox = (await one(`/product_units?select=id&product_id=eq.${aug}&is_base=is.false`)).id
+  await call('post_stock_document', {
+    p_document_type: 'OPENING', p_warehouse_id: wh, p_notes: 'Demo opening balances',
+    p_lines: [
+      { product_id: aug, product_unit_id: augBox, quantity: 20, batch_number: 'AUG2601', expiry_date: day(25) },
+      { product_id: aug, product_unit_id: augBox, quantity: 40, batch_number: 'AUG2608', expiry_date: day(540) },
+      { product_id: pcm, quantity: 5000, batch_number: 'PN-7731', expiry_date: day(75) },
+      { product_id: pcm, quantity: 12000, batch_number: 'PN-8020', expiry_date: day(700) },
+      { product_id: ern, quantity: 800, batch_number: 'ERN-0042', expiry_date: day(200) },
+      { product_id: ern, quantity: 150, batch_number: 'ERN-0009', expiry_date: day(-12), status: 'EXPIRED' },
+    ],
+  })
+  await call('post_stock_document', {
+    p_document_type: 'STATUS_CHANGE', p_warehouse_id: wh, p_reason_code: 'QUALITY_HOLD', p_notes: 'Awaiting lab result',
+    p_lines: [{ product_id: pcm, batch_number: 'PN-8020', quantity: 1000, to_status: 'QUARANTINE' }],
+  })
+}
+await seedInventory(orgA)
+
 // ---- Organization B: proves tenant isolation in the browser -----------------------------------
 const orgB = await ensureOrg('Other Pharma Ltd', { email: 'owner@other.test', first: 'Nana', last: 'Other' })
 const hqB = (await rest('GET', `/branches?select=id&organization_id=eq.${orgB}&is_head_office=is.true`))[0].id

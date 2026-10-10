@@ -25,6 +25,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"batches": {
+                  Row: {
+                    "batch_number": string,"created_at": string,"created_by": string | null,"expiry_date": string,"id": string,"manufacture_date": string | null,"organization_id": string,"product_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "batch_number": string,"created_at"?: string,"created_by"?: string | null,"expiry_date": string,"id"?: string,"manufacture_date"?: string | null,"organization_id"?: string,"product_id": string
+                  }
+                  Update: {
+                    "batch_number"?: string,"created_at"?: string,"created_by"?: string | null,"expiry_date"?: string,"id"?: string,"manufacture_date"?: string | null,"organization_id"?: string,"product_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "batches_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "batches_product_fk"
+      columns: ["product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
                 },"branches": {
                   Row: {
                     "address": string | null,"city": string | null,"code": string,"created_at": string,"email": string | null,"id": string,"is_active": boolean,"is_head_office": boolean,"name": string,"organization_id": string,"phone": string | null,"region": string | null,"updated_at": string
@@ -379,6 +405,144 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"stock_balances": {
+                  Row: {
+                    "batch_id": string | null,"id": string,"location_id": string | null,"organization_id": string,"product_id": string,"quantity": number,"stock_status": string,"updated_at": string,"warehouse_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "batch_id"?: string | null,"id"?: string,"location_id"?: string | null,"organization_id": string,"product_id": string,"quantity": number,"stock_status": string,"updated_at"?: string,"warehouse_id": string
+                  }
+                  Update: {
+                    "batch_id"?: string | null,"id"?: string,"location_id"?: string | null,"organization_id"?: string,"product_id"?: string,"quantity"?: number,"stock_status"?: string,"updated_at"?: string,"warehouse_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "stock_balances_batch_fk"
+      columns: ["batch_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "batches"
+      referencedColumns: ["id","product_id","organization_id"]
+    },{
+      foreignKeyName: "stock_balances_location_fk"
+      columns: ["location_id","warehouse_id"]
+isOneToOne: false
+      referencedRelation: "warehouse_locations"
+      referencedColumns: ["id","warehouse_id"]
+    },{
+      foreignKeyName: "stock_balances_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_balances_product_fk"
+      columns: ["product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "stock_balances_warehouse_fk"
+      columns: ["warehouse_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "warehouses"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
+                },"stock_documents": {
+                  Row: {
+                    "branch_id": string,"document_number": string,"document_type": string,"id": string,"line_count": number,"notes": string | null,"organization_id": string,"posted_at": string,"posted_by": string | null,"reason_code": string | null,"to_warehouse_id": string | null,"warehouse_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "branch_id": string,"document_number": string,"document_type": string,"id"?: string,"line_count": number,"notes"?: string | null,"organization_id"?: string,"posted_at"?: string,"posted_by"?: string | null,"reason_code"?: string | null,"to_warehouse_id"?: string | null,"warehouse_id": string
+                  }
+                  Update: {
+                    "branch_id"?: string,"document_number"?: string,"document_type"?: string,"id"?: string,"line_count"?: number,"notes"?: string | null,"organization_id"?: string,"posted_at"?: string,"posted_by"?: string | null,"reason_code"?: string | null,"to_warehouse_id"?: string | null,"warehouse_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "stock_documents_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "stock_documents_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_documents_to_warehouse_fk"
+      columns: ["to_warehouse_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "warehouses"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "stock_documents_warehouse_fk"
+      columns: ["warehouse_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "warehouses"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
+                },"stock_movements": {
+                  Row: {
+                    "batch_id": string | null,"document_id": string,"entered_quantity": number | null,"entered_unit_id": string | null,"id": string,"line_no": number,"location_id": string | null,"movement_type": string,"organization_id": string,"posted_at": string,"product_id": string,"quantity": number,"seq": number,"stock_status": string,"warehouse_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "batch_id"?: string | null,"document_id": string,"entered_quantity"?: number | null,"entered_unit_id"?: string | null,"id"?: string,"line_no": number,"location_id"?: string | null,"movement_type": string,"organization_id": string,"posted_at"?: string,"product_id": string,"quantity": number,"seq"?: never,"stock_status": string,"warehouse_id": string
+                  }
+                  Update: {
+                    "batch_id"?: string | null,"document_id"?: string,"entered_quantity"?: number | null,"entered_unit_id"?: string | null,"id"?: string,"line_no"?: number,"location_id"?: string | null,"movement_type"?: string,"organization_id"?: string,"posted_at"?: string,"product_id"?: string,"quantity"?: number,"seq"?: never,"stock_status"?: string,"warehouse_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "stock_movements_batch_fk"
+      columns: ["batch_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "batches"
+      referencedColumns: ["id","product_id","organization_id"]
+    },{
+      foreignKeyName: "stock_movements_document_fk"
+      columns: ["document_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "stock_documents"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "stock_movements_location_fk"
+      columns: ["location_id","warehouse_id"]
+isOneToOne: false
+      referencedRelation: "warehouse_locations"
+      referencedColumns: ["id","warehouse_id"]
+    },{
+      foreignKeyName: "stock_movements_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_movements_product_fk"
+      columns: ["product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "stock_movements_unit_fk"
+      columns: ["entered_unit_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "product_units"
+      referencedColumns: ["id","product_id","organization_id"]
+    },{
+      foreignKeyName: "stock_movements_warehouse_fk"
+      columns: ["warehouse_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "warehouses"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
                 },"supplier_products": {
                   Row: {
                     "created_at": string,"id": string,"is_active": boolean,"is_preferred": boolean,"last_cost": number | null,"last_cost_at": string | null,"lead_time_days": number | null,"min_order_quantity": number | null,"organization_id": string,"product_id": string,"product_unit_id": string,"supplier_id": string,"supplier_product_name": string | null,"supplier_sku": string | null,"updated_at": string
@@ -549,8 +713,16 @@ isOneToOne: false
 "complete_invitation":
 { Args: { "p_actor_id": string,"p_branch_id"?: string,"p_first_name": string,"p_job_title"?: string,"p_last_name": string,"p_organization_id": string,"p_role_id": string,"p_user_id": string }; Returns: undefined
                            },
+"expiring_stock":
+{ Args: { "p_warehouse_id"?: string,"p_within_days"?: number }; Returns: {
+              "batch_id": string,"batch_number": string,"brand_name": string,"days_to_expiry": number,"expiry_date": string,"location_id": string,"product_id": string,"quantity": number,"sku": string,"stock_status": string,"warehouse_id": string,"warehouse_name": string
+            }[]
+                           },
 "get_session_context":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"post_stock_document":
+{ Args: { "p_document_type": string,"p_lines": Json,"p_notes"?: string,"p_reason_code"?: string,"p_to_warehouse_id"?: string,"p_warehouse_id": string }; Returns: Json
                            },
 "prepare_invitation":
 { Args: { "p_branch_id"?: string,"p_role_id": string }; Returns: Json
@@ -574,6 +746,16 @@ isOneToOne: false
                            },
 "set_user_active":
 { Args: { "p_is_active": boolean,"p_reason"?: string,"p_user_id": string }; Returns: undefined
+                           },
+"stock_summary":
+{ Args: { "p_limit"?: number,"p_near_days"?: number,"p_offset"?: number,"p_query"?: string,"p_warehouse_id"?: string }; Returns: {
+              "available": number,"base_unit": string,"brand_name": string,"damaged": number,"earliest_expiry": string,"expired_status": number,"expired_unsold": number,"generic_name": string,"near_expiry": number,"product_id": string,"quarantine": number,"sku": string,"strength_text": string,"total_count": number
+            }[]
+                           },
+"suggest_fefo_allocation":
+{ Args: { "p_min_shelf_life_days"?: number,"p_product_id": string,"p_quantity": number,"p_warehouse_id": string }; Returns: {
+              "allocate": number,"batch_id": string,"batch_number": string,"expiry_date": string,"location_id": string,"on_hand": number
+            }[]
                            }
           }
           Enums: {

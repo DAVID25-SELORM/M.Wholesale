@@ -9,6 +9,9 @@ import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { CatalogSetupPage } from '@/modules/catalog/CatalogSetupPage'
 import { ProductDetailPage } from '@/modules/catalog/ProductDetailPage'
 import { ProductsPage } from '@/modules/catalog/ProductsPage'
+import { ExpiryPage } from '@/modules/inventory/ExpiryPage'
+import { StockDocumentsPage } from '@/modules/inventory/StockDocumentsPage'
+import { StockPage } from '@/modules/inventory/StockPage'
 import { OrganizationPage } from '@/modules/organization/OrganizationPage'
 import { RolesPage } from '@/modules/roles/RolesPage'
 import { SuppliersPage } from '@/modules/suppliers/SuppliersPage'
@@ -49,6 +52,14 @@ export const routes = [
             ],
           },
           { element: <RequirePermission anyOf={['suppliers.view']} />, children: [{ path: 'purchasing/suppliers', element: <SuppliersPage /> }] },
+          {
+            element: <RequirePermission anyOf={['inventory.view']} />,
+            children: [
+              { path: 'inventory/stock', element: <StockPage /> },
+              { path: 'inventory/expiry', element: <ExpiryPage /> },
+              { path: 'inventory/documents', element: <StockDocumentsPage /> },
+            ],
+          },
         ],
       },
     ],
