@@ -65,7 +65,9 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'purchasing', label: 'Purchasing', icon: Boxes,
     items: [
       { id: 'suppliers', label: 'Suppliers', to: '/purchasing/suppliers', anyOf: ['suppliers.view'] },
-      ...['Purchase requests', 'Supplier quotations', 'Purchase orders', 'Goods received', 'Purchase returns']
+      { id: 'purchase-orders', label: 'Purchase orders', to: '/purchasing/orders', anyOf: ['purchasing.view'] },
+      { id: 'goods-received', label: 'Goods received', to: '/purchasing/receipts', anyOf: ['purchasing.view'] },
+      ...['Purchase requests', 'Supplier quotations', 'Supplier invoices', 'Purchase returns']
         .map((l) => planned(`pur-${l}`, l)),
     ],
   },

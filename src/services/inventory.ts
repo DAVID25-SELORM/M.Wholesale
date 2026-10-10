@@ -10,8 +10,11 @@ export const STOCK_STATUS_LABEL: Record<StockStatus, string> = {
 
 export const DOCUMENT_TYPES = ['OPENING', 'ADJUSTMENT', 'TRANSFER', 'STATUS_CHANGE'] as const
 export type DocumentType = (typeof DOCUMENT_TYPES)[number]
-export const DOCUMENT_TYPE_LABEL: Record<DocumentType, string> = {
-  OPENING: 'Opening stock', ADJUSTMENT: 'Adjustment', TRANSFER: 'Transfer', STATUS_CHANGE: 'Status change',
+/** Everything that can appear in the ledger. RECEIPT is posted by purchasing (goods received), never by hand. */
+export type StockDocumentType = DocumentType | 'RECEIPT'
+export const ALL_DOCUMENT_TYPES: readonly StockDocumentType[] = [...DOCUMENT_TYPES, 'RECEIPT']
+export const DOCUMENT_TYPE_LABEL: Record<StockDocumentType, string> = {
+  OPENING: 'Opening stock', ADJUSTMENT: 'Adjustment', TRANSFER: 'Transfer', STATUS_CHANGE: 'Status change', RECEIPT: 'Goods received',
 }
 /** Permission needed to post each kind of document (the database enforces the same mapping). */
 export const DOCUMENT_PERMISSION: Record<DocumentType, string> = {
@@ -27,7 +30,7 @@ export const STATUS_CHANGE_REASONS = [
   ['DAMAGE', 'Damaged'], ['EXPIRY_WRITE_OFF', 'Expired'], ['REORGANISATION', 'Re-organisation'], ['OTHER', 'Other'],
 ] as const
 export const REASON_LABEL: Record<string, string> = Object.fromEntries([
-  ...ADJUSTMENT_REASONS, ...STATUS_CHANGE_REASONS, ['OPENING', 'Opening stock'],
+  ...ADJUSTMENT_REASONS, ...STATUS_CHANGE_REASONS, ['OPENING', 'Opening stock'], ['RECEIPT', 'Goods received'],
 ])
 
 // ---- reads ---------------------------------------------------------------------------------------------------
@@ -134,7 +137,7 @@ export interface MovementRow {
   location: { code: string } | null
   batch: { batch_number: string; expiry_date: string } | null
   product: { sku: string; brand_name: string } | null
-  document: { document_number: string; document_type: DocumentType; reason_code: string | null } | null
+  document: { document_number: string; document_type: StockDocumentType; reason_code: string | null } | null
 }
 
 const MOVEMENT_SELECT =
@@ -161,7 +164,7 @@ export async function listDocumentMovements(documentId: string): Promise<Movemen
 export interface StockDocumentRow {
   id: string
   document_number: string
-  document_type: DocumentType
+  document_type: StockDocumentType
   reason_code: string | null
   notes: string | null
   line_count: number
@@ -171,7 +174,7 @@ export interface StockDocumentRow {
 }
 
 export interface DocumentListParams extends PageParams {
-  type: DocumentType | ''
+  type: StockDocumentType | ''
   warehouseId: string
 }
 

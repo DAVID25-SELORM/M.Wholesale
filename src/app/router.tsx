@@ -13,6 +13,9 @@ import { ExpiryPage } from '@/modules/inventory/ExpiryPage'
 import { StockDocumentsPage } from '@/modules/inventory/StockDocumentsPage'
 import { StockPage } from '@/modules/inventory/StockPage'
 import { OrganizationPage } from '@/modules/organization/OrganizationPage'
+import { GoodsReceiptsPage } from '@/modules/purchasing/GoodsReceiptsPage'
+import { PurchaseOrderDetailPage } from '@/modules/purchasing/PurchaseOrderDetailPage'
+import { PurchaseOrdersPage } from '@/modules/purchasing/PurchaseOrdersPage'
 import { RolesPage } from '@/modules/roles/RolesPage'
 import { SuppliersPage } from '@/modules/suppliers/SuppliersPage'
 import { UsersPage } from '@/modules/users/UsersPage'
@@ -52,6 +55,14 @@ export const routes = [
             ],
           },
           { element: <RequirePermission anyOf={['suppliers.view']} />, children: [{ path: 'purchasing/suppliers', element: <SuppliersPage /> }] },
+          {
+            element: <RequirePermission anyOf={['purchasing.view']} />,
+            children: [
+              { path: 'purchasing/orders', element: <PurchaseOrdersPage /> },
+              { path: 'purchasing/orders/:id', element: <PurchaseOrderDetailPage /> },
+              { path: 'purchasing/receipts', element: <GoodsReceiptsPage /> },
+            ],
+          },
           {
             element: <RequirePermission anyOf={['inventory.view']} />,
             children: [

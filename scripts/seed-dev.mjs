@@ -218,6 +218,58 @@ async function seedInventory(orgId) {
 }
 await seedInventory(orgA)
 
+// ---- Phase 3: purchase orders, through the real workflow (draft -> submit -> approve -> receive) ---------
+async function seedPurchasing(orgId) {
+  if (await one(`/purchase_orders?select=id&organization_id=eq.${orgId}&limit=1`)) return
+  const { anonKey } = JSON.parse(readFileSync(secretsFile, 'utf8'))
+  const login = await fetch(`${authUrl}/token?grant_type=password`, {
+    method: 'POST', headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'owner@demo.test', password }),
+  })
+  if (!login.ok) throw new Error(`owner login failed: ${login.status}`)
+  const { access_token } = await login.json()
+  const call = async (fn, body) => {
+    const res = await fetch(`${restUrl}/rpc/${fn}`, {
+      method: 'POST', headers: { apikey: anonKey, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    })
+    const text = await res.text()
+    if (!res.ok) throw new Error(`${fn} -> ${res.status} ${text}`)
+    return text ? JSON.parse(text) : null
+  }
+  const wh = (await one(`/warehouses?select=id&organization_id=eq.${orgId}&order=code&limit=1`)).id
+  const emp = (await one(`/suppliers?select=id&organization_id=eq.${orgId}&code=eq.EMP`)).id
+  const kof = (await one(`/suppliers?select=id&organization_id=eq.${orgId}&code=eq.KOF`)).id
+  const aug = (await one(`/products?select=id&organization_id=eq.${orgId}&sku=eq.AUG-625-14`)).id
+  const pcm = (await one(`/products?select=id&organization_id=eq.${orgId}&sku=eq.PANADOL-500-100`)).id
+  const box = async (p) => (await one(`/product_units?select=id&product_id=eq.${p}&is_base=is.false`)).id
+  const day = (n) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10)
+  const save = (supplier, lines, notes) => call('save_purchase_order', {
+    p_id: null, p_supplier_id: supplier, p_warehouse_id: wh, p_expected_date: day(7), p_notes: notes, p_lines: lines,
+  })
+
+  // 1) an approved order that has been partly received
+  const po1 = await save(emp, [
+    { product_id: aug, product_unit_id: await box(aug), quantity: 30, unit_cost: 85.5 },
+    { product_id: pcm, product_unit_id: await box(pcm), quantity: 50, unit_cost: 22 },
+  ], 'Monthly restock')
+  await call('submit_purchase_order', { p_id: po1 })
+  await call('approve_purchase_order', { p_id: po1 })
+  const lines = await rest('GET', `/purchase_order_lines?select=id,product_id&purchase_order_id=eq.${po1}&order=line_no`)
+  await call('receive_goods', {
+    p_purchase_order_id: po1, p_delivery_note: 'EMP-DN-4471', p_notes: null,
+    p_lines: [{ po_line_id: lines[0].id, quantity: 20, batch_number: 'AUG2610', expiry_date: day(720) }],
+  })
+  // 2) an order waiting for approval, and 3) a draft
+  const po2 = await save(kof, [{ product_id: aug, product_unit_id: await box(aug), quantity: 10, unit_cost: 88 }], null)
+  await call('submit_purchase_order', { p_id: po2 })
+  await save(emp, [{ product_id: pcm, product_unit_id: await box(pcm), quantity: 20, unit_cost: 22 }], 'Draft for next week')
+}
+try {
+  await seedPurchasing(orgA)
+} catch (e) {
+  console.warn(`purchasing demo data skipped: ${e.message}`)
+}
+
 // ---- Organization B: proves tenant isolation in the browser -----------------------------------
 const orgB = await ensureOrg('Other Pharma Ltd', { email: 'owner@other.test', first: 'Nana', last: 'Other' })
 const hqB = (await rest('GET', `/branches?select=id&organization_id=eq.${orgB}&is_head_office=is.true`))[0].id

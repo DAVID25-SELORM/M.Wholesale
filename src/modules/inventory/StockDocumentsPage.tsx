@@ -4,8 +4,8 @@ import { Badge, Button, Card, DataTable, EmptyState, ErrorState, LoadingState, M
 import { toAppError } from '@/lib/errors'
 import { formatDateTime } from '@/lib/utils'
 import {
-  DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL, REASON_LABEL, fmtQty, listDocumentMovements, listStockDocuments,
-  type DocumentType, type StockDocumentRow,
+  ALL_DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL, REASON_LABEL, fmtQty, listDocumentMovements, listStockDocuments,
+  type StockDocumentRow, type StockDocumentType,
 } from '@/services/inventory'
 import { listWarehouseOptions } from '@/services/warehouses'
 import { StockStatusBadge } from './shared'
@@ -14,7 +14,7 @@ const PAGE_SIZE = 20
 
 export function StockDocumentsPage() {
   const [page, setPage] = useState(0)
-  const [type, setType] = useState<DocumentType | ''>('')
+  const [type, setType] = useState<StockDocumentType | ''>('')
   const [warehouseId, setWarehouseId] = useState('')
   const [open, setOpen] = useState<StockDocumentRow | null>(null)
   const warehouses = useQuery({ queryKey: ['warehouse-options', null], queryFn: () => listWarehouseOptions(null), staleTime: 60_000 })
@@ -23,7 +23,7 @@ export function StockDocumentsPage() {
 
   const columns: Column<StockDocumentRow>[] = [
     { key: 'no', header: 'Document', render: (d) => <button type="button" className="font-mono text-xs font-semibold text-brand-700 hover:underline" onClick={() => setOpen(d)}>{d.document_number}</button> },
-    { key: 'type', header: 'Type', render: (d) => <Badge tone={d.document_type === 'OPENING' ? 'blue' : d.document_type === 'TRANSFER' ? 'purple' : 'slate'}>{DOCUMENT_TYPE_LABEL[d.document_type]}</Badge> },
+    { key: 'type', header: 'Type', render: (d) => <Badge tone={d.document_type === 'OPENING' ? 'blue' : d.document_type === 'RECEIPT' ? 'green' : d.document_type === 'TRANSFER' ? 'purple' : 'slate'}>{DOCUMENT_TYPE_LABEL[d.document_type]}</Badge> },
     { key: 'wh', header: 'Warehouse', render: (d) => (d.to_warehouse ? `${d.warehouse?.name ?? '?'} → ${d.to_warehouse.name}` : (d.warehouse?.name ?? '—')) },
     { key: 'reason', header: 'Reason', hideOnMobile: true, render: (d) => (d.reason_code ? (REASON_LABEL[d.reason_code] ?? d.reason_code) : '—') },
     { key: 'lines', header: 'Lines', hideOnMobile: true, className: 'text-right', render: (d) => <span className="tabular-nums">{d.line_count}</span> },
@@ -37,9 +37,9 @@ export function StockDocumentsPage() {
         <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row">
           <div className="w-full sm:w-56">
             <label htmlFor="doc-type" className="sr-only">Type</label>
-            <Select id="doc-type" value={type} onChange={(e) => { setType(e.target.value as DocumentType | ''); setPage(0) }}>
+            <Select id="doc-type" value={type} onChange={(e) => { setType(e.target.value as StockDocumentType | ''); setPage(0) }}>
               <option value="">All types</option>
-              {DOCUMENT_TYPES.map((t) => <option key={t} value={t}>{DOCUMENT_TYPE_LABEL[t]}</option>)}
+              {ALL_DOCUMENT_TYPES.map((t) => <option key={t} value={t}>{DOCUMENT_TYPE_LABEL[t]}</option>)}
             </Select>
           </div>
           <div className="w-full sm:w-64">
