@@ -25,8 +25,10 @@ const secretsFile = join(stackDir, 'secrets.json')
 const NET = 'wps-net'
 const AUTH = 'wps-dev-auth'
 const REST = 'wps-dev-rest'
-const AUTH_PORT = 55330
-const REST_PORT = 55331
+// Windows reserves shifting port ranges (Hyper-V / WSL), which can swallow a fixed port after a reboot:
+// override with WPS_AUTH_PORT / WPS_REST_PORT if these are ever excluded (netsh int ipv4 show excludedportrange protocol=tcp).
+const AUTH_PORT = Number(process.env.WPS_AUTH_PORT ?? 58330)
+const REST_PORT = Number(process.env.WPS_REST_PORT ?? 58331)
 const WEB_URL = 'http://127.0.0.1:5273'
 const GOTRUE_IMAGE = 'public.ecr.aws/supabase/gotrue:v2.197.0'
 const POSTGREST_IMAGE = 'public.ecr.aws/supabase/postgrest:v16.3'
@@ -43,7 +45,12 @@ function signJwt(payload, secret) {
 }
 
 function loadSecrets() {
-  if (existsSync(secretsFile)) return JSON.parse(readFileSync(secretsFile, 'utf8'))
+  if (existsSync(secretsFile)) {
+    // keys are kept; the URLs always follow the ports in use now
+    const saved = { ...JSON.parse(readFileSync(secretsFile, 'utf8')), authUrl: `http://127.0.0.1:${AUTH_PORT}`, restUrl: `http://127.0.0.1:${REST_PORT}` }
+    writeFileSync(secretsFile, JSON.stringify(saved, null, 2))
+    return saved
+  }
   const jwtSecret = randomBytes(32).toString('hex')
   const iat = Math.floor(Date.now() / 1000)
   const exp = iat + 60 * 60 * 24 * 365 * 5
@@ -169,8 +176,18 @@ async function reset() {
   await admin.connect()
   await admin.query('drop schema if exists public cascade; create schema public;')
   await admin.query('grant usage on schema public to anon, authenticated, service_role; grant all on schema public to postgres;')
+  // dropping the schema also drops the default privileges Supabase installs on it: put them back, or the service role
+  // (used by the seed script and Edge Functions) cannot read any new table
+  await admin.query(`alter default privileges for role postgres in schema public grant all on tables to anon, authenticated, service_role;
+                     alter default privileges for role postgres in schema public grant all on functions to anon, authenticated, service_role;
+                     alter default privileges for role postgres in schema public grant all on sequences to anon, authenticated, service_role;`)
   await admin.query('drop schema if exists private cascade;')
-  await admin.query('drop schema if exists auth cascade; create schema auth authorization supabase_auth_admin;')
+  try {
+    await admin.query('drop schema if exists auth cascade; create schema auth authorization supabase_auth_admin;')
+  } catch (e) {
+    // the auth schema belongs to GoTrue's own role; its tables are re-created by GoTrue itself, so leaving it is fine
+    console.log(`(auth schema left as it is: ${e.message})`)
+  }
   await admin.end()
   console.log('dev database wiped')
   await up()

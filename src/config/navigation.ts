@@ -58,7 +58,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'stock', label: 'Stock', to: '/inventory/stock', anyOf: ['inventory.view'] },
       { id: 'expiry', label: 'Expiry', to: '/inventory/expiry', anyOf: ['inventory.view'] },
       { id: 'stock-documents', label: 'Stock documents', to: '/inventory/documents', anyOf: ['inventory.view'] },
-      ...['Picking', 'Packing', 'Dispatch', 'Stock count'].map((l) => planned(`wh-${l}`, l)),
+      { id: 'stock-counts', label: 'Stock counts', to: '/inventory/counts', anyOf: ['inventory.view'] },
+      { id: 'stock-valuation', label: 'Stock valuation', to: '/inventory/valuation', anyOf: ['inventory.valuation'] },
+      ...['Picking', 'Packing', 'Dispatch'].map((l) => planned(`wh-${l}`, l)),
     ],
   },
   {
@@ -67,7 +69,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'suppliers', label: 'Suppliers', to: '/purchasing/suppliers', anyOf: ['suppliers.view'] },
       { id: 'purchase-orders', label: 'Purchase orders', to: '/purchasing/orders', anyOf: ['purchasing.view'] },
       { id: 'goods-received', label: 'Goods received', to: '/purchasing/receipts', anyOf: ['purchasing.view'] },
-      ...['Purchase requests', 'Supplier quotations', 'Supplier invoices', 'Purchase returns']
+      { id: 'purchase-returns', label: 'Purchase returns', to: '/purchasing/returns', anyOf: ['purchasing.view'] },
+      { id: 'supplier-invoices', label: 'Supplier invoices', to: '/purchasing/invoices', anyOf: ['payables.view'] },
+      { id: 'payables', label: 'Payables', to: '/purchasing/payables', anyOf: ['payables.view'] },
+      ...['Purchase requests', 'Supplier quotations']
         .map((l) => planned(`pur-${l}`, l)),
     ],
   },

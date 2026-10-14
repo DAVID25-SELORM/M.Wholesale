@@ -11,10 +11,10 @@ export const STOCK_STATUS_LABEL: Record<StockStatus, string> = {
 export const DOCUMENT_TYPES = ['OPENING', 'ADJUSTMENT', 'TRANSFER', 'STATUS_CHANGE'] as const
 export type DocumentType = (typeof DOCUMENT_TYPES)[number]
 /** Everything that can appear in the ledger. RECEIPT is posted by purchasing (goods received), never by hand. */
-export type StockDocumentType = DocumentType | 'RECEIPT'
-export const ALL_DOCUMENT_TYPES: readonly StockDocumentType[] = [...DOCUMENT_TYPES, 'RECEIPT']
+export type StockDocumentType = DocumentType | 'RECEIPT' | 'RETURN'
+export const ALL_DOCUMENT_TYPES: readonly StockDocumentType[] = [...DOCUMENT_TYPES, 'RECEIPT', 'RETURN']
 export const DOCUMENT_TYPE_LABEL: Record<StockDocumentType, string> = {
-  OPENING: 'Opening stock', ADJUSTMENT: 'Adjustment', TRANSFER: 'Transfer', STATUS_CHANGE: 'Status change', RECEIPT: 'Goods received',
+  OPENING: 'Opening stock', ADJUSTMENT: 'Adjustment', TRANSFER: 'Transfer', STATUS_CHANGE: 'Status change', RECEIPT: 'Goods received', RETURN: 'Return to supplier',
 }
 /** Permission needed to post each kind of document (the database enforces the same mapping). */
 export const DOCUMENT_PERMISSION: Record<DocumentType, string> = {
@@ -30,7 +30,7 @@ export const STATUS_CHANGE_REASONS = [
   ['DAMAGE', 'Damaged'], ['EXPIRY_WRITE_OFF', 'Expired'], ['REORGANISATION', 'Re-organisation'], ['OTHER', 'Other'],
 ] as const
 export const REASON_LABEL: Record<string, string> = Object.fromEntries([
-  ...ADJUSTMENT_REASONS, ...STATUS_CHANGE_REASONS, ['OPENING', 'Opening stock'], ['RECEIPT', 'Goods received'],
+  ...ADJUSTMENT_REASONS, ...STATUS_CHANGE_REASONS, ['OPENING', 'Opening stock'], ['RECEIPT', 'Goods received'], ['RETURN_TO_SUPPLIER', 'Returned to supplier'],
 ])
 
 // ---- reads ---------------------------------------------------------------------------------------------------
@@ -207,6 +207,8 @@ export interface PostLine {
   manufacture_date?: string
   location_id?: string
   status?: StockStatus
+  /** cost per entered pack, recorded when this line creates a new batch (needs inventory.valuation to be seen later) */
+  unit_cost?: number
   direction?: 'IN' | 'OUT'
   to_status?: StockStatus
   to_location_id?: string
@@ -255,3 +257,23 @@ export function daysUntil(isoDate: string, today = new Date()): number {
   return Math.round((Date.UTC(y!, m! - 1, d!) - t) / 86_400_000)
 }
 export const fmtQty = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 3 })
+
+// ---- valuation (needs inventory.valuation) ---------------------------------------------------------------------
+export interface ValuationRow {
+  product_id: string
+  sku: string
+  brand_name: string
+  base_unit: string
+  good_quantity: number
+  other_quantity: number
+  uncosted_quantity: number
+  value: number
+}
+
+export async function listStockValuation(warehouseId: string): Promise<ValuationRow[]> {
+  const rows = unwrap(await supabase.rpc('stock_valuation', { p_warehouse_id: warehouseId || undefined }), 'stock.valuation')
+  return rows.map((r) => ({
+    product_id: r.product_id, sku: r.sku, brand_name: r.brand_name, base_unit: r.base_unit, good_quantity: Number(r.good_quantity),
+    other_quantity: Number(r.other_quantity), uncosted_quantity: Number(r.uncosted_quantity), value: Number(r.value),
+  }))
+}

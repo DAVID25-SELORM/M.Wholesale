@@ -18,6 +18,7 @@ Migrations (`supabase/migrations`, applied in order; reviewed SQL, no dashboard 
 | P1-1…3 | `catalog_permissions`, `suppliers`, `catalog` | Phase 1 - see [../phase1/CATALOG_AND_SUPPLIERS.md](../phase1/CATALOG_AND_SUPPLIERS.md) |
 | P2-1…2 | `inventory_permissions`, `inventory` | Phase 2 - see [../phase2/INVENTORY.md](../phase2/INVENTORY.md) |
 | P3-1…2 | `purchasing_permissions`, `purchasing` | Phase 3 - see [../phase3/PURCHASING.md](../phase3/PURCHASING.md) |
+| P4-1…5 | `phase4_permissions`, `costing`, `purchase_returns`, `supplier_invoices`, `stock_counts` | Phase 4 - see [../phase4/STOCK_AND_PAYABLES.md](../phase4/STOCK_AND_PAYABLES.md) |
 
 Rules for future migrations: never edit an applied migration; add a new one. Every new tenant table needs
 RLS + policies + explicit grants + `updated_at` trigger + audit trigger, and `tests/security/hardening.test.ts`

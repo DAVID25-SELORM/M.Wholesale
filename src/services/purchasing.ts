@@ -180,3 +180,86 @@ export function remainingPacks(l: Pick<PurchaseOrderLine, 'ordered_base' | 'rece
   if (ordered <= 0) return 0
   return Math.max(0, Math.round(((ordered - Number(l.received_base)) / ordered) * Number(l.quantity_ordered) * 1000) / 1000)
 }
+
+// ---- purchase returns ------------------------------------------------------------------------------------------
+export const RETURN_REASONS = ['DAMAGED', 'EXPIRED', 'WRONG_ITEM', 'OVER_SUPPLY', 'QUALITY', 'RECALL', 'OTHER'] as const
+export type ReturnReason = (typeof RETURN_REASONS)[number]
+export const RETURN_REASON_LABEL: Record<ReturnReason, string> = {
+  DAMAGED: 'Damaged', EXPIRED: 'Expired / short-dated', WRONG_ITEM: 'Wrong item', OVER_SUPPLY: 'Over-supplied',
+  QUALITY: 'Quality complaint', RECALL: 'Recall', OTHER: 'Other',
+}
+
+export type PurchaseReturn = Tables<'purchase_returns'> & {
+  supplier: { code: string; name: string } | null
+  warehouse: { code: string; name: string } | null
+  purchase_order: { po_number: string } | null
+}
+
+const RET_SELECT =
+  '*, supplier:suppliers!purchase_returns_supplier_fk(code, name), warehouse:warehouses!purchase_returns_warehouse_fk(code, name), purchase_order:purchase_orders!purchase_returns_po_fk(po_number)'
+
+export interface ReturnListParams extends PageParams {
+  search: string
+  credit: 'PENDING' | 'CREDITED' | ''
+}
+
+export async function listPurchaseReturns(p: ReturnListParams): Promise<Paged<PurchaseReturn>> {
+  let q = supabase.from('purchase_returns').select(RET_SELECT, { count: 'exact' })
+  const s = sanitizeForOrFilter(p.search)
+  if (s) q = q.or(`return_number.ilike.%${s}%,credit_note_number.ilike.%${s}%`)
+  if (p.credit) q = q.eq('credit_status', p.credit)
+  const [from, to] = rangeFor(p)
+  const res = unwrapPaged(await q.order('returned_at', { ascending: false }).order('id').range(from, to), 'purchaseReturns.list', p)
+  return { ...res, rows: res.rows as unknown as PurchaseReturn[] }
+}
+
+export type PurchaseReturnLine = Tables<'purchase_return_lines'> & {
+  product: { sku: string; brand_name: string } | null
+  batch: { batch_number: string; expiry_date: string } | null
+  unit: { unit: { code: string; name: string } | null } | null
+}
+
+export async function listReturnLines(returnId: string): Promise<PurchaseReturnLine[]> {
+  const rows = unwrap(
+    await supabase
+      .from('purchase_return_lines')
+      .select('*, product:products!purchase_return_lines_product_fk(sku, brand_name), batch:batches!purchase_return_lines_batch_fk(batch_number, expiry_date), unit:product_units!purchase_return_lines_unit_fk(unit:units_of_measure(code, name))')
+      .eq('purchase_return_id', returnId)
+      .order('line_no'),
+    'purchaseReturns.lines',
+  )
+  return rows as unknown as PurchaseReturnLine[]
+}
+
+export interface ReturnLineInput {
+  product_id: string
+  quantity: number
+  batch_id?: string
+  product_unit_id?: string
+  location_id?: string
+  status?: 'AVAILABLE' | 'QUARANTINE' | 'DAMAGED' | 'EXPIRED'
+}
+
+export interface PostReturnInput {
+  supplierId: string
+  warehouseId: string
+  reason: ReturnReason
+  notes?: string
+  purchaseOrderId?: string
+  lines: ReturnLineInput[]
+}
+
+export async function postPurchaseReturn(i: PostReturnInput): Promise<{ return_number: string; expected_credit: number }> {
+  const r = unwrap(
+    await supabase.rpc('post_purchase_return', {
+      p_supplier_id: i.supplierId, p_warehouse_id: i.warehouseId, p_reason: i.reason, p_lines: i.lines as unknown as never,
+      p_notes: emptyToNull(i.notes) ?? undefined, p_purchase_order_id: i.purchaseOrderId || undefined,
+    }),
+    'purchaseReturns.post',
+  ) as unknown as { return_number: string; expected_credit: number }
+  return r
+}
+
+export async function recordReturnCredit(id: string, creditNoteNumber: string, amount: number): Promise<void> {
+  unwrap(await supabase.rpc('record_return_credit', { p_id: id, p_credit_note_number: creditNoteNumber, p_amount: amount }), 'purchaseReturns.credit')
+}

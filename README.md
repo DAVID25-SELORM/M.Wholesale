@@ -1,7 +1,7 @@
 # Pharmacy Wholesale ERP
 
 Multi-tenant ERP for pharmaceutical wholesalers (Ghana first, built to be international).
-**Status: Phase 0 (secure foundation), Phase 1 (product master, pharmaceutical identity, units, suppliers), Phase 2 (inventory core: batches, stock ledger, expiry) and Phase 3 (purchase orders with approval, goods received) built.**
+**Status: Phase 0 (secure foundation), Phase 1 (product master, pharmaceutical identity, units, suppliers), Phase 2 (inventory core: batches, stock ledger, expiry) and Phase 3 (purchase orders with approval, goods received) and Phase 4 (costing and valuation, purchase returns, stock counts, supplier invoices with 3-way match, payables) built.**
 Sales, finance and delivery arrive in later phases.
 
 * Stack: React + TypeScript + Vite + Tailwind · Supabase (PostgreSQL 17, Auth, RLS) — see
@@ -18,6 +18,7 @@ Sales, finance and delivery arrive in later phases.
 | [docs/phase1/CATALOG_AND_SUPPLIERS.md](docs/phase1/CATALOG_AND_SUPPLIERS.md) | Phase 1: product identity model, units, barcodes, aliases, search, suppliers |
 | [docs/phase2/INVENTORY.md](docs/phase2/INVENTORY.md) | Phase 2: batches, stock ledger and balances, posting rules, statuses, FEFO, expiry |
 | [docs/phase3/PURCHASING.md](docs/phase3/PURCHASING.md) | Phase 3: purchase orders, approval workflow, receiving goods into stock |
+| [docs/phase4/STOCK_AND_PAYABLES.md](docs/phase4/STOCK_AND_PAYABLES.md) | Phase 4: batch costs and valuation, purchase returns, stock counts, supplier invoices, payables |
 | [docs/README.md](docs/README.md) | original planning pack (architecture/roadmap/requirements) |
 
 Quick start: `npm install && npm run stack:up && DEV_SEED_PASSWORD='…' npm run seed:dev && npm run dev`.

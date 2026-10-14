@@ -222,6 +222,11 @@ function LineEditor({ index, type, line, warehouseId, toWarehouseId, onChange, o
                   <Field label="Manufactured" className="sm:col-span-2"><Input type="date" value={line.mfg} onChange={(e) => onChange({ mfg: e.target.value })} /></Field>
                 </>
               )}
+              {line.tracks && (
+                <Field label="Cost per pack (optional)" className="sm:col-span-6" hint="What this batch cost. Seen only by people allowed to view stock valuation.">
+                  <Input type="number" inputMode="decimal" min="0" step="any" value={line.cost} onChange={(e) => onChange({ cost: e.target.value })} />
+                </Field>
+              )}
               <Field label="Location" className="sm:col-span-3">
                 <Select value={line.locationId} onChange={(e) => onChange({ locationId: e.target.value })}>
                   <option value="">No specific location</option>

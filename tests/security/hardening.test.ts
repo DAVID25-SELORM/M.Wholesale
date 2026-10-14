@@ -95,7 +95,12 @@ describe('catalog hardening', () => {
       'public.receive_goods', 'public.reject_purchase_order', 'public.revoke_user_role', 'public.save_purchase_order',
       'public.search_products', 'public.set_user_active', 'public.stock_summary', 'public.submit_purchase_order',
       'public.suggest_fefo_allocation',
-    ])
+      // Phase 4
+      'public.stock_valuation', 'public.post_purchase_return', 'public.record_return_credit', 'public.record_supplier_invoice',
+      'public.approve_supplier_invoice', 'public.cancel_supplier_invoice', 'public.pay_supplier_invoice', 'public.payables_summary',
+      'public.start_stock_count', 'public.save_count_entries', 'public.submit_stock_count', 'public.return_stock_count',
+      'public.cancel_stock_count', 'public.approve_stock_count',
+    ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))
     // provisioning is NOT available to signed-in users

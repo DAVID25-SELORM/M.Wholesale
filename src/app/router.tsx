@@ -12,7 +12,13 @@ import { ProductsPage } from '@/modules/catalog/ProductsPage'
 import { ExpiryPage } from '@/modules/inventory/ExpiryPage'
 import { StockDocumentsPage } from '@/modules/inventory/StockDocumentsPage'
 import { StockPage } from '@/modules/inventory/StockPage'
+import { StockCountDetailPage } from '@/modules/inventory/StockCountDetailPage'
+import { StockCountsPage } from '@/modules/inventory/StockCountsPage'
+import { ValuationPage } from '@/modules/inventory/ValuationPage'
 import { OrganizationPage } from '@/modules/organization/OrganizationPage'
+import { PayablesPage } from '@/modules/purchasing/PayablesPage'
+import { PurchaseReturnsPage } from '@/modules/purchasing/PurchaseReturnsPage'
+import { SupplierInvoicesPage } from '@/modules/purchasing/SupplierInvoicesPage'
 import { GoodsReceiptsPage } from '@/modules/purchasing/GoodsReceiptsPage'
 import { PurchaseOrderDetailPage } from '@/modules/purchasing/PurchaseOrderDetailPage'
 import { PurchaseOrdersPage } from '@/modules/purchasing/PurchaseOrdersPage'
@@ -61,14 +67,25 @@ export const routes = [
               { path: 'purchasing/orders', element: <PurchaseOrdersPage /> },
               { path: 'purchasing/orders/:id', element: <PurchaseOrderDetailPage /> },
               { path: 'purchasing/receipts', element: <GoodsReceiptsPage /> },
+              { path: 'purchasing/returns', element: <PurchaseReturnsPage /> },
             ],
           },
+          {
+            element: <RequirePermission anyOf={['payables.view']} />,
+            children: [
+              { path: 'purchasing/invoices', element: <SupplierInvoicesPage /> },
+              { path: 'purchasing/payables', element: <PayablesPage /> },
+            ],
+          },
+          { element: <RequirePermission anyOf={['inventory.valuation']} />, children: [{ path: 'inventory/valuation', element: <ValuationPage /> }] },
           {
             element: <RequirePermission anyOf={['inventory.view']} />,
             children: [
               { path: 'inventory/stock', element: <StockPage /> },
               { path: 'inventory/expiry', element: <ExpiryPage /> },
               { path: 'inventory/documents', element: <StockDocumentsPage /> },
+              { path: 'inventory/counts', element: <StockCountsPage /> },
+              { path: 'inventory/counts/:id', element: <StockCountDetailPage /> },
             ],
           },
         ],

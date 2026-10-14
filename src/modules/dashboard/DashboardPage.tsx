@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Boxes, CircleDollarSign, Clock, PackageSearch } from 'lucide-react'
+import { Boxes, CircleDollarSign, ListChecks, PackageSearch } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import { useSession } from '@/modules/session/SessionProvider'
+import { daysUntil, fmtQty, listExpiringStock, listStockSummary } from '@/services/inventory'
 
 async function headCount(table: 'branches' | 'warehouses' | 'warehouse_locations'): Promise<number> {
   const { count, error } = await supabase.from(table).select('id', { count: 'exact', head: true })
@@ -26,14 +27,63 @@ function useSetupCounts() {
 
 const futureWidgets = [
   { title: 'Sales', icon: CircleDollarSign, message: 'No sales data available yet.', hint: 'Sales will be enabled in a later phase.' },
-  { title: 'Inventory', icon: Boxes, message: 'No inventory data available yet.', hint: 'The inventory module will be enabled in a later phase.' },
-  { title: 'Expiry watch', icon: Clock, message: 'No batches are tracked yet.', hint: 'Batch and expiry tracking arrives with inventory.' },
   { title: 'Receivables', icon: PackageSearch, message: 'No receivables yet.', hint: 'Credit and payments will be enabled in a later phase.' },
 ]
+
+/** Work waiting for this person; each row only appears if they hold the permission to act on it. */
+const TODO = [
+  { key: 'po', label: 'purchase orders awaiting approval', table: 'purchase_orders', column: 'status', values: ['SUBMITTED'], perm: 'purchasing.approve', to: '/purchasing/orders' },
+  { key: 'inv', label: 'supplier invoices to approve', table: 'supplier_invoices', column: 'status', values: ['MATCHED', 'EXCEPTION'], perm: 'payables.approve', to: '/purchasing/invoices' },
+  { key: 'cnt', label: 'stock counts to approve', table: 'stock_counts', column: 'status', values: ['SUBMITTED'], perm: 'inventory.count_approve', to: '/inventory/counts' },
+  { key: 'ret', label: 'returns waiting for a credit note', table: 'purchase_returns', column: 'credit_status', values: ['PENDING'], perm: 'payables.create', to: '/purchasing/returns' },
+] as const
+
+function useTodoCounts(enabled: boolean) {
+  return useQuery({
+    queryKey: ['dashboard', 'todo'],
+    enabled,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const out: Record<string, number> = {}
+      await Promise.all(TODO.map(async (row) => {
+        const { count, error } = await supabase.from(row.table).select('id', { count: 'exact', head: true }).in(row.column, [...row.values])
+        if (error) throw error
+        out[row.key] = count ?? 0
+      }))
+      return out
+    },
+  })
+}
+
+function useStockGlance(enabled: boolean) {
+  return useQuery({
+    queryKey: ['dashboard', 'stock-glance'],
+    enabled,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const [summary, expiring] = await Promise.all([
+        listStockSummary({ page: 0, pageSize: 1, search: '', warehouseId: '' }),
+        listExpiringStock(90, ''),
+      ])
+      const sellable = expiring.filter((r) => r.stock_status === 'AVAILABLE')
+      const days = (r: (typeof sellable)[number]) => daysUntil(r.expiry_date)
+      return {
+        products: summary.total ?? 0,
+        expiredUnsold: sellable.filter((r) => days(r) < 0).length,
+        within30: sellable.filter((r) => days(r) >= 0 && days(r) <= 30).length,
+        within90: sellable.filter((r) => days(r) > 30 && days(r) <= 90).length,
+      }
+    },
+  })
+}
 
 export function DashboardPage() {
   const { context, selectedBranchRecord, ability } = useSession()
   const counts = useSetupCounts()
+  const seesStock = ability.canAnywhere('inventory.view')
+  const glance = useStockGlance(seesStock)
+  const todoRows = TODO.filter((row) => ability.canAnywhere(row.perm))
+  const todo = useTodoCounts(todoRows.length > 0)
   const first = context.profile?.first_name ?? ''
 
   const setup = [
@@ -89,6 +139,42 @@ export function DashboardPage() {
       </div>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        {todoRows.length > 0 && (
+          <Card>
+            <CardHeader title="Waiting for you" actions={<ListChecks className="h-5 w-5 text-slate-400" aria-hidden />} />
+            <CardBody>
+              {todo.isError ? <p className="text-sm text-red-600">Could not load your to-do list.</p> : (
+                <ul className="divide-y divide-slate-100">
+                  {todoRows.map((row) => (
+                    <li key={row.key} className="flex items-center justify-between gap-3 py-2 text-sm">
+                      <span className="text-slate-700">{row.label}</span>
+                      <Link to={row.to}>
+                        <Badge tone={(todo.data?.[row.key] ?? 0) > 0 ? 'amber' : 'slate'}>{todo.data ? todo.data[row.key] : '…'}</Badge>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardBody>
+          </Card>
+        )}
+        {seesStock && (
+          <Card>
+            <CardHeader title="Stock and expiry" actions={<Boxes className="h-5 w-5 text-slate-400" aria-hidden />} />
+            <CardBody>
+              {glance.isError ? <p className="text-sm text-red-600">Could not load stock.</p> : !glance.data ? <p className="text-sm text-slate-500">Loading…</p> : (
+                <>
+                  <p className="text-sm text-slate-600"><Link to="/inventory/stock" className="text-2xl font-semibold text-slate-900 hover:underline">{fmtQty(glance.data.products)}</Link> products in stock</p>
+                  <ul className="mt-3 space-y-1.5 text-sm">
+                    <li className="flex items-center justify-between"><span className="text-slate-700">Expired but still sellable</span><Link to="/inventory/expiry"><Badge tone={glance.data.expiredUnsold ? 'red' : 'slate'}>{glance.data.expiredUnsold}</Badge></Link></li>
+                    <li className="flex items-center justify-between"><span className="text-slate-700">Batches expiring within 30 days</span><Link to="/inventory/expiry"><Badge tone={glance.data.within30 ? 'red' : 'slate'}>{glance.data.within30}</Badge></Link></li>
+                    <li className="flex items-center justify-between"><span className="text-slate-700">Batches expiring in 31–90 days</span><Link to="/inventory/expiry"><Badge tone={glance.data.within90 ? 'amber' : 'slate'}>{glance.data.within90}</Badge></Link></li>
+                  </ul>
+                </>
+              )}
+            </CardBody>
+          </Card>
+        )}
         {futureWidgets.map((w) => (
           <Card key={w.title}>
             <CardHeader title={w.title} actions={<Badge>Coming later</Badge>} />

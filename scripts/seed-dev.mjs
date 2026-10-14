@@ -203,10 +203,10 @@ async function seedInventory(orgId) {
   await call('post_stock_document', {
     p_document_type: 'OPENING', p_warehouse_id: wh, p_notes: 'Demo opening balances',
     p_lines: [
-      { product_id: aug, product_unit_id: augBox, quantity: 20, batch_number: 'AUG2601', expiry_date: day(25) },
-      { product_id: aug, product_unit_id: augBox, quantity: 40, batch_number: 'AUG2608', expiry_date: day(540) },
-      { product_id: pcm, quantity: 5000, batch_number: 'PN-7731', expiry_date: day(75) },
-      { product_id: pcm, quantity: 12000, batch_number: 'PN-8020', expiry_date: day(700) },
+      { product_id: aug, product_unit_id: augBox, quantity: 20, batch_number: 'AUG2601', expiry_date: day(25), unit_cost: 84 },
+      { product_id: aug, product_unit_id: augBox, quantity: 40, batch_number: 'AUG2608', expiry_date: day(540), unit_cost: 85.5 },
+      { product_id: pcm, quantity: 5000, batch_number: 'PN-7731', expiry_date: day(75), unit_cost: 0.21 },
+      { product_id: pcm, quantity: 12000, batch_number: 'PN-8020', expiry_date: day(700), unit_cost: 0.22 },
       { product_id: ern, quantity: 800, batch_number: 'ERN-0042', expiry_date: day(200) },
       { product_id: ern, quantity: 150, batch_number: 'ERN-0009', expiry_date: day(-12), status: 'EXPIRED' },
     ],
@@ -268,6 +268,58 @@ try {
   await seedPurchasing(orgA)
 } catch (e) {
   console.warn(`purchasing demo data skipped: ${e.message}`)
+}
+
+// ---- Phase 4: a supplier invoice (matched, approved) and one with a mismatch, a purchase return, a count in progress ----
+async function seedPhase4(orgId) {
+  if (await one(`/supplier_invoices?select=id&organization_id=eq.${orgId}&limit=1`)) return
+  const { anonKey } = JSON.parse(readFileSync(secretsFile, 'utf8'))
+  const login = await fetch(`${authUrl}/token?grant_type=password`, {
+    method: 'POST', headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'owner@demo.test', password }),
+  })
+  if (!login.ok) throw new Error(`owner login failed: ${login.status}`)
+  const { access_token } = await login.json()
+  const call = async (fn, body) => {
+    const res = await fetch(`${restUrl}/rpc/${fn}`, {
+      method: 'POST', headers: { apikey: anonKey, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    })
+    const text = await res.text()
+    if (!res.ok) throw new Error(`${fn} -> ${res.status} ${text}`)
+    return text ? JSON.parse(text) : null
+  }
+  const today = new Date().toISOString().slice(0, 10)
+  const emp = (await one(`/suppliers?select=id&organization_id=eq.${orgId}&code=eq.EMP`)).id
+  const wh = (await one(`/warehouses?select=id&organization_id=eq.${orgId}&order=code&limit=1`)).id
+  const po1 = (await one(`/purchase_orders?select=id&organization_id=eq.${orgId}&po_number=eq.PO-${new Date().getFullYear()}-000001`))?.id
+    ?? (await one(`/purchase_orders?select=id&organization_id=eq.${orgId}&order=created_at&limit=1`)).id
+  const lines = await rest('GET', `/purchase_order_lines?select=id,product_id&purchase_order_id=eq.${po1}&order=line_no`)
+  const inv1 = await call('record_supplier_invoice', {
+    p_id: null, p_purchase_order_id: po1, p_supplier_invoice_number: 'EMP/INV/20931', p_invoice_date: today, p_tax_amount: 0, p_notes: null,
+    p_lines: [{ po_line_id: lines[0].id, quantity: 20, unit_price: 85.5 }],
+  })
+  await call('approve_supplier_invoice', { p_id: inv1, p_variance_reason: null })
+  await call('record_supplier_invoice', {
+    p_id: null, p_purchase_order_id: po1, p_supplier_invoice_number: 'EMP/INV/20977', p_invoice_date: today, p_tax_amount: 12, p_notes: 'Billed ahead of delivery',
+    p_lines: [{ po_line_id: lines[1].id, quantity: 10, unit_price: 24 }],
+  })
+  // return one box of the short-dated Augmentin batch
+  const aug = lines[0].product_id
+  const batch = (await one(`/batches?select=id&organization_id=eq.${orgId}&product_id=eq.${aug}&batch_number=eq.AUG2601`)).id
+  const box = (await one(`/product_units?select=id&product_id=eq.${aug}&is_base=is.false`)).id
+  await call('post_purchase_return', {
+    p_supplier_id: emp, p_warehouse_id: wh, p_reason: 'DAMAGED', p_notes: 'Crushed outer cartons', p_purchase_order_id: po1,
+    p_lines: [{ product_id: aug, product_unit_id: box, quantity: 1, batch_id: batch }],
+  })
+  // a count in progress for the whole warehouse, a few lines entered
+  const count = await call('start_stock_count', { p_warehouse_id: wh, p_notes: 'Monthly cycle count' })
+  const cl = await rest('GET', `/stock_count_lines?select=id,system_quantity&stock_count_id=eq.${count}&order=line_no&limit=3`)
+  await call('save_count_entries', { p_id: count, p_entries: cl.map((l, i) => ({ line_id: l.id, counted_quantity: i === 1 ? Number(l.system_quantity) - 2 : Number(l.system_quantity) })) })
+}
+try {
+  await seedPhase4(orgA)
+} catch (e) {
+  console.warn(`phase 4 demo data skipped: ${e.message}`)
 }
 
 // ---- Organization B: proves tenant isolation in the browser -----------------------------------

@@ -24,11 +24,13 @@ export interface LineDraft {
   status: StockStatus
   toStatus: StockStatus
   toLocationId: string
+  /** cost per pack for a NEW batch (opening stock, adjustment IN); optional */
+  cost: string
 }
 
 export const emptyLine = (key: string): LineDraft => ({
   key, product: null, tracks: true, unitId: '', factor: 1, quantity: '', direction: 'IN', balance: null,
-  batchNumber: '', expiry: '', mfg: '', locationId: '', status: 'AVAILABLE', toStatus: 'QUARANTINE', toLocationId: '',
+  batchNumber: '', expiry: '', mfg: '', locationId: '', status: 'AVAILABLE', toStatus: 'QUARANTINE', toLocationId: '', cost: '',
 })
 
 /** Does this line take stock out of an existing balance? */
@@ -84,6 +86,11 @@ export function buildPostLines(type: DocumentType, drafts: LineDraft[]): BuildRe
         line.batch_number = l.batchNumber.trim()
         line.expiry_date = l.expiry
         if (l.mfg) line.manufacture_date = l.mfg
+      }
+      if (l.cost.trim() !== '') {
+        const cost = Number(l.cost)
+        if (!Number.isFinite(cost) || cost < 0) return fail('the cost must be 0 or more.')
+        line.unit_cost = cost
       }
       if (l.locationId) line.location_id = l.locationId
       line.status = l.status

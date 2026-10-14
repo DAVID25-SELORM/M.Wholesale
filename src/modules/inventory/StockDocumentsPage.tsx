@@ -23,7 +23,7 @@ export function StockDocumentsPage() {
 
   const columns: Column<StockDocumentRow>[] = [
     { key: 'no', header: 'Document', render: (d) => <button type="button" className="font-mono text-xs font-semibold text-brand-700 hover:underline" onClick={() => setOpen(d)}>{d.document_number}</button> },
-    { key: 'type', header: 'Type', render: (d) => <Badge tone={d.document_type === 'OPENING' ? 'blue' : d.document_type === 'RECEIPT' ? 'green' : d.document_type === 'TRANSFER' ? 'purple' : 'slate'}>{DOCUMENT_TYPE_LABEL[d.document_type]}</Badge> },
+    { key: 'type', header: 'Type', render: (d) => <Badge tone={d.document_type === 'OPENING' ? 'blue' : d.document_type === 'RECEIPT' ? 'green' : d.document_type === 'RETURN' ? 'amber' : d.document_type === 'TRANSFER' ? 'purple' : 'slate'}>{DOCUMENT_TYPE_LABEL[d.document_type]}</Badge> },
     { key: 'wh', header: 'Warehouse', render: (d) => (d.to_warehouse ? `${d.warehouse?.name ?? '?'} → ${d.to_warehouse.name}` : (d.warehouse?.name ?? '—')) },
     { key: 'reason', header: 'Reason', hideOnMobile: true, render: (d) => (d.reason_code ? (REASON_LABEL[d.reason_code] ?? d.reason_code) : '—') },
     { key: 'lines', header: 'Lines', hideOnMobile: true, className: 'text-right', render: (d) => <span className="tabular-nums">{d.line_count}</span> },
