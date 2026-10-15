@@ -29,5 +29,5 @@ export default defineConfig({
       '/rest/v1': { target: restTarget, changeOrigin: true, rewrite: (p) => p.replace(/^\/rest\/v1/, '') },
     },
   },
-  build: { sourcemap: true },
+  build: { sourcemap: 'hidden' },
 })

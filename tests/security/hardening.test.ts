@@ -89,7 +89,7 @@ describe('catalog hardening', () => {
     expect(authed).toEqual([
       'private.actor_covers_role', 'private.can_access_branch', 'private.can_access_warehouse',
       'private.current_organization_id', 'private.current_profile_id', 'private.has_permission',
-      'private.has_permission_anywhere', 'private.normalize_text', 'private.warehouse_branch_id', 'public.approve_purchase_order',
+      'private.has_permission_anywhere', 'private.normalize_text', 'private.permitted_branches', 'private.warehouse_branch_id', 'public.approve_purchase_order',
       'public.assign_user_role', 'public.cancel_purchase_order', 'public.close_purchase_order', 'public.expiring_stock',
       'public.get_session_context', 'public.post_stock_document', 'public.prepare_invitation', 'public.prepare_resend',
       'public.receive_goods', 'public.reject_purchase_order', 'public.revoke_user_role', 'public.save_purchase_order',

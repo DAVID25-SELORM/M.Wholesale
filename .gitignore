@@ -9,3 +9,5 @@ coverage
 supabase/.temp
 supabase/.branches
 .stack
+dist-preview
+tsconfig.tsbuildinfo
