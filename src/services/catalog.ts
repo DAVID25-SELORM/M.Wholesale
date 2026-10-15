@@ -202,6 +202,8 @@ export interface ProductInput {
   fda_registration_number?: string | undefined
   fda_registration_expiry?: string | undefined
   base_unit_id: string
+  /** null = the organisation's default tax code */
+  tax_code_id: string | null
   track_batches: boolean
   is_active: boolean
 }
@@ -217,7 +219,7 @@ const productUpdateRow = (i: ProductInput) => ({
   manufacturer_id: i.manufacturer_id, category_id: i.category_id, storage_condition: i.storage_condition,
   ...classFlags(i.product_class, i.requires_prescription),
   fda_registration_number: emptyToNull(i.fda_registration_number), fda_registration_expiry: emptyToNull(i.fda_registration_expiry),
-  track_batches: i.track_batches, is_active: i.is_active,
+  tax_code_id: i.tax_code_id, track_batches: i.track_batches, is_active: i.is_active,
 })
 export async function createProduct(i: ProductInput): Promise<string> {
   return (unwrap(

@@ -9,3 +9,11 @@
   #root { @apply min-h-screen; }
   input[type='number'] { -moz-appearance: textfield; }
 }
+
+/* Printing a document (an invoice): hide everything except the element marked #print-area. */
+@media print {
+  body * { visibility: hidden; }
+  #print-area, #print-area * { visibility: visible; }
+  #print-area { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: 0; }
+  .print-hidden { display: none !important; }
+}

@@ -18,6 +18,13 @@ import { StockCountsPage } from '@/modules/inventory/StockCountsPage'
 import { TransfersPage } from '@/modules/inventory/TransfersPage'
 import { ValuationPage } from '@/modules/inventory/ValuationPage'
 import { OrganizationPage } from '@/modules/organization/OrganizationPage'
+import { CustomerPage } from '@/modules/sales/CustomerPage'
+import { CustomersPage } from '@/modules/sales/CustomersPage'
+import { PricingPage } from '@/modules/sales/PricingPage'
+import { ReceiptsPage } from '@/modules/sales/ReceiptsPage'
+import { ReceivablesPage } from '@/modules/sales/ReceivablesPage'
+import { SalesInvoicePage } from '@/modules/sales/SalesInvoicePage'
+import { SalesInvoicesPage } from '@/modules/sales/SalesInvoicesPage'
 import { PayablesPage } from '@/modules/purchasing/PayablesPage'
 import { PurchaseReturnsPage } from '@/modules/purchasing/PurchaseReturnsPage'
 import { SupplierInvoicesPage } from '@/modules/purchasing/SupplierInvoicesPage'
@@ -79,6 +86,29 @@ export const routes = [
               { path: 'purchasing/payables', element: <PayablesPage /> },
             ],
           },
+          {
+            element: <RequirePermission anyOf={['sales.view']} />,
+            children: [
+              { path: 'sales/invoices', element: <SalesInvoicesPage /> },
+              { path: 'sales/invoices/new', element: <SalesInvoicePage /> },
+              { path: 'sales/invoices/:id', element: <SalesInvoicePage /> },
+            ],
+          },
+          {
+            element: <RequirePermission anyOf={['customers.view']} />,
+            children: [
+              { path: 'sales/customers', element: <CustomersPage /> },
+              { path: 'sales/customers/:id', element: <CustomerPage /> },
+            ],
+          },
+          {
+            element: <RequirePermission anyOf={['receipts.view']} />,
+            children: [
+              { path: 'sales/receipts', element: <ReceiptsPage /> },
+              { path: 'sales/receivables', element: <ReceivablesPage /> },
+            ],
+          },
+          { element: <RequirePermission anyOf={['pricing.view']} />, children: [{ path: 'sales/pricing', element: <PricingPage /> }] },
           { element: <RequirePermission anyOf={['products.create', 'suppliers.create', 'inventory.opening_stock']} />, children: [{ path: 'admin/import', element: <ImportPage /> }] },
           { element: <RequirePermission anyOf={['inventory.valuation']} />, children: [{ path: 'inventory/valuation', element: <ValuationPage /> }] },
           {

@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { Boxes, CircleDollarSign, ListChecks, PackageSearch } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader } from '@/components/ui'
+import { Badge, Card, CardBody, CardHeader, PageHeader } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import { useSession } from '@/modules/session/SessionProvider'
 import { daysUntil, fmtQty, listExpiringStock, listStockSummary } from '@/services/inventory'
+import { getReceivables, moneyFmt } from '@/services/sales'
 
 async function headCount(table: 'branches' | 'warehouses' | 'warehouse_locations'): Promise<number> {
   const { count, error } = await supabase.from(table).select('id', { count: 'exact', head: true })
@@ -25,17 +26,13 @@ function useSetupCounts() {
   })
 }
 
-const futureWidgets = [
-  { title: 'Sales', icon: CircleDollarSign, message: 'No sales data available yet.', hint: 'Sales will be enabled in a later phase.' },
-  { title: 'Receivables', icon: PackageSearch, message: 'No receivables yet.', hint: 'Credit and payments will be enabled in a later phase.' },
-]
-
 /** Work waiting for this person; each row only appears if they hold the permission to act on it. */
 const TODO = [
   { key: 'po', label: 'purchase orders awaiting approval', table: 'purchase_orders', column: 'status', values: ['SUBMITTED'], perm: 'purchasing.approve', to: '/purchasing/orders' },
   { key: 'inv', label: 'supplier invoices to approve', table: 'supplier_invoices', column: 'status', values: ['MATCHED', 'EXCEPTION'], perm: 'payables.approve', to: '/purchasing/invoices' },
   { key: 'cnt', label: 'stock counts to approve', table: 'stock_counts', column: 'status', values: ['SUBMITTED'], perm: 'inventory.count_approve', to: '/inventory/counts' },
   { key: 'trf', label: 'transfers on the way', table: 'stock_transfers', column: 'status', values: ['IN_TRANSIT', 'PARTIALLY_RECEIVED'], perm: 'inventory.transfer', to: '/inventory/transfers' },
+  { key: 'drf', label: 'sales invoices still in draft', table: 'sales_invoices', column: 'status', values: ['DRAFT'], perm: 'sales.create', to: '/sales/invoices' },
   { key: 'ret', label: 'returns waiting for a credit note', table: 'purchase_returns', column: 'credit_status', values: ['PENDING'], perm: 'payables.create', to: '/purchasing/returns' },
 ] as const
 
@@ -52,6 +49,36 @@ function useTodoCounts(enabled: boolean) {
         out[row.key] = count ?? 0
       }))
       return out
+    },
+  })
+}
+
+function useSalesGlance(enabled: boolean) {
+  return useQuery({
+    queryKey: ['dashboard', 'sales-glance'],
+    enabled,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10)
+      const { data, error } = await supabase.from('sales_invoices').select('total_amount').eq('status', 'POSTED').eq('invoice_date', today).limit(5000)
+      if (error) throw error
+      return { count: data.length, total: data.reduce((s, r) => s + Number(r.total_amount), 0) }
+    },
+  })
+}
+
+function useReceivablesGlance(enabled: boolean) {
+  return useQuery({
+    queryKey: ['dashboard', 'receivables-glance'],
+    enabled,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const rows = await getReceivables()
+      return {
+        owed: rows.reduce((s, r) => s + r.outstanding, 0),
+        overdue: rows.reduce((s, r) => s + r.overdue_1_30 + r.overdue_31_60 + r.overdue_61_90 + r.overdue_over_90, 0),
+        debtors: rows.filter((r) => r.outstanding > 0).length,
+      }
     },
   })
 }
@@ -83,6 +110,10 @@ export function DashboardPage() {
   const counts = useSetupCounts()
   const seesStock = ability.canAnywhere('inventory.view')
   const glance = useStockGlance(seesStock)
+  const seesSales = ability.canAnywhere('sales.view')
+  const seesDebt = ability.canAnywhere('receipts.view')
+  const sales = useSalesGlance(seesSales)
+  const debt = useReceivablesGlance(seesDebt)
   const todoRows = TODO.filter((row) => ability.canAnywhere(row.perm))
   const todo = useTodoCounts(todoRows.length > 0)
   const first = context.profile?.first_name ?? ''
@@ -176,12 +207,29 @@ export function DashboardPage() {
             </CardBody>
           </Card>
         )}
-        {futureWidgets.map((w) => (
-          <Card key={w.title}>
-            <CardHeader title={w.title} actions={<Badge>Coming later</Badge>} />
-            <EmptyState icon={<w.icon className="h-9 w-9" />} title={w.message} description={w.hint} />
+        {seesSales && (
+          <Card>
+            <CardHeader title="Sales today" actions={<CircleDollarSign className="h-5 w-5 text-slate-400" aria-hidden />} />
+            <CardBody>
+              {sales.isError ? <p className="text-sm text-red-600">Could not load sales.</p> : !sales.data ? <p className="text-sm text-slate-500">Loading…</p> : (
+                <p className="text-sm text-slate-600"><Link to="/sales/invoices" className="text-2xl font-semibold tabular-nums text-slate-900 hover:underline">{moneyFmt(sales.data.total)}</Link> from {sales.data.count} posted invoice{sales.data.count === 1 ? '' : 's'}</p>
+              )}
+            </CardBody>
           </Card>
-        ))}
+        )}
+        {seesDebt && (
+          <Card>
+            <CardHeader title="Receivables" actions={<PackageSearch className="h-5 w-5 text-slate-400" aria-hidden />} />
+            <CardBody>
+              {debt.isError ? <p className="text-sm text-red-600">Could not load receivables.</p> : !debt.data ? <p className="text-sm text-slate-500">Loading…</p> : (
+                <>
+                  <p className="text-sm text-slate-600"><Link to="/sales/receivables" className="text-2xl font-semibold tabular-nums text-slate-900 hover:underline">{moneyFmt(debt.data.owed)}</Link> owed by {debt.data.debtors} customer{debt.data.debtors === 1 ? '' : 's'}</p>
+                  <p className="mt-2 text-sm text-slate-600">Overdue <Badge tone={debt.data.overdue > 0 ? 'red' : 'slate'}>{moneyFmt(debt.data.overdue)}</Badge></p>
+                </>
+              )}
+            </CardBody>
+          </Card>
+        )}
       </div>
     </>
   )

@@ -103,6 +103,9 @@ describe('catalog hardening', () => {
       // Phase 5
       'public.dispatch_transfer', 'public.receive_transfer', 'public.close_transfer', 'public.cancel_transfer',
       'public.import_products', 'public.import_suppliers',
+      // Phase 6
+      'public.resolve_price', 'public.save_sales_invoice', 'public.cancel_sales_invoice', 'public.post_sales_invoice', 'public.record_receipt',
+      'public.allocate_receipt', 'public.void_receipt', 'public.customer_credit', 'public.receivables_summary', 'public.customer_statement',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))

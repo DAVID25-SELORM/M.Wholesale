@@ -11,11 +11,11 @@ export const STOCK_STATUS_LABEL: Record<StockStatus, string> = {
 export const DOCUMENT_TYPES = ['OPENING', 'ADJUSTMENT', 'TRANSFER', 'STATUS_CHANGE'] as const
 export type DocumentType = (typeof DOCUMENT_TYPES)[number]
 /** Everything that can appear in the ledger. RECEIPT is posted by purchasing (goods received), never by hand. */
-export type StockDocumentType = DocumentType | 'RECEIPT' | 'RETURN' | 'TRANSFER_DISPATCH' | 'TRANSFER_RECEIPT'
-export const ALL_DOCUMENT_TYPES: readonly StockDocumentType[] = [...DOCUMENT_TYPES, 'RECEIPT', 'RETURN', 'TRANSFER_DISPATCH', 'TRANSFER_RECEIPT']
+export type StockDocumentType = DocumentType | 'RECEIPT' | 'RETURN' | 'TRANSFER_DISPATCH' | 'TRANSFER_RECEIPT' | 'SALE'
+export const ALL_DOCUMENT_TYPES: readonly StockDocumentType[] = [...DOCUMENT_TYPES, 'RECEIPT', 'RETURN', 'TRANSFER_DISPATCH', 'TRANSFER_RECEIPT', 'SALE']
 export const DOCUMENT_TYPE_LABEL: Record<StockDocumentType, string> = {
   OPENING: 'Opening stock', ADJUSTMENT: 'Adjustment', TRANSFER: 'Transfer', STATUS_CHANGE: 'Status change', RECEIPT: 'Goods received', RETURN: 'Return to supplier',
-  TRANSFER_DISPATCH: 'Transfer sent', TRANSFER_RECEIPT: 'Transfer received',
+  TRANSFER_DISPATCH: 'Transfer sent', TRANSFER_RECEIPT: 'Transfer received', SALE: 'Sale',
 }
 /** Permission needed to post each kind of document (the database enforces the same mapping). */
 export const DOCUMENT_PERMISSION: Record<DocumentType, string> = {

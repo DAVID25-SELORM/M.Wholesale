@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { z } from 'zod'
 import { Button, Checkbox, DateInput, Field, InlineError, Input, Modal, Select, Textarea, useToast } from '@/components/ui'
+import { listTaxCodes } from '@/services/pricing'
 import { toAppError } from '@/lib/errors'
 import { optionalText, requiredText, validate } from '@/lib/validation'
 import {
@@ -25,6 +26,7 @@ const schema = z
     fda_registration_number: optionalText(60),
     fda_registration_expiry: z.string().optional(),
     base_unit_id: z.string().uuid('Choose the base unit'),
+    tax_code_id: z.string().uuid().or(z.literal('')).transform((v) => v || null),
     track_batches: z.boolean(),
     is_active: z.boolean(),
   })
@@ -35,19 +37,19 @@ const schema = z
 interface Values {
   sku: string; brand_name: string; identity_id: string; description: string; manufacturer_id: string; category_id: string
   product_class: ProductClass; storage_condition: (typeof STORAGE_CONDITIONS)[number]; requires_prescription: boolean
-  fda_registration_number: string; fda_registration_expiry: string; base_unit_id: string; track_batches: boolean; is_active: boolean
+  fda_registration_number: string; fda_registration_expiry: string; base_unit_id: string; tax_code_id: string; track_batches: boolean; is_active: boolean
 }
 
 const blank: Values = {
   sku: '', brand_name: '', identity_id: '', description: '', manufacturer_id: '', category_id: '', product_class: 'POM', storage_condition: 'AMBIENT',
-  requires_prescription: true, fda_registration_number: '', fda_registration_expiry: '', base_unit_id: '', track_batches: true, is_active: true,
+  requires_prescription: true, fda_registration_number: '', fda_registration_expiry: '', base_unit_id: '', tax_code_id: '', track_batches: true, is_active: true,
 }
 
 const fromProduct = (p: ProductDetail): Values => ({
   sku: p.sku, brand_name: p.brand_name, identity_id: p.identity_id ?? '', description: p.description ?? '', manufacturer_id: p.manufacturer_id ?? '',
   category_id: p.category_id ?? '', product_class: p.product_class as ProductClass, storage_condition: p.storage_condition as Values['storage_condition'],
   requires_prescription: p.requires_prescription, fda_registration_number: p.fda_registration_number ?? '', fda_registration_expiry: p.fda_registration_expiry ?? '',
-  base_unit_id: p.base_unit_id, track_batches: p.track_batches, is_active: p.is_active,
+  base_unit_id: p.base_unit_id, tax_code_id: p.tax_code_id ?? '', track_batches: p.track_batches, is_active: p.is_active,
 })
 
 export function ProductForm({ open, product, canEdit, canCreateIdentity, onClose, onSaved }: {
@@ -64,6 +66,7 @@ function Inner({ product, canEdit, canCreateIdentity, onClose, onSaved }: {
   const units = useQuery({ queryKey: ['units'], queryFn: listUnitsOfMeasure, staleTime: Infinity })
   const manufacturers = useQuery({ queryKey: ['manufacturers', 'options'], queryFn: listManufacturerOptions, staleTime: 60_000 })
   const categories = useQuery({ queryKey: ['categories', 'options'], queryFn: listCategoryOptions, staleTime: 60_000 })
+  const taxCodes = useQuery({ queryKey: ['tax-codes'], queryFn: listTaxCodes, staleTime: 60_000 })
   const [values, setValues] = useState<Values>(product ? fromProduct(product) : blank)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string | null>(null)
@@ -151,6 +154,12 @@ function Inner({ product, canEdit, canCreateIdentity, onClose, onSaved }: {
         <Field label="Storage" error={errors.storage_condition}>
           <Select value={values.storage_condition} onChange={set('storage_condition')} disabled={!canEdit}>
             {STORAGE_CONDITIONS.map((s) => <option key={s} value={s}>{STORAGE_LABEL[s]}</option>)}
+          </Select>
+        </Field>
+        <Field label="Tax" hint="Applied on sales invoices. Leave on the default unless this product is taxed differently.">
+          <Select value={values.tax_code_id} onChange={set('tax_code_id')} disabled={!canEdit}>
+            <option value="">Default{(taxCodes.data ?? []).find((t) => t.is_default) ? ` (${(taxCodes.data ?? []).find((t) => t.is_default)?.name})` : ''}</option>
+            {(taxCodes.data ?? []).filter((t) => t.is_active || t.id === values.tax_code_id).map((t) => <option key={t.id} value={t.id}>{t.name} ({Number(t.rate)}%)</option>)}
           </Select>
         </Field>
         <div className="grid grid-cols-2 gap-3">
