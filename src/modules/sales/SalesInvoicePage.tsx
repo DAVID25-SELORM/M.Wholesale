@@ -5,6 +5,7 @@ import { Button, Card, CardBody, CardHeader, EmptyState, ErrorState, LoadingStat
 import { toAppError } from '@/lib/errors'
 import { formatDateTime } from '@/lib/utils'
 import { useSession } from '@/modules/session/SessionProvider'
+import { CREDIT_REASON_LABEL, listCreditNotes, type CreditReason } from '@/services/creditNotes'
 import { getCustomer, listCustomerOptions } from '@/services/customers'
 import { fmtQty } from '@/services/inventory'
 import { getOrganization } from '@/services/organization'
@@ -57,6 +58,11 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
   const allocations = useQuery({ queryKey: ['sales-allocations', invoiceId], queryFn: () => listSalesAllocations(invoiceId) })
   const payments = useQuery({ queryKey: ['invoice-payments', invoiceId], queryFn: () => listInvoicePayments(invoiceId), enabled: ability.canAnywhere('receipts.view') })
   const org = useQuery({ queryKey: ['organization'], queryFn: getOrganization, staleTime: 5 * 60_000 })
+  const credits = useQuery({
+    queryKey: ['credit-notes', { invoiceId }],
+    queryFn: () => listCreditNotes({ page: 0, pageSize: 50, search: '', status: '', customerId: '', invoiceId, unusedOnly: false }),
+    enabled: ability.canAnywhere('credit_notes.view'),
+  })
   const inv = invoice.data
   const customer = useQuery({ queryKey: ['customer', inv?.customer_id], queryFn: () => getCustomer(inv!.customer_id), enabled: Boolean(inv) })
   if (!inv || !lines.data) return <LoadingState />
@@ -75,6 +81,7 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
           actions={
             <div className="flex flex-wrap items-center gap-2">
               <SalesStatusBadge status={inv.status} />
+              {inv.status === 'POSTED' && ability.can('credit_notes.create', inv.branch_id) && <Link to={`/sales/credit-notes/new?invoice=${inv.id}`}><Button variant="secondary">Credit note</Button></Link>}
               <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" aria-hidden /> Print</Button>
             </div>
           }
@@ -144,11 +151,30 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
             <div className="flex justify-between"><dt className="text-slate-500">Tax</dt><dd className="tabular-nums">{moneyFmt(inv.tax_total)}</dd></div>
             <div className="flex justify-between border-t border-slate-200 pt-1 text-base font-semibold"><dt>Total ({inv.currency_code})</dt><dd className="tabular-nums">{moneyFmt(inv.total_amount)}</dd></div>
             <div className="flex justify-between"><dt className="text-slate-500">Paid</dt><dd className="tabular-nums">{moneyFmt(inv.amount_paid)}</dd></div>
+            {Number(inv.amount_credited) > 0 && <div className="flex justify-between"><dt className="text-slate-500">Credited</dt><dd className="tabular-nums">{moneyFmt(inv.amount_credited)}</dd></div>}
             <div className="flex justify-between font-semibold"><dt>Balance due</dt><dd className={`tabular-nums ${owed > 0 && inv.due_date && inv.due_date < today ? 'text-red-700' : ''}`}>{moneyFmt(owed)}</dd></div>
           </dl>
           {inv.notes && <p className="text-sm text-slate-600">{inv.notes}</p>}
         </div>
       </div>
+
+      {(credits.data?.rows ?? []).filter((n) => n.status !== 'CANCELLED').length > 0 && (
+        <div className="print-hidden mt-5">
+          <Card>
+            <CardHeader title="Credit notes" />
+            <CardBody>
+              <ul className="divide-y divide-slate-100 rounded-md border border-slate-200 text-sm">
+                {(credits.data?.rows ?? []).filter((n) => n.status !== 'CANCELLED').map((n) => (
+                  <li key={n.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                    <span><Link to={`/sales/credit-notes/${n.id}`} className="font-mono text-xs font-semibold text-brand-700 hover:underline">{n.credit_note_number ?? 'Draft'}</Link> <span className="text-slate-500">{CREDIT_REASON_LABEL[n.reason_code as CreditReason] ?? n.reason_code}{n.status === 'DRAFT' ? ' · draft' : ''}</span></span>
+                    <span className="tabular-nums">{moneyFmt(n.total_amount)}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardBody>
+          </Card>
+        </div>
+      )}
 
       {(payments.data ?? []).length > 0 && (
         <div className="print-hidden mt-5">

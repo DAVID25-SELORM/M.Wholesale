@@ -22,7 +22,7 @@ Migrations: `20261015000100_sales_permissions`, `â€¦0200_customers_pricing`, `â€
 4. numbers the invoice (`INV-yyyy-nnnnnn`, gap-free because the number is assigned only at posting), stores the batches picked with their cost, and sets the due date from the customer's terms;
 5. optionally records a payment taken at the counter.
 
-A posted invoice is **locked**: only the amount paid can move (through receipts). There is no delete. (Credit notes and returns are the next phase.)
+A posted invoice is **locked**: only the amount paid can move (through receipts). There is no delete. (Credit notes and returns: see Phase 7.)
 
 ## Receipts
 
@@ -40,4 +40,4 @@ Transactional tables have **select-only** policies; every write goes through a d
 
 ## Not in this phase
 
-Credit notes / sales returns, invoice reversal, payment reminders, PDF export, point-of-sale, quotations and orders with stock reservation.
+Invoice reversal, payment reminders, PDF export, point-of-sale, quotations and orders with stock reservation.

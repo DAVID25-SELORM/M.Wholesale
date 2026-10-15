@@ -1,7 +1,7 @@
 # Pharmacy Wholesale ERP
 
 Multi-tenant ERP for pharmaceutical wholesalers (Ghana first, built to be international).
-**Status: Phase 0 (secure foundation), Phase 1 (product master, pharmaceutical identity, units, suppliers), Phase 2 (inventory core: batches, stock ledger, expiry) and Phase 3 (purchase orders with approval, goods received), Phase 4 (costing and valuation, purchase returns, stock counts, supplier invoices with 3-way match, payables) Phase 5 (in-transit transfers, bulk import from Excel/CSV) and Phase 6 (customers, price lists, tax, sales invoices with FEFO picking, receipts, receivables) built.**
+**Status: Phase 0 (secure foundation), Phase 1 (product master, pharmaceutical identity, units, suppliers), Phase 2 (inventory core: batches, stock ledger, expiry) and Phase 3 (purchase orders with approval, goods received), Phase 4 (costing and valuation, purchase returns, stock counts, supplier invoices with 3-way match, payables), Phase 5 (in-transit transfers, bulk import from Excel/CSV), Phase 6 (customers, price lists, tax, sales invoices with FEFO picking, receipts, receivables) and Phase 7 (credit notes: sales returns and price corrections) built.**
 Sales, finance and delivery arrive in later phases.
 
 * Stack: React + TypeScript + Vite + Tailwind · Supabase (PostgreSQL 17, Auth, RLS) — see
@@ -21,6 +21,7 @@ Sales, finance and delivery arrive in later phases.
 | [docs/phase4/STOCK_AND_PAYABLES.md](docs/phase4/STOCK_AND_PAYABLES.md) | Phase 4: batch costs and valuation, purchase returns, stock counts, supplier invoices, payables |
 | [docs/phase5/TRANSFERS_AND_IMPORT.md](docs/phase5/TRANSFERS_AND_IMPORT.md) | Phase 5: two-step transfers between warehouses, importing products, suppliers and opening stock |
 | [docs/phase6/SALES.md](docs/phase6/SALES.md) | Phase 6: customers and credit, price lists and tax, sales invoices (FEFO, regulatory rules), receipts, receivables |
+| [docs/phase7/CREDIT_NOTES.md](docs/phase7/CREDIT_NOTES.md) | Phase 7: credit notes - returned goods back into the sold batches, price corrections, customer credit |
 | [docs/README.md](docs/README.md) | original planning pack (architecture/roadmap/requirements) |
 
 Quick start: `npm install && npm run stack:up && DEV_SEED_PASSWORD='…' npm run seed:dev && npm run dev`.

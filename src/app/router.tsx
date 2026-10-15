@@ -18,6 +18,8 @@ import { StockCountsPage } from '@/modules/inventory/StockCountsPage'
 import { TransfersPage } from '@/modules/inventory/TransfersPage'
 import { ValuationPage } from '@/modules/inventory/ValuationPage'
 import { OrganizationPage } from '@/modules/organization/OrganizationPage'
+import { CreditNotePage } from '@/modules/sales/CreditNotePage'
+import { CreditNotesPage } from '@/modules/sales/CreditNotesPage'
 import { CustomerPage } from '@/modules/sales/CustomerPage'
 import { CustomersPage } from '@/modules/sales/CustomersPage'
 import { PricingPage } from '@/modules/sales/PricingPage'
@@ -92,6 +94,14 @@ export const routes = [
               { path: 'sales/invoices', element: <SalesInvoicesPage /> },
               { path: 'sales/invoices/new', element: <SalesInvoicePage /> },
               { path: 'sales/invoices/:id', element: <SalesInvoicePage /> },
+            ],
+          },
+          {
+            element: <RequirePermission anyOf={['credit_notes.view']} />,
+            children: [
+              { path: 'sales/credit-notes', element: <CreditNotesPage /> },
+              { path: 'sales/credit-notes/new', element: <CreditNotePage /> },
+              { path: 'sales/credit-notes/:id', element: <CreditNotePage /> },
             ],
           },
           {

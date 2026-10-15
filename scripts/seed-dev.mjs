@@ -407,6 +407,43 @@ try {
   console.warn(`sales demo data skipped: ${e.message}`)
 }
 
+// ---- Phase 7: one posted credit note (a damaged box taken back) and one draft -------------------------------------------------
+async function seedCredit(orgId) {
+  if (await one(`/sales_credit_notes?select=id&organization_id=eq.${orgId}&limit=1`)) return
+  const inv = await one(`/sales_invoices?select=id&organization_id=eq.${orgId}&status=eq.POSTED&order=created_at&limit=1`)
+  if (!inv) return
+  const { anonKey } = JSON.parse(readFileSync(secretsFile, 'utf8'))
+  const login = await fetch(`${authUrl}/token?grant_type=password`, {
+    method: 'POST', headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'owner@demo.test', password }),
+  })
+  if (!login.ok) throw new Error(`owner login failed: ${login.status}`)
+  const { access_token } = await login.json()
+  const call = async (fn, body) => {
+    const res = await fetch(`${restUrl}/rpc/${fn}`, {
+      method: 'POST', headers: { apikey: anonKey, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    })
+    const text = await res.text()
+    if (!res.ok) throw new Error(`${fn} -> ${res.status} ${text}`)
+    return text ? JSON.parse(text) : null
+  }
+  const lines = await rest('GET', `/sales_invoice_lines?select=id,product_id,line_no&sales_invoice_id=eq.${inv.id}&order=line_no`)
+  const note = await call('save_credit_note', {
+    p_id: null, p_invoice_id: inv.id, p_warehouse_id: null, p_reason_code: 'DAMAGED', p_notes: 'One box arrived crushed',
+    p_lines: [{ type: 'RETURN', invoice_line_id: lines[0].id, quantity: 1, condition: 'DAMAGED' }],
+  })
+  await call('post_credit_note', { p_id: note })
+  await call('save_credit_note', {
+    p_id: null, p_invoice_id: inv.id, p_warehouse_id: null, p_reason_code: 'PRICE_ERROR', p_notes: null,
+    p_lines: [{ type: 'PRICE', invoice_line_id: lines[1].id, amount: 10, description: 'Agreed rebate on Panadol' }],
+  })
+}
+try {
+  await seedCredit(orgA)
+} catch (e) {
+  console.warn(`credit note demo data skipped: ${e.message}`)
+}
+
 // ---- Organization B: proves tenant isolation in the browser -----------------------------------
 const orgB = await ensureOrg('Other Pharma Ltd', { email: 'owner@other.test', first: 'Nana', last: 'Other' })
 const hqB = (await rest('GET', `/branches?select=id&organization_id=eq.${orgB}&is_head_office=is.true`))[0].id

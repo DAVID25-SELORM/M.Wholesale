@@ -97,6 +97,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"credit_note_allocations": {
+                  Row: {
+                    "amount": number,"branch_id": string,"created_at": string,"credit_note_id": string,"id": string,"organization_id": string,"sales_invoice_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"branch_id": string,"created_at"?: string,"credit_note_id": string,"id"?: string,"organization_id": string,"sales_invoice_id": string
+                  }
+                  Update: {
+                    "amount"?: number,"branch_id"?: string,"created_at"?: string,"credit_note_id"?: string,"id"?: string,"organization_id"?: string,"sales_invoice_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "credit_note_allocations_credit_note_fk"
+      columns: ["credit_note_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_credit_notes"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "credit_note_allocations_invoice_fk"
+      columns: ["sales_invoice_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_invoices"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "credit_note_allocations_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"customer_receipts": {
                   Row: {
                     "allocated_amount": number,"amount": number,"branch_id": string,"created_at": string,"customer_id": string,"id": string,"method": string,"notes": string | null,"organization_id": string,"receipt_date": string,"receipt_number": string,"received_by": string | null,"reference": string | null,"status": string,"unallocated_amount": number | null,"void_reason": string | null,"voided_at": string | null,"voided_by": string | null
@@ -855,6 +887,156 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"sales_credit_note_lines": {
+                  Row: {
+                    "base_quantity": number | null,"batch_id": string | null,"branch_id": string,"credit_note_id": string,"description": string | null,"id": string,"invoice_line_id": string,"line_net": number,"line_no": number,"line_tax": number,"line_total": number,"line_type": string,"organization_id": string,"product_id": string,"product_unit_id": string,"quantity": number | null,"return_condition": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "base_quantity"?: number | null,"batch_id"?: string | null,"branch_id": string,"credit_note_id": string,"description"?: string | null,"id"?: string,"invoice_line_id": string,"line_net": number,"line_no": number,"line_tax": number,"line_total": number,"line_type": string,"organization_id"?: string,"product_id": string,"product_unit_id": string,"quantity"?: number | null,"return_condition"?: string | null
+                  }
+                  Update: {
+                    "base_quantity"?: number | null,"batch_id"?: string | null,"branch_id"?: string,"credit_note_id"?: string,"description"?: string | null,"id"?: string,"invoice_line_id"?: string,"line_net"?: number,"line_no"?: number,"line_tax"?: number,"line_total"?: number,"line_type"?: string,"organization_id"?: string,"product_id"?: string,"product_unit_id"?: string,"quantity"?: number | null,"return_condition"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sales_credit_note_lines_batch_fk"
+      columns: ["batch_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "batches"
+      referencedColumns: ["id","product_id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_note_lines_credit_note_fk"
+      columns: ["credit_note_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_credit_notes"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_note_lines_invoice_line_fk"
+      columns: ["invoice_line_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_invoice_lines"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_note_lines_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_credit_note_lines_product_fk"
+      columns: ["product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_note_lines_unit_fk"
+      columns: ["product_unit_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "product_units"
+      referencedColumns: ["id","product_id","organization_id"]
+    }
+                  ]
+                },"sales_credit_note_returns": {
+                  Row: {
+                    "base_quantity": number,"batch_id": string | null,"branch_id": string,"credit_note_id": string,"credit_note_line_id": string,"id": string,"invoice_allocation_id": string,"location_id": string | null,"organization_id": string,"product_id": string,"return_condition": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "base_quantity": number,"batch_id"?: string | null,"branch_id": string,"credit_note_id": string,"credit_note_line_id": string,"id"?: string,"invoice_allocation_id": string,"location_id"?: string | null,"organization_id": string,"product_id": string,"return_condition": string
+                  }
+                  Update: {
+                    "base_quantity"?: number,"batch_id"?: string | null,"branch_id"?: string,"credit_note_id"?: string,"credit_note_line_id"?: string,"id"?: string,"invoice_allocation_id"?: string,"location_id"?: string | null,"organization_id"?: string,"product_id"?: string,"return_condition"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sales_credit_note_returns_allocation_fk"
+      columns: ["invoice_allocation_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_invoice_allocations"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_note_returns_batch_fk"
+      columns: ["batch_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "batches"
+      referencedColumns: ["id","product_id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_note_returns_credit_note_fk"
+      columns: ["credit_note_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_credit_notes"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_note_returns_line_fk"
+      columns: ["credit_note_line_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_credit_note_lines"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_note_returns_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "warehouse_locations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_credit_note_returns_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sales_credit_notes": {
+                  Row: {
+                    "applied_amount": number,"branch_id": string,"created_at": string,"created_by": string | null,"credit_date": string,"credit_note_number": string | null,"currency_code": string,"customer_id": string,"id": string,"notes": string | null,"organization_id": string,"posted_at": string | null,"posted_by": string | null,"reason_code": string,"sales_invoice_id": string,"status": string,"status_reason": string | null,"stock_document_id": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"unapplied_amount": number | null,"updated_at": string,"warehouse_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "applied_amount"?: number,"branch_id": string,"created_at"?: string,"created_by"?: string | null,"credit_date": string,"credit_note_number"?: string | null,"currency_code": string,"customer_id": string,"id"?: string,"notes"?: string | null,"organization_id"?: string,"posted_at"?: string | null,"posted_by"?: string | null,"reason_code": string,"sales_invoice_id": string,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"unapplied_amount"?: never,"updated_at"?: string,"warehouse_id": string
+                  }
+                  Update: {
+                    "applied_amount"?: number,"branch_id"?: string,"created_at"?: string,"created_by"?: string | null,"credit_date"?: string,"credit_note_number"?: string | null,"currency_code"?: string,"customer_id"?: string,"id"?: string,"notes"?: string | null,"organization_id"?: string,"posted_at"?: string | null,"posted_by"?: string | null,"reason_code"?: string,"sales_invoice_id"?: string,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"unapplied_amount"?: never,"updated_at"?: string,"warehouse_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sales_credit_notes_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_notes_customer_fk"
+      columns: ["customer_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "customers"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_notes_invoice_fk"
+      columns: ["sales_invoice_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_invoices"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_notes_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_credit_notes_stock_document_fk"
+      columns: ["stock_document_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "stock_documents"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_credit_notes_warehouse_fk"
+      columns: ["warehouse_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "warehouses"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
                 },"sales_invoice_allocations": {
                   Row: {
                     "base_quantity": number,"batch_id": string | null,"branch_id": string,"id": string,"location_id": string | null,"organization_id": string,"product_id": string,"sales_invoice_id": string,"sales_invoice_line_id": string,"unit_cost_base": number | null
@@ -945,14 +1127,14 @@ isOneToOne: false
                   ]
                 },"sales_invoices": {
                   Row: {
-                    "amount_paid": number,"balance_due": number | null,"branch_id": string,"created_at": string,"created_by": string | null,"currency_code": string,"customer_id": string,"customer_reference": string | null,"discount_total": number,"due_date": string | null,"id": string,"invoice_date": string,"invoice_number": string | null,"notes": string | null,"organization_id": string,"override_reason": string | null,"payment_terms_days": number,"posted_at": string | null,"posted_by": string | null,"status": string,"status_reason": string | null,"stock_document_id": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"updated_at": string,"warehouse_id": string
+                    "amount_credited": number,"amount_paid": number,"balance_due": number | null,"branch_id": string,"created_at": string,"created_by": string | null,"currency_code": string,"customer_id": string,"customer_reference": string | null,"discount_total": number,"due_date": string | null,"id": string,"invoice_date": string,"invoice_number": string | null,"notes": string | null,"organization_id": string,"override_reason": string | null,"payment_terms_days": number,"posted_at": string | null,"posted_by": string | null,"status": string,"status_reason": string | null,"stock_document_id": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"updated_at": string,"warehouse_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount_paid"?: number,"balance_due"?: never,"branch_id": string,"created_at"?: string,"created_by"?: string | null,"currency_code": string,"customer_id": string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date": string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id": string
+                    "amount_credited"?: number,"amount_paid"?: number,"balance_due"?: never,"branch_id": string,"created_at"?: string,"created_by"?: string | null,"currency_code": string,"customer_id": string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date": string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id": string
                   }
                   Update: {
-                    "amount_paid"?: number,"balance_due"?: never,"branch_id"?: string,"created_at"?: string,"created_by"?: string | null,"currency_code"?: string,"customer_id"?: string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date"?: string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id"?: string
+                    "amount_credited"?: number,"amount_paid"?: number,"balance_due"?: never,"branch_id"?: string,"created_at"?: string,"created_by"?: string | null,"currency_code"?: string,"customer_id"?: string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date"?: string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id"?: string
                   }
                   Relationships: [
                     {
@@ -1576,6 +1758,9 @@ isOneToOne: false
             "allocate_receipt":
 { Args: { "p_allocations"?: Json,"p_receipt_id": string }; Returns: Json
                            },
+"apply_credit_note":
+{ Args: { "p_allocations"?: Json,"p_id": string }; Returns: Json
+                           },
 "approve_purchase_order":
 { Args: { "p_id": string }; Returns: undefined
                            },
@@ -1587,6 +1772,9 @@ isOneToOne: false
                            },
 "assign_user_role":
 { Args: { "p_branch_id"?: string,"p_reason"?: string,"p_role_id": string,"p_user_id": string }; Returns: string
+                           },
+"cancel_credit_note":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
 "cancel_purchase_order":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
@@ -1639,6 +1827,11 @@ isOneToOne: false
 "import_suppliers":
 { Args: { "p_dry_run"?: boolean,"p_rows": Json }; Returns: Json
                            },
+"invoice_creditable":
+{ Args: { "p_invoice_id": string }; Returns: {
+              "credited_net": number,"credited_tax": number,"invoice_line_id": string,"line_net": number,"line_no": number,"line_tax": number,"quantity": number,"remaining_net": number,"remaining_quantity": number,"remaining_tax": number,"returned_quantity": number
+            }[]
+                           },
 "pay_supplier_invoice":
 { Args: { "p_id": string,"p_paid_on": string,"p_reference": string }; Returns: undefined
                            },
@@ -1646,6 +1839,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "awaiting_approval": number,"credit_expected": number,"currency_code": string,"not_due": number,"outstanding": number,"overdue_1_30": number,"overdue_31_60": number,"overdue_61_90": number,"overdue_over_90": number,"supplier_id": string,"supplier_name": string
             }[]
+                           },
+"post_credit_note":
+{ Args: { "p_id": string }; Returns: Json
                            },
 "post_purchase_return":
 { Args: { "p_lines": Json,"p_notes"?: string,"p_purchase_order_id"?: string,"p_reason": string,"p_supplier_id": string,"p_warehouse_id": string }; Returns: Json
@@ -1702,6 +1898,9 @@ isOneToOne: false
                            },
 "save_count_entries":
 { Args: { "p_entries": Json,"p_id": string }; Returns: number
+                           },
+"save_credit_note":
+{ Args: { "p_id": string,"p_invoice_id": string,"p_lines": Json,"p_notes": string,"p_reason_code": string,"p_warehouse_id": string }; Returns: string
                            },
 "save_purchase_order":
 { Args: { "p_expected_date": string,"p_id": string,"p_lines": Json,"p_notes": string,"p_payment_terms_days"?: number,"p_supplier_id": string,"p_warehouse_id": string }; Returns: string
