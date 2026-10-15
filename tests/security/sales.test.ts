@@ -455,7 +455,7 @@ describe('credit control and payment at the counter', () => {
     expect(r.receipt_number).toMatch(/^RCP-/)
     expect(await inv(id)).toMatchObject({ status: 'POSTED' })
     expect([Number((await inv(id)).amount_paid), Number((await inv(id)).balance_due)]).toEqual([50, 0])
-    const [rc] = await q(`select method, reference, amount::float8 a, allocated_amount::float8 al, unallocated_amount::float8 un, branch_id from public.customer_receipts where receipt_number = $1`, [r.receipt_number])
+    const [rc] = await q(`select method, reference, amount::float8 a, allocated_amount::float8 al, unallocated_amount::float8 un, branch_id from public.customer_receipts where receipt_number = $1 and organization_id = $2`, [r.receipt_number, a.id])
     expect(rc).toEqual({ method: 'MOBILE_MONEY', reference: 'MM-123', a: 50, al: 50, un: 0, branch_id: a.hq })
     expect(await code(post(accounts, await draft(cash, [{ product_id: s.product.id, quantity: 1 }]), null, { amount: 2, method: 'CASH' }))).toBe('42501')   // accounts cannot post
     // the half-failed attempts above changed nothing

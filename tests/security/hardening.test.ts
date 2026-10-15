@@ -108,6 +108,8 @@ describe('catalog hardening', () => {
       'public.allocate_receipt', 'public.void_receipt', 'public.customer_credit', 'public.receivables_summary', 'public.customer_statement',
       // Phase 7
       'public.invoice_creditable', 'public.save_credit_note', 'public.cancel_credit_note', 'public.post_credit_note', 'public.apply_credit_note',
+      // Phase 8
+      'public.open_pos_session', 'public.pos_session_summary', 'public.close_pos_session', 'public.pos_checkout',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))

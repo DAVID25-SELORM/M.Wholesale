@@ -15,5 +15,6 @@
   body * { visibility: hidden; }
   #print-area, #print-area * { visibility: visible; }
   #print-area { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: 0; }
+  #print-area.receipt-80 { width: 80mm; max-width: 80mm; font-size: 11px; padding: 2mm; }
   .print-hidden { display: none !important; }
 }

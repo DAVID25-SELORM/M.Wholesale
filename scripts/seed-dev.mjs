@@ -444,6 +444,37 @@ try {
   console.warn(`credit note demo data skipped: ${e.message}`)
 }
 
+// ---- Phase 8: a finished till shift for the demo cashier (two counter sales, a small cash shortage) -------------------------------
+async function seedPos(orgId) {
+  if (await one(`/pos_sessions?select=id&organization_id=eq.${orgId}&limit=1`)) return
+  const { anonKey } = JSON.parse(readFileSync(secretsFile, 'utf8'))
+  const login = await fetch(`${authUrl}/token?grant_type=password`, {
+    method: 'POST', headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'cashier@demo.test', password }),
+  })
+  if (!login.ok) throw new Error(`cashier login failed: ${login.status}`)
+  const { access_token } = await login.json()
+  const call = async (fn, body) => {
+    const res = await fetch(`${restUrl}/rpc/${fn}`, {
+      method: 'POST', headers: { apikey: anonKey, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    })
+    const text = await res.text()
+    if (!res.ok) throw new Error(`${fn} -> ${res.status} ${text}`)
+    return text ? JSON.parse(text) : null
+  }
+  const wh = (await one(`/warehouses?select=id&organization_id=eq.${orgId}&code=eq.MAIN-HQ`)).id
+  const pcm = (await one(`/products?select=id&organization_id=eq.${orgId}&sku=eq.PANADOL-500-100`)).id
+  const session = await call('open_pos_session', { p_warehouse_id: wh, p_opening_float: 100 })
+  await call('pos_checkout', { p_session_id: session, p_customer_id: null, p_lines: [{ product_id: pcm, quantity: 20 }], p_payments: [{ method: 'CASH', amount: 20 }] })
+  await call('pos_checkout', { p_session_id: session, p_customer_id: null, p_lines: [{ product_id: pcm, quantity: 50 }], p_payments: [{ method: 'MOBILE_MONEY', amount: 40, reference: 'MM 5521009' }] })
+  await call('close_pos_session', { p_id: session, p_counted_cash: 115, p_notes: 'GHS 1 short - coin change given in error' })
+}
+try {
+  await seedPos(orgA)
+} catch (e) {
+  console.warn(`point of sale demo data skipped: ${e.message}`)
+}
+
 // ---- Organization B: proves tenant isolation in the browser -----------------------------------
 const orgB = await ensureOrg('Other Pharma Ltd', { email: 'owner@other.test', first: 'Nana', last: 'Other' })
 const hqB = (await rest('GET', `/branches?select=id&organization_id=eq.${orgB}&is_head_office=is.true`))[0].id
