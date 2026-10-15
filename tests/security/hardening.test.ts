@@ -112,6 +112,10 @@ describe('catalog hardening', () => {
       'public.open_pos_session', 'public.pos_session_summary', 'public.close_pos_session', 'public.pos_checkout',
       // Phase 9
       'public.refund_customer', 'public.reverse_sales_invoice', 'public.reverse_credit_note',
+      // Phase 10
+      'public.save_quotation', 'public.send_quotation', 'public.reject_quotation', 'public.cancel_quotation', 'public.convert_quotation_to_order',
+      'public.save_sales_order', 'public.confirm_sales_order', 'public.cancel_sales_order', 'public.close_sales_order', 'public.invoice_sales_order',
+      'public.stock_availability', 'public.order_progress',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))

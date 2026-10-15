@@ -18,6 +18,10 @@ import { StockCountsPage } from '@/modules/inventory/StockCountsPage'
 import { TransfersPage } from '@/modules/inventory/TransfersPage'
 import { ValuationPage } from '@/modules/inventory/ValuationPage'
 import { OrganizationPage } from '@/modules/organization/OrganizationPage'
+import { QuotationPage } from '@/modules/sales/QuotationPage'
+import { QuotationsPage } from '@/modules/sales/QuotationsPage'
+import { SalesOrderPage } from '@/modules/sales/SalesOrderPage'
+import { SalesOrdersPage } from '@/modules/sales/SalesOrdersPage'
 import { PosPage } from '@/modules/pos/PosPage'
 import { PosSessionsPage } from '@/modules/pos/PosSessionsPage'
 import { CreditNotePage } from '@/modules/sales/CreditNotePage'
@@ -97,6 +101,22 @@ export const routes = [
               { path: 'sales/invoices', element: <SalesInvoicesPage /> },
               { path: 'sales/invoices/new', element: <SalesInvoicePage /> },
               { path: 'sales/invoices/:id', element: <SalesInvoicePage /> },
+            ],
+          },
+          {
+            element: <RequirePermission anyOf={['quotations.view']} />,
+            children: [
+              { path: 'sales/quotations', element: <QuotationsPage /> },
+              { path: 'sales/quotations/new', element: <QuotationPage /> },
+              { path: 'sales/quotations/:id', element: <QuotationPage /> },
+            ],
+          },
+          {
+            element: <RequirePermission anyOf={['orders.view']} />,
+            children: [
+              { path: 'sales/orders', element: <SalesOrdersPage /> },
+              { path: 'sales/orders/new', element: <SalesOrderPage /> },
+              { path: 'sales/orders/:id', element: <SalesOrderPage /> },
             ],
           },
           { element: <RequirePermission anyOf={['pos.sell']} />, children: [{ path: 'pos', element: <PosPage /> }] },

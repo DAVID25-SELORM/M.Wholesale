@@ -475,6 +475,47 @@ try {
   console.warn(`point of sale demo data skipped: ${e.message}`)
 }
 
+// ---- Phase 10: a sent quotation, and a confirmed order that is holding stock -----------------------------------------------------
+async function seedOrders(orgId) {
+  if (await one(`/sales_orders?select=id&organization_id=eq.${orgId}&limit=1`)) return
+  const { anonKey } = JSON.parse(readFileSync(secretsFile, 'utf8'))
+  const login = await fetch(`${authUrl}/token?grant_type=password`, {
+    method: 'POST', headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'owner@demo.test', password }),
+  })
+  if (!login.ok) throw new Error(`owner login failed: ${login.status}`)
+  const { access_token } = await login.json()
+  const call = async (fn, body) => {
+    const res = await fetch(`${restUrl}/rpc/${fn}`, {
+      method: 'POST', headers: { apikey: anonKey, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    })
+    const text = await res.text()
+    if (!res.ok) throw new Error(`${fn} -> ${res.status} ${text}`)
+    return text ? JSON.parse(text) : null
+  }
+  const wh = (await one(`/warehouses?select=id&organization_id=eq.${orgId}&code=eq.MAIN-HQ`)).id
+  const adom = (await one(`/customers?select=id&organization_id=eq.${orgId}&code=eq.ADOM`)).id
+  const aug = (await one(`/products?select=id&organization_id=eq.${orgId}&sku=eq.AUG-625-14`)).id
+  const pcm = (await one(`/products?select=id&organization_id=eq.${orgId}&sku=eq.PANADOL-500-100`)).id
+  const box = (await one(`/product_units?select=id&product_id=eq.${aug}&is_base=is.false`)).id
+  const in30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
+  const quote = await call('save_quotation', {
+    p_id: null, p_customer_id: adom, p_warehouse_id: wh, p_valid_until: in30, p_customer_reference: 'RFQ-2231', p_notes: 'Prices include delivery to Accra.',
+    p_lines: [{ product_id: pcm, quantity: 1000 }],
+  })
+  await call('send_quotation', { p_id: quote })
+  const order = await call('save_sales_order', {
+    p_id: null, p_customer_id: adom, p_warehouse_id: wh, p_required_date: in30, p_reserved_until: null, p_customer_reference: 'LPO-5530', p_notes: 'Deliver before month end',
+    p_lines: [{ product_id: aug, product_unit_id: box, quantity: 4 }],
+  })
+  await call('confirm_sales_order', { p_id: order })
+}
+try {
+  await seedOrders(orgA)
+} catch (e) {
+  console.warn(`orders demo data skipped: ${e.message}`)
+}
+
 // ---- Organization B: proves tenant isolation in the browser -----------------------------------
 const orgB = await ensureOrg('Other Pharma Ltd', { email: 'owner@other.test', first: 'Nana', last: 'Other' })
 const hqB = (await rest('GET', `/branches?select=id&organization_id=eq.${orgB}&is_head_office=is.true`))[0].id

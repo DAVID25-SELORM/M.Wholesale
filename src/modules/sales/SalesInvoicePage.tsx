@@ -9,9 +9,10 @@ import { ReasonDialog } from '@/modules/purchasing/shared'
 import { useSession } from '@/modules/session/SessionProvider'
 import { CREDIT_REASON_LABEL, listCreditNotes, type CreditReason } from '@/services/creditNotes'
 import { getCustomer, listCustomerOptions } from '@/services/customers'
+import { getSalesOrder } from '@/services/orders'
 import { fmtQty } from '@/services/inventory'
 import { getOrganization } from '@/services/organization'
-import { RECEIPT_METHOD_LABEL, getSalesInvoice, reverseSalesInvoice, listInvoicePayments, listSalesAllocations, listSalesLines, moneyFmt, type ReceiptMethod } from '@/services/sales'
+import { RECEIPT_METHOD_LABEL, cancelSalesInvoice, getSalesInvoice, reverseSalesInvoice, listInvoicePayments, listSalesAllocations, listSalesLines, moneyFmt, type ReceiptMethod } from '@/services/sales'
 import { InvoiceEditor } from './InvoiceEditor'
 import { PostInvoiceDialog } from './PostInvoiceDialog'
 import { SalesStatusBadge } from './SalesInvoicesPage'
@@ -43,6 +44,16 @@ function DraftView({ invoiceId }: { invoiceId: string }) {
   const customer = (customers.data ?? []).find((c) => c.id === inv?.customer_id)
   if (!inv || !lines.data) return <LoadingState />
   // "Save and post" lands here with ?post=1
+  if (inv.sales_order_id) {
+    return (
+      <>
+        <OrderInvoiceDraft invoice={inv} lines={lines.data} onPost={() => setSp({ post: '1' }, { replace: true })} />
+        {posting && customer && ability.can('sales.post', inv.branch_id) && (
+          <PostInvoiceDialog invoice={inv} customer={customer} total={Number(inv.total_amount)} branchId={inv.branch_id} onClose={() => setSp({}, { replace: true })} />
+        )}
+      </>
+    )
+  }
   return (
     <>
       <InvoiceEditor invoice={inv} lines={lines.data} presetCustomerId="" />
@@ -216,6 +227,74 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
           </Card>
         </div>
       )}
+    </>
+  )
+}
+
+/** A draft raised from a sales order: its lines follow the order, so it can only be posted or cancelled. */
+function OrderInvoiceDraft({ invoice, lines, onPost }: { invoice: NonNullable<Awaited<ReturnType<typeof getSalesInvoice>>>; lines: Awaited<ReturnType<typeof listSalesLines>>; onPost: () => void }) {
+  const { ability } = useSession()
+  const qc = useQueryClient()
+  const toast = useToast()
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState<string | null>(null)
+  const order = useQuery({ queryKey: ['sales-order', invoice.sales_order_id], queryFn: () => getSalesOrder(invoice.sales_order_id!), enabled: ability.canAnywhere('orders.view') })
+  const cancel = useMutation({
+    mutationFn: (reason: string) => cancelSalesInvoice(invoice.id, reason),
+    onSuccess: async () => {
+      toast.success('Draft invoice cancelled: the quantity is free to invoice again.')
+      setCancelling(false)
+      await Promise.all(['sales-invoice', 'sales-invoices', 'order-progress', 'order-invoices', 'sales-order'].map((k) => qc.invalidateQueries({ queryKey: [k] })))
+    },
+    onError: (e) => setCancelError(toAppError(e).message),
+  })
+  return (
+    <>
+      <Link to={invoice.sales_order_id ? `/sales/orders/${invoice.sales_order_id}` : '/sales/invoices'} className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"><ArrowLeft className="h-4 w-4" aria-hidden /> {order.data?.order_number ?? 'Order'}</Link>
+      <PageHeader
+        title="Draft invoice"
+        description={`${invoice.customer?.name ?? ''} · raised from order ${order.data?.order_number ?? ''} at the order's prices`}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {ability.can('sales.create', invoice.branch_id) && <Button variant="ghost" onClick={() => { setCancelError(null); setCancelling(true) }}>Cancel draft</Button>}
+            {ability.can('sales.post', invoice.branch_id) && <Button onClick={onPost}>Post…</Button>}
+          </div>
+        }
+      />
+      <Card>
+        <CardBody className="p-0">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <caption className="sr-only">Draft invoice lines</caption>
+              <thead className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr><th className="px-4 py-2">Item</th><th className="pr-3 text-right">Qty</th><th className="pr-3 text-right">Price</th><th className="pr-3 text-right">Tax</th><th className="pr-4 text-right">Amount</th></tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {lines.map((l) => {
+                  const factor = Number(l.unit?.factor_to_base ?? 1)
+                  return (
+                    <tr key={l.id}>
+                      <td className="px-4 py-2"><span className="font-medium text-slate-900">{l.product?.brand_name}</span> <span className="text-xs text-slate-500">{l.product?.sku}</span></td>
+                      <td className="whitespace-nowrap pr-3 text-right tabular-nums">{fmtQty(Number(l.quantity))} {factor === 1 ? l.product?.base_unit?.name : l.unit?.unit?.name}</td>
+                      <td className="pr-3 text-right tabular-nums">{moneyFmt(l.unit_price)}</td>
+                      <td className="pr-3 text-right tabular-nums">{Number(l.tax_rate) > 0 ? `${Number(l.tax_rate)}%` : 'Exempt'}</td>
+                      <td className="pr-4 text-right font-medium tabular-nums">{moneyFmt(l.line_total)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <dl className="ml-auto w-full max-w-xs space-y-1 p-4 text-sm">
+            <div className="flex justify-between"><dt className="text-slate-500">Tax</dt><dd className="tabular-nums">{moneyFmt(invoice.tax_total)}</dd></div>
+            <div className="flex justify-between border-t border-slate-200 pt-1 text-base font-semibold"><dt>Total</dt><dd className="tabular-nums">{moneyFmt(invoice.total_amount)}</dd></div>
+          </dl>
+        </CardBody>
+      </Card>
+      <ReasonDialog
+        open={cancelling} title="Cancel this draft invoice" description="The quantity goes back to what is still left to invoice on the order." confirmLabel="Cancel draft" tone="danger"
+        busy={cancel.isPending} error={cancelError} onConfirm={(r) => cancel.mutate(r)} onClose={() => setCancelling(false)}
+      />
     </>
   )
 }

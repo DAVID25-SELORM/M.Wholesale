@@ -52,6 +52,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: 'sales', label: 'Sales', icon: ShoppingCart,
     items: [
+      { id: 'sales-quotations', label: 'Quotations', to: '/sales/quotations', anyOf: ['quotations.view'] },
+      { id: 'sales-orders', label: 'Orders', to: '/sales/orders', anyOf: ['orders.view'] },
       { id: 'sales-pos', label: 'Point of sale', to: '/pos', anyOf: ['pos.sell'] },
       { id: 'sales-shifts', label: 'Till shifts', to: '/pos/sessions', anyOf: ['pos.sell', 'pos.view'] },
       { id: 'sales-invoices', label: 'Invoices', to: '/sales/invoices', anyOf: ['sales.view'] },
@@ -61,7 +63,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'sales-receipts', label: 'Payments received', to: '/sales/receipts', anyOf: ['receipts.view'] },
       { id: 'sales-receivables', label: 'Receivables', to: '/sales/receivables', anyOf: ['receipts.view'] },
       { id: 'sales-pricing', label: 'Pricing & tax', to: '/sales/pricing', anyOf: ['pricing.view'] },
-      ...['Orders', 'Quotations'].map((l) => planned(`sales-${l}`, l)),
+      ...['Delivery notes'].map((l) => planned(`sales-${l}`, l)),
     ],
   },
   {

@@ -241,7 +241,7 @@ function CustomerStrip({ customer, credit, total }: { customer: CustomerOption; 
   )
 }
 
-function LineRow({ index, row, warehouseId, rights, onPick, onUnit, onChange, onRemove }: {
+export function LineRow({ index, row, warehouseId, rights, onPick, onUnit, onChange, onRemove }: {
   index: number
   row: SalesLineDraft
   warehouseId: string

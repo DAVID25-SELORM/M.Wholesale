@@ -1247,14 +1247,14 @@ isOneToOne: false
                   ]
                 },"sales_invoice_lines": {
                   Row: {
-                    "base_quantity": number,"branch_id": string,"discount_percent": number,"id": string,"line_net": number,"line_no": number,"line_tax": number,"line_total": number,"list_price": number | null,"organization_id": string,"product_id": string,"product_unit_id": string,"quantity": number,"sales_invoice_id": string,"tax_code_id": string | null,"tax_rate": number,"unit_price": number
+                    "base_quantity": number,"branch_id": string,"discount_percent": number,"id": string,"line_net": number,"line_no": number,"line_tax": number,"line_total": number,"list_price": number | null,"organization_id": string,"product_id": string,"product_unit_id": string,"quantity": number,"sales_invoice_id": string,"sales_order_line_id": string | null,"tax_code_id": string | null,"tax_rate": number,"unit_price": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "base_quantity": number,"branch_id": string,"discount_percent"?: number,"id"?: string,"line_net": number,"line_no": number,"line_tax": number,"line_total": number,"list_price"?: number | null,"organization_id"?: string,"product_id": string,"product_unit_id": string,"quantity": number,"sales_invoice_id": string,"tax_code_id"?: string | null,"tax_rate"?: number,"unit_price": number
+                    "base_quantity": number,"branch_id": string,"discount_percent"?: number,"id"?: string,"line_net": number,"line_no": number,"line_tax": number,"line_total": number,"list_price"?: number | null,"organization_id"?: string,"product_id": string,"product_unit_id": string,"quantity": number,"sales_invoice_id": string,"sales_order_line_id"?: string | null,"tax_code_id"?: string | null,"tax_rate"?: number,"unit_price": number
                   }
                   Update: {
-                    "base_quantity"?: number,"branch_id"?: string,"discount_percent"?: number,"id"?: string,"line_net"?: number,"line_no"?: number,"line_tax"?: number,"line_total"?: number,"list_price"?: number | null,"organization_id"?: string,"product_id"?: string,"product_unit_id"?: string,"quantity"?: number,"sales_invoice_id"?: string,"tax_code_id"?: string | null,"tax_rate"?: number,"unit_price"?: number
+                    "base_quantity"?: number,"branch_id"?: string,"discount_percent"?: number,"id"?: string,"line_net"?: number,"line_no"?: number,"line_tax"?: number,"line_total"?: number,"list_price"?: number | null,"organization_id"?: string,"product_id"?: string,"product_unit_id"?: string,"quantity"?: number,"sales_invoice_id"?: string,"sales_order_line_id"?: string | null,"tax_code_id"?: string | null,"tax_rate"?: number,"unit_price"?: number
                   }
                   Relationships: [
                     {
@@ -1262,6 +1262,12 @@ isOneToOne: false
       columns: ["sales_invoice_id","organization_id"]
 isOneToOne: false
       referencedRelation: "sales_invoices"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_invoice_lines_order_line_fk"
+      columns: ["sales_order_line_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_order_lines"
       referencedColumns: ["id","organization_id"]
     },{
       foreignKeyName: "sales_invoice_lines_organization_id_fkey"
@@ -1291,14 +1297,14 @@ isOneToOne: false
                   ]
                 },"sales_invoices": {
                   Row: {
-                    "amount_credited": number,"amount_paid": number,"balance_due": number | null,"branch_id": string,"created_at": string,"created_by": string | null,"currency_code": string,"customer_id": string,"customer_reference": string | null,"discount_total": number,"due_date": string | null,"id": string,"invoice_date": string,"invoice_number": string | null,"notes": string | null,"organization_id": string,"override_reason": string | null,"payment_terms_days": number,"posted_at": string | null,"posted_by": string | null,"reversal_document_id": string | null,"reversal_reason": string | null,"reversed_at": string | null,"reversed_by": string | null,"status": string,"status_reason": string | null,"stock_document_id": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"updated_at": string,"warehouse_id": string
+                    "amount_credited": number,"amount_paid": number,"balance_due": number | null,"branch_id": string,"created_at": string,"created_by": string | null,"currency_code": string,"customer_id": string,"customer_reference": string | null,"discount_total": number,"due_date": string | null,"id": string,"invoice_date": string,"invoice_number": string | null,"notes": string | null,"organization_id": string,"override_reason": string | null,"payment_terms_days": number,"posted_at": string | null,"posted_by": string | null,"reversal_document_id": string | null,"reversal_reason": string | null,"reversed_at": string | null,"reversed_by": string | null,"sales_order_id": string | null,"status": string,"status_reason": string | null,"stock_document_id": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"updated_at": string,"warehouse_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount_credited"?: number,"amount_paid"?: number,"balance_due"?: never,"branch_id": string,"created_at"?: string,"created_by"?: string | null,"currency_code": string,"customer_id": string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date": string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"reversal_document_id"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id": string
+                    "amount_credited"?: number,"amount_paid"?: number,"balance_due"?: never,"branch_id": string,"created_at"?: string,"created_by"?: string | null,"currency_code": string,"customer_id": string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date": string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"reversal_document_id"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"sales_order_id"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id": string
                   }
                   Update: {
-                    "amount_credited"?: number,"amount_paid"?: number,"balance_due"?: never,"branch_id"?: string,"created_at"?: string,"created_by"?: string | null,"currency_code"?: string,"customer_id"?: string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date"?: string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"reversal_document_id"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id"?: string
+                    "amount_credited"?: number,"amount_paid"?: number,"balance_due"?: never,"branch_id"?: string,"created_at"?: string,"created_by"?: string | null,"currency_code"?: string,"customer_id"?: string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date"?: string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"reversal_document_id"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"sales_order_id"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id"?: string
                   }
                   Relationships: [
                     {
@@ -1312,6 +1318,12 @@ isOneToOne: false
       columns: ["customer_id","organization_id"]
 isOneToOne: false
       referencedRelation: "customers"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_invoices_order_fk"
+      columns: ["sales_order_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_orders"
       referencedColumns: ["id","organization_id"]
     },{
       foreignKeyName: "sales_invoices_organization_id_fkey"
@@ -1333,6 +1345,182 @@ isOneToOne: false
       referencedColumns: ["id","organization_id"]
     },{
       foreignKeyName: "sales_invoices_warehouse_fk"
+      columns: ["warehouse_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "warehouses"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
+                },"sales_order_lines": {
+                  Row: {
+                    "base_quantity": number,"branch_id": string,"discount_percent": number,"id": string,"line_net": number,"line_no": number,"line_tax": number,"line_total": number,"list_price": number | null,"organization_id": string,"product_id": string,"product_unit_id": string,"quantity": number,"sales_order_id": string,"tax_code_id": string | null,"tax_rate": number,"unit_price": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "base_quantity": number,"branch_id": string,"discount_percent"?: number,"id"?: string,"line_net": number,"line_no": number,"line_tax": number,"line_total": number,"list_price"?: number | null,"organization_id"?: string,"product_id": string,"product_unit_id": string,"quantity": number,"sales_order_id": string,"tax_code_id"?: string | null,"tax_rate"?: number,"unit_price": number
+                  }
+                  Update: {
+                    "base_quantity"?: number,"branch_id"?: string,"discount_percent"?: number,"id"?: string,"line_net"?: number,"line_no"?: number,"line_tax"?: number,"line_total"?: number,"list_price"?: number | null,"organization_id"?: string,"product_id"?: string,"product_unit_id"?: string,"quantity"?: number,"sales_order_id"?: string,"tax_code_id"?: string | null,"tax_rate"?: number,"unit_price"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sales_order_lines_order_fk"
+      columns: ["sales_order_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_orders"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_order_lines_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_order_lines_product_fk"
+      columns: ["product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_order_lines_tax_fk"
+      columns: ["tax_code_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "tax_codes"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_order_lines_unit_fk"
+      columns: ["product_unit_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "product_units"
+      referencedColumns: ["id","product_id","organization_id"]
+    }
+                  ]
+                },"sales_orders": {
+                  Row: {
+                    "branch_id": string,"confirmed_at": string | null,"confirmed_by": string | null,"created_at": string,"created_by": string | null,"currency_code": string,"customer_id": string,"customer_reference": string | null,"discount_total": number,"id": string,"notes": string | null,"order_date": string,"order_number": string | null,"organization_id": string,"quotation_id": string | null,"required_date": string | null,"reserved_until": string | null,"status": string,"status_reason": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"updated_at": string,"warehouse_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "branch_id": string,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency_code": string,"customer_id": string,"customer_reference"?: string | null,"discount_total"?: number,"id"?: string,"notes"?: string | null,"order_date": string,"order_number"?: string | null,"organization_id"?: string,"quotation_id"?: string | null,"required_date"?: string | null,"reserved_until"?: string | null,"status"?: string,"status_reason"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id": string
+                  }
+                  Update: {
+                    "branch_id"?: string,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency_code"?: string,"customer_id"?: string,"customer_reference"?: string | null,"discount_total"?: number,"id"?: string,"notes"?: string | null,"order_date"?: string,"order_number"?: string | null,"organization_id"?: string,"quotation_id"?: string | null,"required_date"?: string | null,"reserved_until"?: string | null,"status"?: string,"status_reason"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sales_orders_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_orders_customer_fk"
+      columns: ["customer_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "customers"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_orders_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_orders_quotation_fk"
+      columns: ["quotation_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_quotations"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_orders_warehouse_fk"
+      columns: ["warehouse_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "warehouses"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
+                },"sales_quotation_lines": {
+                  Row: {
+                    "base_quantity": number,"branch_id": string,"discount_percent": number,"id": string,"line_net": number,"line_no": number,"line_tax": number,"line_total": number,"list_price": number | null,"organization_id": string,"product_id": string,"product_unit_id": string,"quantity": number,"quotation_id": string,"tax_code_id": string | null,"tax_rate": number,"unit_price": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "base_quantity": number,"branch_id": string,"discount_percent"?: number,"id"?: string,"line_net": number,"line_no": number,"line_tax": number,"line_total": number,"list_price"?: number | null,"organization_id"?: string,"product_id": string,"product_unit_id": string,"quantity": number,"quotation_id": string,"tax_code_id"?: string | null,"tax_rate"?: number,"unit_price": number
+                  }
+                  Update: {
+                    "base_quantity"?: number,"branch_id"?: string,"discount_percent"?: number,"id"?: string,"line_net"?: number,"line_no"?: number,"line_tax"?: number,"line_total"?: number,"list_price"?: number | null,"organization_id"?: string,"product_id"?: string,"product_unit_id"?: string,"quantity"?: number,"quotation_id"?: string,"tax_code_id"?: string | null,"tax_rate"?: number,"unit_price"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sales_quotation_lines_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_quotation_lines_product_fk"
+      columns: ["product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_quotation_lines_quotation_fk"
+      columns: ["quotation_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_quotations"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_quotation_lines_tax_fk"
+      columns: ["tax_code_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "tax_codes"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_quotation_lines_unit_fk"
+      columns: ["product_unit_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "product_units"
+      referencedColumns: ["id","product_id","organization_id"]
+    }
+                  ]
+                },"sales_quotations": {
+                  Row: {
+                    "branch_id": string,"converted_order_id": string | null,"created_at": string,"created_by": string | null,"currency_code": string,"customer_id": string,"customer_reference": string | null,"discount_total": number,"id": string,"notes": string | null,"organization_id": string,"quotation_date": string,"quotation_number": string | null,"sent_at": string | null,"status": string,"status_reason": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"updated_at": string,"valid_until": string,"warehouse_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "branch_id": string,"converted_order_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency_code": string,"customer_id": string,"customer_reference"?: string | null,"discount_total"?: number,"id"?: string,"notes"?: string | null,"organization_id"?: string,"quotation_date": string,"quotation_number"?: string | null,"sent_at"?: string | null,"status"?: string,"status_reason"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"valid_until": string,"warehouse_id": string
+                  }
+                  Update: {
+                    "branch_id"?: string,"converted_order_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency_code"?: string,"customer_id"?: string,"customer_reference"?: string | null,"discount_total"?: number,"id"?: string,"notes"?: string | null,"organization_id"?: string,"quotation_date"?: string,"quotation_number"?: string | null,"sent_at"?: string | null,"status"?: string,"status_reason"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"valid_until"?: string,"warehouse_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sales_quotations_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_quotations_customer_fk"
+      columns: ["customer_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "customers"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_quotations_order_fk"
+      columns: ["converted_order_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_orders"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "sales_quotations_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_quotations_warehouse_fk"
       columns: ["warehouse_id","organization_id"]
 isOneToOne: false
       referencedRelation: "warehouses"
@@ -1949,7 +2137,13 @@ isOneToOne: false
 "cancel_purchase_order":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
+"cancel_quotation":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
 "cancel_sales_invoice":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
+"cancel_sales_order":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
 "cancel_stock_count":
@@ -1967,11 +2161,20 @@ isOneToOne: false
 "close_purchase_order":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
+"close_sales_order":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
 "close_transfer":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
 "complete_invitation":
 { Args: { "p_actor_id": string,"p_branch_id"?: string,"p_first_name": string,"p_job_title"?: string,"p_last_name": string,"p_organization_id": string,"p_role_id": string,"p_user_id": string }; Returns: undefined
+                           },
+"confirm_sales_order":
+{ Args: { "p_id": string }; Returns: Json
+                           },
+"convert_quotation_to_order":
+{ Args: { "p_id": string }; Returns: string
                            },
 "customer_credit":
 { Args: { "p_customer_id": string }; Returns: {
@@ -2005,8 +2208,16 @@ isOneToOne: false
               "credited_net": number,"credited_tax": number,"invoice_line_id": string,"line_net": number,"line_no": number,"line_tax": number,"quantity": number,"remaining_net": number,"remaining_quantity": number,"remaining_tax": number,"returned_quantity": number
             }[]
                            },
+"invoice_sales_order":
+{ Args: { "p_lines"?: Json,"p_order_id": string }; Returns: string
+                           },
 "open_pos_session":
 { Args: { "p_opening_float"?: number,"p_warehouse_id": string }; Returns: string
+                           },
+"order_progress":
+{ Args: { "p_order_id": string }; Returns: {
+              "in_draft": number,"invoiced": number,"line_no": number,"order_line_id": string,"quantity": number,"remaining": number,"reserved_base": number
+            }[]
                            },
 "pay_supplier_invoice":
 { Args: { "p_id": string,"p_paid_on": string,"p_reference": string }; Returns: undefined
@@ -2072,6 +2283,9 @@ isOneToOne: false
 "reject_purchase_order":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
+"reject_quotation":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
 "resolve_price":
 { Args: { "p_customer_id": string,"p_product_unit_id": string }; Returns: number
                            },
@@ -2096,19 +2310,33 @@ isOneToOne: false
 "save_purchase_order":
 { Args: { "p_expected_date": string,"p_id": string,"p_lines": Json,"p_notes": string,"p_payment_terms_days"?: number,"p_supplier_id": string,"p_warehouse_id": string }; Returns: string
                            },
+"save_quotation":
+{ Args: { "p_customer_id": string,"p_customer_reference": string,"p_id": string,"p_lines": Json,"p_notes": string,"p_valid_until": string,"p_warehouse_id": string }; Returns: string
+                           },
 "save_sales_invoice":
 { Args: { "p_customer_id": string,"p_customer_reference": string,"p_id": string,"p_lines": Json,"p_notes": string,"p_warehouse_id": string }; Returns: string
+                           },
+"save_sales_order":
+{ Args: { "p_customer_id": string,"p_customer_reference": string,"p_id": string,"p_lines": Json,"p_notes": string,"p_required_date": string,"p_reserved_until": string,"p_warehouse_id": string }; Returns: string
                            },
 "search_products":
 { Args: { "p_limit"?: number,"p_offset"?: number,"p_query": string }; Returns: {
               "brand_name": string,"dosage_form": string,"generic_name": string,"is_active": boolean,"manufacturer_name": string,"matched_on": string,"product_class": string,"product_id": string,"sku": string,"strength_text": string
             }[]
                            },
+"send_quotation":
+{ Args: { "p_id": string }; Returns: string
+                           },
 "set_user_active":
 { Args: { "p_is_active": boolean,"p_reason"?: string,"p_user_id": string }; Returns: undefined
                            },
 "start_stock_count":
 { Args: { "p_location_id"?: string,"p_notes"?: string,"p_product_ids"?: (string)[],"p_warehouse_id": string }; Returns: string
+                           },
+"stock_availability":
+{ Args: { "p_product_id": string,"p_warehouse_id": string }; Returns: {
+              "free": number,"on_hand": number,"reserved": number
+            }[]
                            },
 "stock_summary":
 { Args: { "p_limit"?: number,"p_near_days"?: number,"p_offset"?: number,"p_query"?: string,"p_warehouse_id"?: string }; Returns: {
