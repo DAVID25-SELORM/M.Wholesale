@@ -59,12 +59,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'sales-invoices', label: 'Invoices', to: '/sales/invoices', anyOf: ['sales.view'] },
       { id: 'sales-credit-notes', label: 'Credit notes', to: '/sales/credit-notes', anyOf: ['credit_notes.view'] },
       { id: 'sales-refunds', label: 'Refunds', to: '/sales/refunds', anyOf: ['refunds.view'] },
+      { id: 'sales-deliveries', label: 'Deliveries', to: '/sales/deliveries', anyOf: ['deliveries.view'] },
       { id: 'sales-reminders', label: 'Payment reminders', to: '/sales/reminders', anyOf: ['reminders.view'] },
       { id: 'sales-customers', label: 'Customers', to: '/sales/customers', anyOf: ['customers.view'] },
       { id: 'sales-receipts', label: 'Payments received', to: '/sales/receipts', anyOf: ['receipts.view'] },
       { id: 'sales-receivables', label: 'Receivables', to: '/sales/receivables', anyOf: ['receipts.view'] },
       { id: 'sales-pricing', label: 'Pricing & tax', to: '/sales/pricing', anyOf: ['pricing.view'] },
-      ...['Delivery notes'].map((l) => planned(`sales-${l}`, l)),
+      ...['Price agreements'].map((l) => planned(`sales-${l}`, l)),
     ],
   },
   {
@@ -113,8 +114,10 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'reports', label: 'Reports', icon: BarChart3,
     items: [
       { id: 'reports-sales', label: 'Sales and margins', to: '/reports/sales', anyOf: ['reports.sales'] },
+      { id: 'reports-stock', label: 'Stock insights', to: '/reports/stock', anyOf: ['reports.stock'] },
+      { id: 'reports-vat', label: 'VAT summary', to: '/reports/vat', anyOf: ['reports.tax'] },
       { id: 'reports-controlled', label: 'Controlled drugs register', to: '/registers/controlled', anyOf: ['registers.controlled'] },
-      ...['Stock insights', 'Customer insights'].map((l) => planned(`rep-${l}`, l)),
+      ...['Customer insights'].map((l) => planned(`rep-${l}`, l)),
     ],
   },
 ]

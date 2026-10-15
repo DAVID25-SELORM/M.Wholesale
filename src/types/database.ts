@@ -237,6 +237,50 @@ isOneToOne: false
       referencedColumns: ["id","organization_id"]
     }
                   ]
+                },"delivery_notes": {
+                  Row: {
+                    "branch_id": string,"contact_name": string | null,"contact_phone": string | null,"created_at": string,"customer_id": string,"delivered_at": string | null,"delivery_address": string | null,"dispatched_at": string | null,"dispatched_by": string | null,"driver_name": string | null,"id": string,"note_number": string,"notes": string | null,"organization_id": string,"packages": number,"prepared_at": string,"prepared_by": string | null,"received_by_name": string | null,"sales_invoice_id": string,"status": string,"status_reason": string | null,"updated_at": string,"vehicle_number": string | null,"warehouse_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "branch_id": string,"contact_name"?: string | null,"contact_phone"?: string | null,"created_at"?: string,"customer_id": string,"delivered_at"?: string | null,"delivery_address"?: string | null,"dispatched_at"?: string | null,"dispatched_by"?: string | null,"driver_name"?: string | null,"id"?: string,"note_number": string,"notes"?: string | null,"organization_id"?: string,"packages"?: number,"prepared_at"?: string,"prepared_by"?: string | null,"received_by_name"?: string | null,"sales_invoice_id": string,"status"?: string,"status_reason"?: string | null,"updated_at"?: string,"vehicle_number"?: string | null,"warehouse_id": string
+                  }
+                  Update: {
+                    "branch_id"?: string,"contact_name"?: string | null,"contact_phone"?: string | null,"created_at"?: string,"customer_id"?: string,"delivered_at"?: string | null,"delivery_address"?: string | null,"dispatched_at"?: string | null,"dispatched_by"?: string | null,"driver_name"?: string | null,"id"?: string,"note_number"?: string,"notes"?: string | null,"organization_id"?: string,"packages"?: number,"prepared_at"?: string,"prepared_by"?: string | null,"received_by_name"?: string | null,"sales_invoice_id"?: string,"status"?: string,"status_reason"?: string | null,"updated_at"?: string,"vehicle_number"?: string | null,"warehouse_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "delivery_notes_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "delivery_notes_customer_fk"
+      columns: ["customer_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "customers"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "delivery_notes_invoice_fk"
+      columns: ["sales_invoice_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_invoices"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "delivery_notes_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "delivery_notes_warehouse_fk"
+      columns: ["warehouse_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "warehouses"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
                 },"dosage_forms": {
                   Row: {
                     "code": string,"id": string,"is_active": boolean,"name": string
@@ -2160,6 +2204,9 @@ isOneToOne: false
 "cancel_credit_note":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
+"cancel_delivery_note":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
 "cancel_purchase_order":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
@@ -2196,6 +2243,9 @@ isOneToOne: false
 "complete_invitation":
 { Args: { "p_actor_id": string,"p_branch_id"?: string,"p_first_name": string,"p_job_title"?: string,"p_last_name": string,"p_organization_id": string,"p_role_id": string,"p_user_id": string }; Returns: undefined
                            },
+"confirm_delivery":
+{ Args: { "p_id": string,"p_notes"?: string,"p_received_by_name": string }; Returns: undefined
+                           },
 "confirm_sales_order":
 { Args: { "p_id": string }; Returns: Json
                            },
@@ -2222,6 +2272,14 @@ isOneToOne: false
               "balance": number,"credit": number,"debit": number,"description": string,"entry_date": string,"entry_type": string,"reference": string
             }[]
                            },
+"delivery_pick_list":
+{ Args: { "p_id": string }; Returns: {
+              "base_quantity": number,"base_unit": string,"batch_number": string,"expiry_date": string,"line_no": number,"line_quantity": number,"line_unit": string,"location_code": string,"picking_sequence": number,"product_name": string,"sku": string
+            }[]
+                           },
+"dispatch_delivery_note":
+{ Args: { "p_driver_name": string,"p_id": string,"p_vehicle_number": string }; Returns: undefined
+                           },
 "dispatch_transfer":
 { Args: { "p_from_warehouse_id": string,"p_lines": Json,"p_notes"?: string,"p_to_warehouse_id": string }; Returns: Json
                            },
@@ -2229,6 +2287,14 @@ isOneToOne: false
 { Args: { "p_warehouse_id"?: string,"p_within_days"?: number }; Returns: {
               "batch_id": string,"batch_number": string,"brand_name": string,"days_to_expiry": number,"expiry_date": string,"location_id": string,"product_id": string,"quantity": number,"sku": string,"stock_status": string,"warehouse_id": string,"warehouse_name": string
             }[]
+                           },
+"expiry_risk":
+{ Args: { "p_history_days"?: number,"p_horizon_days"?: number,"p_warehouse_id"?: string }; Returns: {
+              "at_risk_qty": number,"avg_daily": number,"batch_number": string,"days_left": number,"expected_sales": number,"expiry_date": string,"product_id": string,"product_name": string,"quantity": number,"sku": string,"value_at_risk": number
+            }[]
+                           },
+"fail_delivery":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
 "get_session_context":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -2286,6 +2352,9 @@ isOneToOne: false
 "post_stock_document":
 { Args: { "p_document_type": string,"p_lines": Json,"p_notes"?: string,"p_reason_code"?: string,"p_to_warehouse_id"?: string,"p_warehouse_id": string }; Returns: Json
                            },
+"prepare_delivery_note":
+{ Args: { "p_address": string,"p_contact_name": string,"p_contact_phone": string,"p_invoice_id": string,"p_notes": string,"p_packages": number }; Returns: string
+                           },
 "prepare_invitation":
 { Args: { "p_branch_id"?: string,"p_role_id": string }; Returns: Json
                            },
@@ -2329,6 +2398,11 @@ isOneToOne: false
                            },
 "reject_quotation":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
+"reorder_suggestions":
+{ Args: { "p_cover_days"?: number,"p_history_days"?: number,"p_warehouse_id"?: string }; Returns: {
+              "avg_daily": number,"base_unit": string,"days_cover": number,"free": number,"lead_time_days": number,"on_hand": number,"on_order": number,"product_id": string,"product_name": string,"reserved": number,"sku": string,"suggested_qty": number,"supplier_name": string,"target_stock": number
+            }[]
                            },
 "resolve_price":
 { Args: { "p_customer_id": string,"p_product_unit_id": string }; Returns: number
@@ -2379,6 +2453,11 @@ isOneToOne: false
 "set_user_active":
 { Args: { "p_is_active": boolean,"p_reason"?: string,"p_user_id": string }; Returns: undefined
                            },
+"slow_moving_stock":
+{ Args: { "p_days"?: number }; Returns: {
+              "base_unit": string,"days_since_sale": number,"earliest_expiry": string,"last_sale_date": string,"on_hand": number,"product_id": string,"product_name": string,"sku": string,"stock_value": number
+            }[]
+                           },
 "start_stock_count":
 { Args: { "p_location_id"?: string,"p_notes"?: string,"p_product_ids"?: (string)[],"p_warehouse_id": string }; Returns: string
                            },
@@ -2406,6 +2485,11 @@ isOneToOne: false
 "suggest_fefo_allocation":
 { Args: { "p_min_shelf_life_days"?: number,"p_product_id": string,"p_quantity": number,"p_warehouse_id": string }; Returns: {
               "allocate": number,"batch_id": string,"batch_number": string,"expiry_date": string,"location_id": string,"on_hand": number
+            }[]
+                           },
+"vat_report":
+{ Args: { "p_branch_id"?: string,"p_from": string,"p_to": string }; Returns: {
+              "rate": number,"section": string,"tax": number,"tax_code": string,"tax_name": string,"taxable": number
             }[]
                            },
 "void_receipt":

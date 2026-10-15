@@ -9,11 +9,14 @@ import { ReasonDialog } from '@/modules/purchasing/shared'
 import { useSession } from '@/modules/session/SessionProvider'
 import { CREDIT_REASON_LABEL, listCreditNotes, type CreditReason } from '@/services/creditNotes'
 import { getCustomer, listCustomerOptions } from '@/services/customers'
+import { getInvoiceDelivery } from '@/services/deliveries'
 import { getSalesOrder } from '@/services/orders'
 import { fmtQty } from '@/services/inventory'
 import { getOrganization } from '@/services/organization'
 import { RECEIPT_METHOD_LABEL, cancelSalesInvoice, getSalesInvoice, reverseSalesInvoice, listInvoicePayments, listSalesAllocations, listSalesLines, moneyFmt, type ReceiptMethod } from '@/services/sales'
+import { DeliveryStatusBadge } from './DeliveriesPage'
 import { downloadInvoicePdf } from './documentPdf'
+import { PrepareDeliveryDialog } from './PrepareDeliveryDialog'
 import { InvoiceEditor } from './InvoiceEditor'
 import { PostInvoiceDialog } from './PostInvoiceDialog'
 import { SalesStatusBadge } from './SalesInvoicesPage'
@@ -69,6 +72,8 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
   const { ability } = useSession()
   const qc = useQueryClient()
   const toast = useToast()
+  const [preparing, setPreparing] = useState(false)
+  const delivery = useQuery({ queryKey: ['invoice-delivery', invoiceId], queryFn: () => getInvoiceDelivery(invoiceId), enabled: ability.canAnywhere('deliveries.view') })
   const [reversing, setReversing] = useState(false)
   const [reverseError, setReverseError] = useState<string | null>(null)
   const reverse = useMutation({
@@ -111,6 +116,8 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
           actions={
             <div className="flex flex-wrap items-center gap-2">
               <SalesStatusBadge status={inv.status} />
+              {inv.status === 'POSTED' && !delivery.data && delivery.isSuccess && ability.can('deliveries.create', inv.branch_id) && <Button variant="secondary" onClick={() => setPreparing(true)}>Prepare delivery</Button>}
+              {delivery.data && <Link to={`/sales/deliveries/${delivery.data.id}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline">{delivery.data.note_number} <DeliveryStatusBadge status={delivery.data.status} /></Link>}
               {inv.status === 'POSTED' && ability.can('sales.reverse', inv.branch_id) && <Button variant="ghost" onClick={() => { setReverseError(null); setReversing(true) }}>Reverse</Button>}
               {inv.status === 'POSTED' && ability.can('credit_notes.create', inv.branch_id) && <Link to={`/sales/credit-notes/new?invoice=${inv.id}`}><Button variant="secondary">Credit note</Button></Link>}
               <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" aria-hidden /> Print</Button>
@@ -209,6 +216,7 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
         </div>
       )}
 
+      {preparing && <PrepareDeliveryDialog invoiceId={inv.id} customer={c} onClose={() => setPreparing(false)} />}
       <ReasonDialog
         open={reversing} title={`Reverse ${inv.invoice_number}`} confirmLabel="Reverse invoice" tone="danger"
         description="Use this when the sale should never have happened. The goods go back into stock, and anything paid on it becomes the customer's credit (to apply elsewhere or pay back). Credit notes on the invoice must be reversed first. This cannot be undone."

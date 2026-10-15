@@ -118,6 +118,9 @@ describe('catalog hardening', () => {
       'public.stock_availability', 'public.order_progress',
       // Phase 11
       'public.sales_report', 'public.controlled_drug_summary', 'public.controlled_drug_register', 'public.overdue_customers', 'public.record_payment_reminder',
+      // Phase 12
+      'public.prepare_delivery_note', 'public.dispatch_delivery_note', 'public.confirm_delivery', 'public.fail_delivery', 'public.cancel_delivery_note', 'public.delivery_pick_list',
+      'public.reorder_suggestions', 'public.slow_moving_stock', 'public.expiry_risk', 'public.vat_report',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))

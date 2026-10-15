@@ -1,6 +1,7 @@
 import { downloadDocumentPdf, downloadTablePdf } from '@/lib/pdf'
 import type { CreditNote, CreditNoteLine } from '@/services/creditNotes'
 import type { Customer, StatementRow } from '@/services/customers'
+import type { DeliveryNote, PickLine } from '@/services/deliveries'
 import { fmtQty } from '@/services/inventory'
 import type { DocLine, Quotation } from '@/services/orders'
 import type { Organization } from '@/services/organization'
@@ -75,5 +76,19 @@ export async function downloadStatementPdf(i: { customerName: string; organizati
     columns: [{ header: 'Date' }, { header: 'Type' }, { header: 'Document' }, { header: 'Details' }, { header: 'Debit', align: 'right' }, { header: 'Credit', align: 'right' }, { header: 'Balance', align: 'right' }],
     rows: i.rows.map((r) => [r.entry_date, r.entry_type.replace(/_/g, ' ').toLowerCase(), r.reference, r.description, r.debit > 0 ? moneyFmt(r.debit) : '', r.credit > 0 ? moneyFmt(r.credit) : '', moneyFmt(r.balance)]),
     footer: last ? [['', '', '', 'Balance (positive = the customer owes us)', '', '', moneyFmt(last.balance)]] : undefined,
+  })
+}
+
+export async function downloadDeliveryNotePdf(i: { note: DeliveryNote; lines: PickLine[]; org: Organization | undefined }): Promise<void> {
+  const n = i.note
+  await downloadDocumentPdf({
+    kind: 'DELIVERY NOTE', number: n.note_number, organization: orgBlock(i.org),
+    meta: [['Invoice', n.invoice?.invoice_number ?? ''], ['Packages', String(n.packages)], ...(n.driver_name ? [['Driver', `${n.driver_name}${n.vehicle_number ? ` / ${n.vehicle_number}` : ''}`] as [string, string]] : [])],
+    party: { heading: 'Deliver to', name: n.customer?.name ?? '', lines: [n.delivery_address ?? '', [n.contact_name, n.contact_phone].filter(Boolean).join(' · ')] },
+    columns: [{ header: 'Location' }, { header: 'Item' }, { header: 'Batch' }, { header: 'Expiry' }, { header: 'Pick', align: 'right' }, { header: 'Ordered', align: 'right' }],
+    rows: i.lines.map((l) => [l.location_code ?? '', `${l.product_name} (${l.sku})`, l.batch_number ?? '', l.expiry_date ?? '', `${fmtQty(l.base_quantity)} ${l.base_unit}`, `${fmtQty(l.line_quantity)} ${l.line_unit}`]),
+    totals: [['Packages', String(n.packages)]],
+    notes: [n.notes ?? '', 'Picked by: ____________________     Received by: ____________________     Signature / date: ____________________'].filter(Boolean),
+    ...(n.status === 'CANCELLED' ? { stamp: 'CANCELLED' } : {}), filename: `delivery-note-${n.note_number}`,
   })
 }

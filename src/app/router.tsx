@@ -25,6 +25,10 @@ import { SalesOrdersPage } from '@/modules/sales/SalesOrdersPage'
 import { ControlledRegisterPage } from '@/modules/reports/ControlledRegisterPage'
 import { SalesReportPage } from '@/modules/reports/SalesReportPage'
 import { RemindersPage } from '@/modules/sales/RemindersPage'
+import { StockInsightsPage } from '@/modules/reports/StockInsightsPage'
+import { VatReportPage } from '@/modules/reports/VatReportPage'
+import { DeliveriesPage } from '@/modules/sales/DeliveriesPage'
+import { DeliveryNotePage } from '@/modules/sales/DeliveryNotePage'
 import { PosPage } from '@/modules/pos/PosPage'
 import { PosSessionsPage } from '@/modules/pos/PosSessionsPage'
 import { CreditNotePage } from '@/modules/sales/CreditNotePage'
@@ -125,6 +129,15 @@ export const routes = [
           { element: <RequirePermission anyOf={['reports.sales']} />, children: [{ path: 'reports/sales', element: <SalesReportPage /> }] },
           { element: <RequirePermission anyOf={['registers.controlled']} />, children: [{ path: 'registers/controlled', element: <ControlledRegisterPage /> }] },
           { element: <RequirePermission anyOf={['reminders.view']} />, children: [{ path: 'sales/reminders', element: <RemindersPage /> }] },
+          { element: <RequirePermission anyOf={['reports.stock']} />, children: [{ path: 'reports/stock', element: <StockInsightsPage /> }] },
+          { element: <RequirePermission anyOf={['reports.tax']} />, children: [{ path: 'reports/vat', element: <VatReportPage /> }] },
+          {
+            element: <RequirePermission anyOf={['deliveries.view']} />,
+            children: [
+              { path: 'sales/deliveries', element: <DeliveriesPage /> },
+              { path: 'sales/deliveries/:id', element: <DeliveryNotePage /> },
+            ],
+          },
           { element: <RequirePermission anyOf={['pos.sell']} />, children: [{ path: 'pos', element: <PosPage /> }] },
           { element: <RequirePermission anyOf={['pos.sell', 'pos.view']} />, children: [{ path: 'pos/sessions', element: <PosSessionsPage /> }] },
           {
