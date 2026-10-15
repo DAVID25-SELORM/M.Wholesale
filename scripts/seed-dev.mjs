@@ -322,6 +322,40 @@ try {
   console.warn(`phase 4 demo data skipped: ${e.message}`)
 }
 
+// ---- Phase 5: a transfer on its way from the head-office store to the Kumasi store ---------------------------------------
+async function seedTransfer(orgId) {
+  if (await one(`/stock_transfers?select=id&organization_id=eq.${orgId}&limit=1`)) return
+  const { anonKey } = JSON.parse(readFileSync(secretsFile, 'utf8'))
+  const login = await fetch(`${authUrl}/token?grant_type=password`, {
+    method: 'POST', headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'owner@demo.test', password }),
+  })
+  if (!login.ok) throw new Error(`owner login failed: ${login.status}`)
+  const { access_token } = await login.json()
+  const call = async (fn, body) => {
+    const res = await fetch(`${restUrl}/rpc/${fn}`, {
+      method: 'POST', headers: { apikey: anonKey, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    })
+    const text = await res.text()
+    if (!res.ok) throw new Error(`${fn} -> ${res.status} ${text}`)
+    return text ? JSON.parse(text) : null
+  }
+  const from = (await one(`/warehouses?select=id&organization_id=eq.${orgId}&code=eq.MAIN-HQ`)).id
+  const to = (await one(`/warehouses?select=id&organization_id=eq.${orgId}&code=eq.MAIN-KUM`)).id
+  const aug = (await one(`/products?select=id&organization_id=eq.${orgId}&sku=eq.AUG-625-14`)).id
+  const box = (await one(`/product_units?select=id&product_id=eq.${aug}&is_base=is.false`)).id
+  const batch = (await one(`/batches?select=id&organization_id=eq.${orgId}&product_id=eq.${aug}&batch_number=eq.AUG2608`)).id
+  await call('dispatch_transfer', {
+    p_from_warehouse_id: from, p_to_warehouse_id: to, p_notes: 'Kumasi restock - van GR 4417-22',
+    p_lines: [{ product_id: aug, product_unit_id: box, quantity: 10, batch_id: batch }],
+  })
+}
+try {
+  await seedTransfer(orgA)
+} catch (e) {
+  console.warn(`transfer demo data skipped: ${e.message}`)
+}
+
 // ---- Organization B: proves tenant isolation in the browser -----------------------------------
 const orgB = await ensureOrg('Other Pharma Ltd', { email: 'owner@other.test', first: 'Nana', last: 'Other' })
 const hqB = (await rest('GET', `/branches?select=id&organization_id=eq.${orgB}&is_head_office=is.true`))[0].id

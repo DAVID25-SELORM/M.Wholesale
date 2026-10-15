@@ -12,8 +12,10 @@ import { ProductsPage } from '@/modules/catalog/ProductsPage'
 import { ExpiryPage } from '@/modules/inventory/ExpiryPage'
 import { StockDocumentsPage } from '@/modules/inventory/StockDocumentsPage'
 import { StockPage } from '@/modules/inventory/StockPage'
+import { ImportPage } from '@/modules/imports/ImportPage'
 import { StockCountDetailPage } from '@/modules/inventory/StockCountDetailPage'
 import { StockCountsPage } from '@/modules/inventory/StockCountsPage'
+import { TransfersPage } from '@/modules/inventory/TransfersPage'
 import { ValuationPage } from '@/modules/inventory/ValuationPage'
 import { OrganizationPage } from '@/modules/organization/OrganizationPage'
 import { PayablesPage } from '@/modules/purchasing/PayablesPage'
@@ -77,6 +79,7 @@ export const routes = [
               { path: 'purchasing/payables', element: <PayablesPage /> },
             ],
           },
+          { element: <RequirePermission anyOf={['products.create', 'suppliers.create', 'inventory.opening_stock']} />, children: [{ path: 'admin/import', element: <ImportPage /> }] },
           { element: <RequirePermission anyOf={['inventory.valuation']} />, children: [{ path: 'inventory/valuation', element: <ValuationPage /> }] },
           {
             element: <RequirePermission anyOf={['inventory.view']} />,
@@ -85,6 +88,7 @@ export const routes = [
               { path: 'inventory/expiry', element: <ExpiryPage /> },
               { path: 'inventory/documents', element: <StockDocumentsPage /> },
               { path: 'inventory/counts', element: <StockCountsPage /> },
+              { path: 'inventory/transfers', element: <TransfersPage /> },
               { path: 'inventory/counts/:id', element: <StockCountDetailPage /> },
             ],
           },

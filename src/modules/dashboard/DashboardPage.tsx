@@ -35,6 +35,7 @@ const TODO = [
   { key: 'po', label: 'purchase orders awaiting approval', table: 'purchase_orders', column: 'status', values: ['SUBMITTED'], perm: 'purchasing.approve', to: '/purchasing/orders' },
   { key: 'inv', label: 'supplier invoices to approve', table: 'supplier_invoices', column: 'status', values: ['MATCHED', 'EXCEPTION'], perm: 'payables.approve', to: '/purchasing/invoices' },
   { key: 'cnt', label: 'stock counts to approve', table: 'stock_counts', column: 'status', values: ['SUBMITTED'], perm: 'inventory.count_approve', to: '/inventory/counts' },
+  { key: 'trf', label: 'transfers on the way', table: 'stock_transfers', column: 'status', values: ['IN_TRANSIT', 'PARTIALLY_RECEIVED'], perm: 'inventory.transfer', to: '/inventory/transfers' },
   { key: 'ret', label: 'returns waiting for a credit note', table: 'purchase_returns', column: 'credit_status', values: ['PENDING'], perm: 'payables.create', to: '/purchasing/returns' },
 ] as const
 
