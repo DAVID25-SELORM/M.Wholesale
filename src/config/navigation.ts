@@ -59,6 +59,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'sales-invoices', label: 'Invoices', to: '/sales/invoices', anyOf: ['sales.view'] },
       { id: 'sales-credit-notes', label: 'Credit notes', to: '/sales/credit-notes', anyOf: ['credit_notes.view'] },
       { id: 'sales-refunds', label: 'Refunds', to: '/sales/refunds', anyOf: ['refunds.view'] },
+      { id: 'sales-reminders', label: 'Payment reminders', to: '/sales/reminders', anyOf: ['reminders.view'] },
       { id: 'sales-customers', label: 'Customers', to: '/sales/customers', anyOf: ['customers.view'] },
       { id: 'sales-receipts', label: 'Payments received', to: '/sales/receipts', anyOf: ['receipts.view'] },
       { id: 'sales-receivables', label: 'Receivables', to: '/sales/receivables', anyOf: ['receipts.view'] },
@@ -109,8 +110,12 @@ export const NAV_GROUPS: NavGroup[] = [
       .map((l) => planned(`int-${l}`, l)),
   },
   {
-    id: 'reports', label: 'Reports', icon: BarChart3, collapsedByDefault: true,
-    items: [planned('reports-all', 'Reports')],
+    id: 'reports', label: 'Reports', icon: BarChart3,
+    items: [
+      { id: 'reports-sales', label: 'Sales and margins', to: '/reports/sales', anyOf: ['reports.sales'] },
+      { id: 'reports-controlled', label: 'Controlled drugs register', to: '/registers/controlled', anyOf: ['registers.controlled'] },
+      ...['Stock insights', 'Customer insights'].map((l) => planned(`rep-${l}`, l)),
+    ],
   },
 ]
 

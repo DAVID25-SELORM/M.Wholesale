@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, ArrowLeft, Printer } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, FileDown, Printer } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Field, InlineError, Input, LoadingState, Modal, PageHeader, Select, useToast } from '@/components/ui'
@@ -16,6 +16,8 @@ import { getOrganization } from '@/services/organization'
 import { getSalesInvoice, listSalesAllocations, listSalesLines, moneyFmt } from '@/services/sales'
 import { listWarehouseOptions } from '@/services/warehouses'
 import { buildCreditLines, draftsFromLines, type CreditLineDraft, type InvoiceLineInfo } from './creditLines'
+import { getCustomer } from '@/services/customers'
+import { downloadCreditNotePdf } from './documentPdf'
 import { CreditStatusBadge } from './CreditNotesPage'
 import { RefundDialog } from './RefundDialog'
 
@@ -267,6 +269,7 @@ function CreditView({ note }: { note: CreditNote }) {
   const returns = useQuery({ queryKey: ['credit-note-returns', note.id], queryFn: () => listCreditNoteReturns(note.id), enabled: note.status === 'POSTED' })
   const allocs = useQuery({ queryKey: ['credit-note-allocations', note.id], queryFn: () => listCreditNoteAllocations(note.id), enabled: note.status === 'POSTED' })
   const org = useQuery({ queryKey: ['organization'], queryFn: getOrganization, staleTime: 5 * 60_000 })
+  const customerQuery = useQuery({ queryKey: ['customer', note.customer_id], queryFn: () => getCustomer(note.customer_id) })
   const [reversing, setReversing] = useState(false)
   const [reverseError, setReverseError] = useState<string | null>(null)
   const [refunding, setRefunding] = useState(false)
@@ -290,6 +293,9 @@ function CreditView({ note }: { note: CreditNote }) {
   if (lines.isPending) return <LoadingState />
   if (lines.isError) return <ErrorState message={toAppError(lines.error).message} onRetry={() => void lines.refetch()} />
   const o = org.data
+  const pdf = async () => {
+    try { await downloadCreditNotePdf({ note, lines: lines.data ?? [], org: o, customer: customerQuery.data }) } catch (e) { toast.error(toAppError(e).message) }
+  }
   const unapplied = Number(note.unapplied_amount ?? 0)
   const factor = (l: CreditNoteLine) => Number(l.unit?.factor_to_base ?? 1)
 
@@ -307,6 +313,7 @@ function CreditView({ note }: { note: CreditNote }) {
               {note.status === 'POSTED' && unapplied > 0 && ability.can('refunds.create', note.branch_id) && <Button variant="secondary" onClick={() => setRefunding(true)}>Pay back</Button>}
               {note.status === 'POSTED' && ability.can('credit_notes.reverse', note.branch_id) && <Button variant="ghost" onClick={() => { setReverseError(null); setReversing(true) }}>Reverse</Button>}
               {note.status === 'POSTED' && <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" aria-hidden /> Print</Button>}
+              {note.status === 'POSTED' && <Button variant="secondary" onClick={() => void pdf()}><FileDown className="h-4 w-4" aria-hidden /> PDF</Button>}
             </div>
           }
         />

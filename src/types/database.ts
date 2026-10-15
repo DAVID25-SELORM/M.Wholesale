@@ -417,6 +417,32 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"payment_reminders": {
+                  Row: {
+                    "channel": string,"customer_id": string,"id": string,"invoice_ids": (string)[],"level": number,"message": string,"organization_id": string,"overdue_amount": number,"sent_at": string,"sent_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "channel": string,"customer_id": string,"id"?: string,"invoice_ids": (string)[],"level": number,"message": string,"organization_id"?: string,"overdue_amount": number,"sent_at"?: string,"sent_by"?: string | null
+                  }
+                  Update: {
+                    "channel"?: string,"customer_id"?: string,"id"?: string,"invoice_ids"?: (string)[],"level"?: number,"message"?: string,"organization_id"?: string,"overdue_amount"?: number,"sent_at"?: string,"sent_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_reminders_customer_fk"
+      columns: ["customer_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "customers"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "payment_reminders_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"permissions": {
                   Row: {
                     "action": string,"code": string,"description": string,"id": string,"module": string
@@ -2173,6 +2199,16 @@ isOneToOne: false
 "confirm_sales_order":
 { Args: { "p_id": string }; Returns: Json
                            },
+"controlled_drug_register":
+{ Args: { "p_from": string,"p_product_id": string,"p_to": string,"p_warehouse_id"?: string }; Returns: {
+              "balance": number,"batch_number": string,"counterparty": string,"document_number": string,"document_type": string,"expiry_date": string,"is_opening": boolean,"licence_number": string,"line_no": number,"movement_type": string,"notes": string,"posted_at": string,"posted_by_name": string,"quantity": number,"reference": string,"stock_status": string,"warehouse_name": string
+            }[]
+                           },
+"controlled_drug_summary":
+{ Args: { "p_from": string,"p_to": string,"p_warehouse_id"?: string }; Returns: {
+              "adjusted": number,"closing": number,"issued": number,"opening": number,"product_id": string,"product_name": string,"received": number,"sku": string
+            }[]
+                           },
 "convert_quotation_to_order":
 { Args: { "p_id": string }; Returns: string
                            },
@@ -2217,6 +2253,11 @@ isOneToOne: false
 "order_progress":
 { Args: { "p_order_id": string }; Returns: {
               "in_draft": number,"invoiced": number,"line_no": number,"order_line_id": string,"quantity": number,"remaining": number,"reserved_base": number
+            }[]
+                           },
+"overdue_customers":
+{ Args: { "p_min_days"?: number }; Returns: {
+              "contact_name": string,"customer_id": string,"customer_name": string,"email": string,"invoices": number,"last_level": number,"last_reminder_at": string,"oldest_days": number,"on_hold": boolean,"overdue_amount": number,"phone": string,"suggested_level": number
             }[]
                            },
 "pay_supplier_invoice":
@@ -2268,6 +2309,9 @@ isOneToOne: false
 "receive_transfer":
 { Args: { "p_id": string,"p_lines": Json,"p_notes"?: string }; Returns: Json
                            },
+"record_payment_reminder":
+{ Args: { "p_channel": string,"p_customer_id": string,"p_invoice_ids": (string)[],"p_level": number,"p_message": string }; Returns: string
+                           },
 "record_receipt":
 { Args: { "p_allocations"?: Json,"p_amount": number,"p_branch_id": string,"p_customer_id": string,"p_method": string,"p_notes"?: string,"p_reference"?: string }; Returns: Json
                            },
@@ -2300,6 +2344,11 @@ isOneToOne: false
                            },
 "revoke_user_role":
 { Args: { "p_reason"?: string,"p_user_role_id": string }; Returns: undefined
+                           },
+"sales_report":
+{ Args: { "p_branch_id"?: string,"p_from": string,"p_group"?: string,"p_to": string }; Returns: {
+              "cost": number,"credits": number,"group_key": string,"group_label": string,"invoices": number,"margin": number,"margin_pct": number,"net_sales": number,"sales": number,"tax": number,"uncosted_lines": number,"units": number
+            }[]
                            },
 "save_count_entries":
 { Args: { "p_entries": Json,"p_id": string }; Returns: number

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft, FileDown, Printer } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Button, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@/components/ui'
@@ -12,6 +12,7 @@ import { fmtQty } from '@/services/inventory'
 import { cancelQuotation, convertQuotation, getQuotation, listQuotationLines, rejectQuotation, type DocLine, type Quotation } from '@/services/orders'
 import { getOrganization } from '@/services/organization'
 import { moneyFmt } from '@/services/sales'
+import { downloadQuotationPdf } from './documentPdf'
 import { QuotationStatusBadge, isExpired } from './QuotationsPage'
 import { SalesDocEditor } from './SalesDocEditor'
 
@@ -44,6 +45,9 @@ function QuotationView({ quote, lines }: { quote: Quotation; lines: DocLine[] })
   const o = org.data
   const c = customer.data
   const expired = isExpired(quote)
+  const pdf = async () => {
+    try { await downloadQuotationPdf({ quotation: quote, lines, org: o, customer: c }) } catch (e) { toast.error(toAppError(e).message) }
+  }
   const refresh = () => Promise.all(['quotation', 'quotations', 'sales-orders', 'dashboard'].map((k) => qc.invalidateQueries({ queryKey: [k] })))
 
   const accept = useMutation({
@@ -72,6 +76,7 @@ function QuotationView({ quote, lines }: { quote: Quotation; lines: DocLine[] })
               {quote.status === 'SENT' && canAct && <Button variant="secondary" onClick={() => { setCloseError(null); setClosing('reject') }}>Rejected</Button>}
               {quote.status === 'SENT' && canAct && <Button variant="ghost" onClick={() => { setCloseError(null); setClosing('cancel') }}>Cancel</Button>}
               <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" aria-hidden /> Print</Button>
+              <Button variant="secondary" onClick={() => void pdf()}><FileDown className="h-4 w-4" aria-hidden /> PDF</Button>
             </div>
           }
         />

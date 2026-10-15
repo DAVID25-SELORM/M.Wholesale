@@ -516,6 +516,51 @@ try {
   console.warn(`orders demo data skipped: ${e.message}`)
 }
 
+// ---- Phase 11: a controlled medicine with stock, sold to a customer authorised for controlled drugs (fills the register), ----
+async function seedControlled(orgId) {
+  if (await one(`/products?select=id&organization_id=eq.${orgId}&sku=eq.TRAMADOL-50-100`)) return
+  const { anonKey } = JSON.parse(readFileSync(secretsFile, 'utf8'))
+  const login = await fetch(`${authUrl}/token?grant_type=password`, {
+    method: 'POST', headers: { apikey: anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'owner@demo.test', password }),
+  })
+  if (!login.ok) throw new Error(`owner login failed: ${login.status}`)
+  const { access_token } = await login.json()
+  const call = async (fn, body) => {
+    const res = await fetch(`${restUrl}/rpc/${fn}`, {
+      method: 'POST', headers: { apikey: anonKey, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    })
+    const text = await res.text()
+    if (!res.ok) throw new Error(`${fn} -> ${res.status} ${text}`)
+    return text ? JSON.parse(text) : null
+  }
+  const identity = await ensure('product_identities', `organization_id=eq.${orgId}&generic_name=eq.Tramadol`,
+    { organization_id: orgId, generic_name: 'Tramadol', dosage_form_id: await form('TABLET'), strength_text: '50 mg' })
+  const analgesics = (await one(`/product_categories?select=id&organization_id=eq.${orgId}&code=eq.ANALGESICS`)).id
+  const tram = await ensure('products', `organization_id=eq.${orgId}&sku=eq.TRAMADOL-50-100`, {
+    organization_id: orgId, sku: 'TRAMADOL-50-100', identity_id: identity, brand_name: 'Tramadol 50 mg capsules', category_id: analgesics,
+    product_class: 'CONTROLLED', is_controlled: true, requires_prescription: true, base_unit_id: await unit('TABLET'), storage_condition: 'AMBIENT',
+  })
+  const tramBase = (await one(`/product_units?select=id&product_id=eq.${tram}&is_base=is.true`)).id
+  const list = (await one(`/price_lists?select=id&organization_id=eq.${orgId}&code=eq.WHOLESALE`)).id
+  await ensure('price_list_items', `price_list_id=eq.${list}&product_unit_id=eq.${tramBase}`, { organization_id: orgId, price_list_id: list, product_id: tram, product_unit_id: tramBase, unit_price: 1.5 })
+  const wh = (await one(`/warehouses?select=id&organization_id=eq.${orgId}&code=eq.MAIN-HQ`)).id
+  const day = (n) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10)
+  await call('post_stock_document', {
+    p_document_type: 'OPENING', p_warehouse_id: wh, p_notes: 'Controlled stock brought forward',
+    p_lines: [{ product_id: tram, quantity: 500, batch_number: 'TR-2601', expiry_date: day(400), unit_cost: 0.6 }],
+  })
+  await rest('PATCH', `/customers?organization_id=eq.${orgId}&code=eq.ADOM`, { controlled_drugs_authorised: true })
+  const adom = (await one(`/customers?select=id&organization_id=eq.${orgId}&code=eq.ADOM`)).id
+  const inv = await call('save_sales_invoice', { p_id: null, p_customer_id: adom, p_warehouse_id: wh, p_customer_reference: 'LPO-9001', p_notes: null, p_lines: [{ product_id: tram, quantity: 100 }] })
+  await call('post_sales_invoice', { p_id: inv })
+}
+try {
+  await seedControlled(orgA)
+} catch (e) {
+  console.warn(`controlled-drug demo data skipped: ${e.message}`)
+}
+
 // ---- Organization B: proves tenant isolation in the browser -----------------------------------
 const orgB = await ensureOrg('Other Pharma Ltd', { email: 'owner@other.test', first: 'Nana', last: 'Other' })
 const hqB = (await rest('GET', `/branches?select=id&organization_id=eq.${orgB}&is_head_office=is.true`))[0].id

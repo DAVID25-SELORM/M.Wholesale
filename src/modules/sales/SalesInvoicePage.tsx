@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft, FileDown, Printer } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { Button, Card, CardBody, CardHeader, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@/components/ui'
@@ -13,6 +13,7 @@ import { getSalesOrder } from '@/services/orders'
 import { fmtQty } from '@/services/inventory'
 import { getOrganization } from '@/services/organization'
 import { RECEIPT_METHOD_LABEL, cancelSalesInvoice, getSalesInvoice, reverseSalesInvoice, listInvoicePayments, listSalesAllocations, listSalesLines, moneyFmt, type ReceiptMethod } from '@/services/sales'
+import { downloadInvoicePdf } from './documentPdf'
 import { InvoiceEditor } from './InvoiceEditor'
 import { PostInvoiceDialog } from './PostInvoiceDialog'
 import { SalesStatusBadge } from './SalesInvoicesPage'
@@ -96,6 +97,9 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
   const o = org.data
   const today = new Date().toISOString().slice(0, 10)
   const owed = Number(inv.balance_due)
+  const pdf = async () => {
+    try { await downloadInvoicePdf({ invoice: inv, lines: lines.data, org: o, customer: c }) } catch (e) { toast.error(toAppError(e).message) }
+  }
 
   return (
     <>
@@ -110,6 +114,7 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
               {inv.status === 'POSTED' && ability.can('sales.reverse', inv.branch_id) && <Button variant="ghost" onClick={() => { setReverseError(null); setReversing(true) }}>Reverse</Button>}
               {inv.status === 'POSTED' && ability.can('credit_notes.create', inv.branch_id) && <Link to={`/sales/credit-notes/new?invoice=${inv.id}`}><Button variant="secondary">Credit note</Button></Link>}
               <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" aria-hidden /> Print</Button>
+              <Button variant="secondary" onClick={() => void pdf()}><FileDown className="h-4 w-4" aria-hidden /> PDF</Button>
             </div>
           }
         />

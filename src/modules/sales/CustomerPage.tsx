@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, FileDown } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, LoadingState, PageHeader, StatusBadge } from '@/components/ui'
@@ -12,6 +12,8 @@ import { CUSTOMER_TYPE_LABEL, getCustomer, getCustomerCredit, getCustomerStateme
 import { listOpenInvoices, moneyFmt } from '@/services/sales'
 import { CustomerForm } from './CustomerForm'
 import { LicenceBadge } from './CustomersPage'
+import { getOrganization } from '@/services/organization'
+import { downloadStatementPdf } from './documentPdf'
 import { RecordReceiptDialog } from './RecordReceiptDialog'
 import { RefundDialog, type RefundSourceInfo } from './RefundDialog'
 
@@ -159,7 +161,7 @@ export function CustomerPage() {
       {ability.canAnywhere('receipts.view') && (
         <div className="mt-5">
           <Card>
-            <CardHeader title="Statement" description="Every posted invoice and receipt with the running balance." />
+            <CardHeader title="Statement" description="Invoices, payments, credit notes, reversals and refunds with the running balance." actions={(statement.data ?? []).length > 0 ? <Button size="sm" variant="secondary" onClick={() => void getOrganization().then((org) => downloadStatementPdf({ customerName: c.name, organization: org.legal_name || org.name, rows: statement.data ?? [] }))}><FileDown className="h-4 w-4" aria-hidden /> PDF</Button> : undefined} />
             <CardBody>
               {statement.isPending ? <LoadingState /> : statement.isError ? <ErrorState message={toAppError(statement.error).message} onRetry={() => void statement.refetch()} /> : (statement.data ?? []).length === 0 ? (
                 <EmptyState title="No activity yet" />

@@ -22,6 +22,9 @@ import { QuotationPage } from '@/modules/sales/QuotationPage'
 import { QuotationsPage } from '@/modules/sales/QuotationsPage'
 import { SalesOrderPage } from '@/modules/sales/SalesOrderPage'
 import { SalesOrdersPage } from '@/modules/sales/SalesOrdersPage'
+import { ControlledRegisterPage } from '@/modules/reports/ControlledRegisterPage'
+import { SalesReportPage } from '@/modules/reports/SalesReportPage'
+import { RemindersPage } from '@/modules/sales/RemindersPage'
 import { PosPage } from '@/modules/pos/PosPage'
 import { PosSessionsPage } from '@/modules/pos/PosSessionsPage'
 import { CreditNotePage } from '@/modules/sales/CreditNotePage'
@@ -119,6 +122,9 @@ export const routes = [
               { path: 'sales/orders/:id', element: <SalesOrderPage /> },
             ],
           },
+          { element: <RequirePermission anyOf={['reports.sales']} />, children: [{ path: 'reports/sales', element: <SalesReportPage /> }] },
+          { element: <RequirePermission anyOf={['registers.controlled']} />, children: [{ path: 'registers/controlled', element: <ControlledRegisterPage /> }] },
+          { element: <RequirePermission anyOf={['reminders.view']} />, children: [{ path: 'sales/reminders', element: <RemindersPage /> }] },
           { element: <RequirePermission anyOf={['pos.sell']} />, children: [{ path: 'pos', element: <PosPage /> }] },
           { element: <RequirePermission anyOf={['pos.sell', 'pos.view']} />, children: [{ path: 'pos/sessions', element: <PosSessionsPage /> }] },
           {

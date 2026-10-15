@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
+import { Download, FileDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Badge, Card, DataTable, PageHeader, type Column } from '@/components/ui'
+import { Badge, Button, Card, DataTable, PageHeader, type Column } from '@/components/ui'
+import { downloadCsv } from '@/lib/download'
+import { downloadTablePdf } from '@/lib/pdf'
 import { toAppError } from '@/lib/errors'
 import { getReceivables, type ReceivablesRow } from '@/services/sales'
 
@@ -13,6 +16,8 @@ export function ReceivablesPage() {
     (t, r) => ({ outstanding: t.outstanding + r.outstanding, overdue: t.overdue + r.overdue_1_30 + r.overdue_31_60 + r.overdue_61_90 + r.overdue_over_90, credit: t.credit + r.credit_held }),
     { outstanding: 0, overdue: 0, credit: 0 },
   )
+  const exportRows = () => (rows ?? []).map((r) => [r.customer_name, r.outstanding, r.not_due, r.overdue_1_30, r.overdue_31_60, r.overdue_61_90, r.overdue_over_90, r.credit_held, r.credit_limit])
+  const exportHead = ['Customer', 'Owes', 'Not yet due', '1-30 days late', '31-60', '61-90', 'Over 90', 'Customer credit', 'Credit limit']
   const mixed = new Set((rows ?? []).map((r) => r.currency_code)).size > 1
 
   const columns: Column<ReceivablesRow>[] = [
@@ -32,7 +37,15 @@ export function ReceivablesPage() {
 
   return (
     <>
-      <PageHeader title="Receivables" description="What customers owe on posted invoices, by how late it is. Open a customer to see their invoices and statement." />
+      <PageHeader
+        title="Receivables" description="What customers owe on posted invoices, by how late it is. Open a customer to see their invoices and statement."
+        actions={
+          <div className="flex gap-2">
+            <Button variant="secondary" disabled={(rows ?? []).length === 0} onClick={() => downloadCsv(`receivables-${new Date().toISOString().slice(0, 10)}`, [exportHead, ...exportRows()])}><Download className="h-4 w-4" aria-hidden /> CSV</Button>
+            <Button variant="secondary" disabled={(rows ?? []).length === 0} onClick={() => void downloadTablePdf({ title: 'Receivables ageing', subtitle: `As at ${new Date().toLocaleDateString()}`, landscape: true, filename: `receivables-${new Date().toISOString().slice(0, 10)}`, columns: exportHead.map((h, i) => ({ header: h, align: i === 0 ? 'left' : 'right' })), rows: exportRows().map((r) => r.map((v, i) => (i === 0 ? String(v) : Number(v).toFixed(2)))) })}><FileDown className="h-4 w-4" aria-hidden /> PDF</Button>
+          </div>
+        }
+      />
       <Card>
         {rows && (
           <div className="flex flex-wrap gap-x-8 gap-y-2 border-b border-slate-100 p-4 text-sm text-slate-600">
