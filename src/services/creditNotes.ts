@@ -3,9 +3,9 @@ import { sanitizeForOrFilter } from '@/lib/utils'
 import type { PageParams, Paged, Tables } from '@/types/domain'
 import { emptyToNull, rangeFor, unwrap, unwrapPaged } from './common'
 
-export const CREDIT_STATUSES = ['DRAFT', 'POSTED', 'CANCELLED'] as const
+export const CREDIT_STATUSES = ['DRAFT', 'POSTED', 'CANCELLED', 'REVERSED'] as const
 export type CreditStatus = (typeof CREDIT_STATUSES)[number]
-export const CREDIT_STATUS_LABEL: Record<CreditStatus, string> = { DRAFT: 'Draft', POSTED: 'Posted', CANCELLED: 'Cancelled' }
+export const CREDIT_STATUS_LABEL: Record<CreditStatus, string> = { DRAFT: 'Draft', POSTED: 'Posted', CANCELLED: 'Cancelled', REVERSED: 'Reversed' }
 
 export const CREDIT_REASONS = ['DAMAGED', 'EXPIRED', 'WRONG_ITEM', 'OVER_SUPPLY', 'QUALITY_COMPLAINT', 'RECALL', 'PRICE_ERROR', 'OTHER'] as const
 export type CreditReason = (typeof CREDIT_REASONS)[number]
@@ -163,6 +163,11 @@ export interface CreditPostResult { credit_note_number: string; total_amount: nu
 
 export async function postCreditNote(id: string): Promise<CreditPostResult> {
   return unwrap(await supabase.rpc('post_credit_note', { p_id: id }), 'creditNotes.post') as unknown as CreditPostResult
+}
+
+export async function reverseCreditNote(id: string, reason: string): Promise<{ reopened: number }> {
+  const r = unwrap(await supabase.rpc('reverse_credit_note', { p_id: id, p_reason: reason }), 'creditNotes.reverse') as unknown as { reopened: number }
+  return { reopened: Number(r.reopened) }
 }
 
 export async function cancelCreditNote(id: string, reason: string): Promise<void> {

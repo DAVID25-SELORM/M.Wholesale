@@ -1,15 +1,17 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Printer } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { Button, Card, CardBody, CardHeader, EmptyState, ErrorState, LoadingState, PageHeader } from '@/components/ui'
+import { Button, Card, CardBody, CardHeader, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@/components/ui'
 import { toAppError } from '@/lib/errors'
 import { formatDateTime } from '@/lib/utils'
+import { ReasonDialog } from '@/modules/purchasing/shared'
 import { useSession } from '@/modules/session/SessionProvider'
 import { CREDIT_REASON_LABEL, listCreditNotes, type CreditReason } from '@/services/creditNotes'
 import { getCustomer, listCustomerOptions } from '@/services/customers'
 import { fmtQty } from '@/services/inventory'
 import { getOrganization } from '@/services/organization'
-import { RECEIPT_METHOD_LABEL, getSalesInvoice, listInvoicePayments, listSalesAllocations, listSalesLines, moneyFmt, type ReceiptMethod } from '@/services/sales'
+import { RECEIPT_METHOD_LABEL, getSalesInvoice, reverseSalesInvoice, listInvoicePayments, listSalesAllocations, listSalesLines, moneyFmt, type ReceiptMethod } from '@/services/sales'
 import { InvoiceEditor } from './InvoiceEditor'
 import { PostInvoiceDialog } from './PostInvoiceDialog'
 import { SalesStatusBadge } from './SalesInvoicesPage'
@@ -53,6 +55,19 @@ function DraftView({ invoiceId }: { invoiceId: string }) {
 
 function PostedView({ invoiceId }: { invoiceId: string }) {
   const { ability } = useSession()
+  const qc = useQueryClient()
+  const toast = useToast()
+  const [reversing, setReversing] = useState(false)
+  const [reverseError, setReverseError] = useState<string | null>(null)
+  const reverse = useMutation({
+    mutationFn: (reason: string) => reverseSalesInvoice(invoiceId, reason),
+    onSuccess: async (r) => {
+      toast.success(`Invoice reversed. The goods are back in stock${r.credit_released > 0 ? ` and ${moneyFmt(r.credit_released)} paid on it is now the customer's credit` : ''}.`)
+      setReversing(false)
+      await Promise.all(['sales-invoice', 'sales-invoices', 'sales-allocations', 'invoice-payments', 'customer-credit', 'customer-statement', 'open-invoices', 'unallocated-receipts', 'receivables', 'balances', 'stock-documents', 'dashboard'].map((k) => qc.invalidateQueries({ queryKey: [k] })))
+    },
+    onError: (e) => setReverseError(toAppError(e).message),
+  })
   const invoice = useQuery({ queryKey: ['sales-invoice', invoiceId], queryFn: () => getSalesInvoice(invoiceId) })
   const lines = useQuery({ queryKey: ['sales-invoice-lines', invoiceId], queryFn: () => listSalesLines(invoiceId) })
   const allocations = useQuery({ queryKey: ['sales-allocations', invoiceId], queryFn: () => listSalesAllocations(invoiceId) })
@@ -81,6 +96,7 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
           actions={
             <div className="flex flex-wrap items-center gap-2">
               <SalesStatusBadge status={inv.status} />
+              {inv.status === 'POSTED' && ability.can('sales.reverse', inv.branch_id) && <Button variant="ghost" onClick={() => { setReverseError(null); setReversing(true) }}>Reverse</Button>}
               {inv.status === 'POSTED' && ability.can('credit_notes.create', inv.branch_id) && <Link to={`/sales/credit-notes/new?invoice=${inv.id}`}><Button variant="secondary">Credit note</Button></Link>}
               <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" aria-hidden /> Print</Button>
             </div>
@@ -88,6 +104,7 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
         />
       </div>
 
+      {inv.status === 'REVERSED' && <p className="print-hidden mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">This invoice was reversed on {formatDateTime(inv.reversed_at)}: {inv.reversal_reason}. The goods are back in stock and the customer no longer owes it.</p>}
       <div id="print-area" className="rounded-xl border border-slate-200 bg-white">
         <div className="space-y-5 p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -98,7 +115,7 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
               {o?.tax_number && <p className="text-sm text-slate-600">Tax no. {o.tax_number}</p>}
             </div>
             <div className="text-right">
-              <p className="text-xl font-bold tracking-wide text-slate-900">{inv.status === 'CANCELLED' ? 'CANCELLED' : 'TAX INVOICE'}</p>
+              <p className="text-xl font-bold tracking-wide text-slate-900">{inv.status === 'CANCELLED' ? 'CANCELLED' : inv.status === 'REVERSED' ? 'REVERSED' : 'TAX INVOICE'}</p>
               <p className="font-mono text-sm font-semibold">{inv.invoice_number}</p>
               <p className="text-sm text-slate-600">Date {inv.invoice_date}</p>
               {inv.due_date && <p className="text-sm text-slate-600">Due {inv.due_date}</p>}
@@ -175,6 +192,12 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
           </Card>
         </div>
       )}
+
+      <ReasonDialog
+        open={reversing} title={`Reverse ${inv.invoice_number}`} confirmLabel="Reverse invoice" tone="danger"
+        description="Use this when the sale should never have happened. The goods go back into stock, and anything paid on it becomes the customer's credit (to apply elsewhere or pay back). Credit notes on the invoice must be reversed first. This cannot be undone."
+        busy={reverse.isPending} error={reverseError} onConfirm={(r) => reverse.mutate(r)} onClose={() => setReversing(false)}
+      />
 
       {(payments.data ?? []).length > 0 && (
         <div className="print-hidden mt-5">

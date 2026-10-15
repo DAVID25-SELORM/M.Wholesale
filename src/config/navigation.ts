@@ -56,6 +56,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'sales-shifts', label: 'Till shifts', to: '/pos/sessions', anyOf: ['pos.sell', 'pos.view'] },
       { id: 'sales-invoices', label: 'Invoices', to: '/sales/invoices', anyOf: ['sales.view'] },
       { id: 'sales-credit-notes', label: 'Credit notes', to: '/sales/credit-notes', anyOf: ['credit_notes.view'] },
+      { id: 'sales-refunds', label: 'Refunds', to: '/sales/refunds', anyOf: ['refunds.view'] },
       { id: 'sales-customers', label: 'Customers', to: '/sales/customers', anyOf: ['customers.view'] },
       { id: 'sales-receipts', label: 'Payments received', to: '/sales/receipts', anyOf: ['receipts.view'] },
       { id: 'sales-receivables', label: 'Receivables', to: '/sales/receivables', anyOf: ['receipts.view'] },

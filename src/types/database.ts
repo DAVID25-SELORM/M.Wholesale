@@ -99,14 +99,14 @@ isOneToOne: false
                   ]
                 },"credit_note_allocations": {
                   Row: {
-                    "amount": number,"branch_id": string,"created_at": string,"credit_note_id": string,"id": string,"organization_id": string,"sales_invoice_id": string
+                    "amount": number,"branch_id": string,"created_at": string,"credit_note_id": string,"id": string,"is_reversed": boolean,"organization_id": string,"sales_invoice_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount": number,"branch_id": string,"created_at"?: string,"credit_note_id": string,"id"?: string,"organization_id": string,"sales_invoice_id": string
+                    "amount": number,"branch_id": string,"created_at"?: string,"credit_note_id": string,"id"?: string,"is_reversed"?: boolean,"organization_id": string,"sales_invoice_id": string
                   }
                   Update: {
-                    "amount"?: number,"branch_id"?: string,"created_at"?: string,"credit_note_id"?: string,"id"?: string,"organization_id"?: string,"sales_invoice_id"?: string
+                    "amount"?: number,"branch_id"?: string,"created_at"?: string,"credit_note_id"?: string,"id"?: string,"is_reversed"?: boolean,"organization_id"?: string,"sales_invoice_id"?: string
                   }
                   Relationships: [
                     {
@@ -131,14 +131,14 @@ isOneToOne: false
                   ]
                 },"customer_receipts": {
                   Row: {
-                    "allocated_amount": number,"amount": number,"branch_id": string,"created_at": string,"customer_id": string,"id": string,"method": string,"notes": string | null,"organization_id": string,"receipt_date": string,"receipt_number": string,"received_by": string | null,"reference": string | null,"status": string,"unallocated_amount": number | null,"void_reason": string | null,"voided_at": string | null,"voided_by": string | null
+                    "allocated_amount": number,"amount": number,"branch_id": string,"created_at": string,"customer_id": string,"id": string,"method": string,"notes": string | null,"organization_id": string,"receipt_date": string,"receipt_number": string,"received_by": string | null,"reference": string | null,"refunded_amount": number,"status": string,"unallocated_amount": number | null,"void_reason": string | null,"voided_at": string | null,"voided_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "allocated_amount"?: number,"amount": number,"branch_id": string,"created_at"?: string,"customer_id": string,"id"?: string,"method": string,"notes"?: string | null,"organization_id": string,"receipt_date": string,"receipt_number": string,"received_by"?: string | null,"reference"?: string | null,"status"?: string,"unallocated_amount"?: never,"void_reason"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
+                    "allocated_amount"?: number,"amount": number,"branch_id": string,"created_at"?: string,"customer_id": string,"id"?: string,"method": string,"notes"?: string | null,"organization_id": string,"receipt_date": string,"receipt_number": string,"received_by"?: string | null,"reference"?: string | null,"refunded_amount"?: number,"status"?: string,"unallocated_amount"?: never,"void_reason"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
                   }
                   Update: {
-                    "allocated_amount"?: number,"amount"?: number,"branch_id"?: string,"created_at"?: string,"customer_id"?: string,"id"?: string,"method"?: string,"notes"?: string | null,"organization_id"?: string,"receipt_date"?: string,"receipt_number"?: string,"received_by"?: string | null,"reference"?: string | null,"status"?: string,"unallocated_amount"?: never,"void_reason"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
+                    "allocated_amount"?: number,"amount"?: number,"branch_id"?: string,"created_at"?: string,"customer_id"?: string,"id"?: string,"method"?: string,"notes"?: string | null,"organization_id"?: string,"receipt_date"?: string,"receipt_number"?: string,"received_by"?: string | null,"reference"?: string | null,"refunded_amount"?: number,"status"?: string,"unallocated_amount"?: never,"void_reason"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -159,6 +159,56 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "organizations"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"customer_refunds": {
+                  Row: {
+                    "amount": number,"branch_id": string,"created_at": string,"credit_note_id": string | null,"customer_id": string,"id": string,"method": string,"notes": string | null,"organization_id": string,"pos_session_id": string | null,"receipt_id": string | null,"reference": string | null,"refund_date": string,"refund_number": string,"refunded_by": string | null,"source_type": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"branch_id": string,"created_at"?: string,"credit_note_id"?: string | null,"customer_id": string,"id"?: string,"method": string,"notes"?: string | null,"organization_id": string,"pos_session_id"?: string | null,"receipt_id"?: string | null,"reference"?: string | null,"refund_date": string,"refund_number": string,"refunded_by"?: string | null,"source_type": string
+                  }
+                  Update: {
+                    "amount"?: number,"branch_id"?: string,"created_at"?: string,"credit_note_id"?: string | null,"customer_id"?: string,"id"?: string,"method"?: string,"notes"?: string | null,"organization_id"?: string,"pos_session_id"?: string | null,"receipt_id"?: string | null,"reference"?: string | null,"refund_date"?: string,"refund_number"?: string,"refunded_by"?: string | null,"source_type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "customer_refunds_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "customer_refunds_credit_note_fk"
+      columns: ["credit_note_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_credit_notes"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "customer_refunds_customer_fk"
+      columns: ["customer_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "customers"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "customer_refunds_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "customer_refunds_receipt_fk"
+      columns: ["receipt_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "customer_receipts"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "customer_refunds_session_fk"
+      columns: ["pos_session_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "pos_sessions"
+      referencedColumns: ["id","organization_id"]
     }
                   ]
                 },"customers": {
@@ -1097,14 +1147,14 @@ isOneToOne: false
                   ]
                 },"sales_credit_notes": {
                   Row: {
-                    "applied_amount": number,"branch_id": string,"created_at": string,"created_by": string | null,"credit_date": string,"credit_note_number": string | null,"currency_code": string,"customer_id": string,"id": string,"notes": string | null,"organization_id": string,"posted_at": string | null,"posted_by": string | null,"reason_code": string,"sales_invoice_id": string,"status": string,"status_reason": string | null,"stock_document_id": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"unapplied_amount": number | null,"updated_at": string,"warehouse_id": string
+                    "applied_amount": number,"branch_id": string,"created_at": string,"created_by": string | null,"credit_date": string,"credit_note_number": string | null,"currency_code": string,"customer_id": string,"id": string,"notes": string | null,"organization_id": string,"posted_at": string | null,"posted_by": string | null,"reason_code": string,"refunded_amount": number,"reversal_document_id": string | null,"reversal_reason": string | null,"reversed_at": string | null,"reversed_by": string | null,"sales_invoice_id": string,"status": string,"status_reason": string | null,"stock_document_id": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"unapplied_amount": number | null,"updated_at": string,"warehouse_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "applied_amount"?: number,"branch_id": string,"created_at"?: string,"created_by"?: string | null,"credit_date": string,"credit_note_number"?: string | null,"currency_code": string,"customer_id": string,"id"?: string,"notes"?: string | null,"organization_id"?: string,"posted_at"?: string | null,"posted_by"?: string | null,"reason_code": string,"sales_invoice_id": string,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"unapplied_amount"?: never,"updated_at"?: string,"warehouse_id": string
+                    "applied_amount"?: number,"branch_id": string,"created_at"?: string,"created_by"?: string | null,"credit_date": string,"credit_note_number"?: string | null,"currency_code": string,"customer_id": string,"id"?: string,"notes"?: string | null,"organization_id"?: string,"posted_at"?: string | null,"posted_by"?: string | null,"reason_code": string,"refunded_amount"?: number,"reversal_document_id"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"sales_invoice_id": string,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"unapplied_amount"?: never,"updated_at"?: string,"warehouse_id": string
                   }
                   Update: {
-                    "applied_amount"?: number,"branch_id"?: string,"created_at"?: string,"created_by"?: string | null,"credit_date"?: string,"credit_note_number"?: string | null,"currency_code"?: string,"customer_id"?: string,"id"?: string,"notes"?: string | null,"organization_id"?: string,"posted_at"?: string | null,"posted_by"?: string | null,"reason_code"?: string,"sales_invoice_id"?: string,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"unapplied_amount"?: never,"updated_at"?: string,"warehouse_id"?: string
+                    "applied_amount"?: number,"branch_id"?: string,"created_at"?: string,"created_by"?: string | null,"credit_date"?: string,"credit_note_number"?: string | null,"currency_code"?: string,"customer_id"?: string,"id"?: string,"notes"?: string | null,"organization_id"?: string,"posted_at"?: string | null,"posted_by"?: string | null,"reason_code"?: string,"refunded_amount"?: number,"reversal_document_id"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"sales_invoice_id"?: string,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"unapplied_amount"?: never,"updated_at"?: string,"warehouse_id"?: string
                   }
                   Relationships: [
                     {
@@ -1131,6 +1181,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "organizations"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_credit_notes_reversal_document_fk"
+      columns: ["reversal_document_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "stock_documents"
+      referencedColumns: ["id","organization_id"]
     },{
       foreignKeyName: "sales_credit_notes_stock_document_fk"
       columns: ["stock_document_id","organization_id"]
@@ -1235,14 +1291,14 @@ isOneToOne: false
                   ]
                 },"sales_invoices": {
                   Row: {
-                    "amount_credited": number,"amount_paid": number,"balance_due": number | null,"branch_id": string,"created_at": string,"created_by": string | null,"currency_code": string,"customer_id": string,"customer_reference": string | null,"discount_total": number,"due_date": string | null,"id": string,"invoice_date": string,"invoice_number": string | null,"notes": string | null,"organization_id": string,"override_reason": string | null,"payment_terms_days": number,"posted_at": string | null,"posted_by": string | null,"status": string,"status_reason": string | null,"stock_document_id": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"updated_at": string,"warehouse_id": string
+                    "amount_credited": number,"amount_paid": number,"balance_due": number | null,"branch_id": string,"created_at": string,"created_by": string | null,"currency_code": string,"customer_id": string,"customer_reference": string | null,"discount_total": number,"due_date": string | null,"id": string,"invoice_date": string,"invoice_number": string | null,"notes": string | null,"organization_id": string,"override_reason": string | null,"payment_terms_days": number,"posted_at": string | null,"posted_by": string | null,"reversal_document_id": string | null,"reversal_reason": string | null,"reversed_at": string | null,"reversed_by": string | null,"status": string,"status_reason": string | null,"stock_document_id": string | null,"subtotal": number,"tax_total": number,"total_amount": number,"updated_at": string,"warehouse_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount_credited"?: number,"amount_paid"?: number,"balance_due"?: never,"branch_id": string,"created_at"?: string,"created_by"?: string | null,"currency_code": string,"customer_id": string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date": string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id": string
+                    "amount_credited"?: number,"amount_paid"?: number,"balance_due"?: never,"branch_id": string,"created_at"?: string,"created_by"?: string | null,"currency_code": string,"customer_id": string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date": string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"reversal_document_id"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id": string
                   }
                   Update: {
-                    "amount_credited"?: number,"amount_paid"?: number,"balance_due"?: never,"branch_id"?: string,"created_at"?: string,"created_by"?: string | null,"currency_code"?: string,"customer_id"?: string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date"?: string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id"?: string
+                    "amount_credited"?: number,"amount_paid"?: number,"balance_due"?: never,"branch_id"?: string,"created_at"?: string,"created_by"?: string | null,"currency_code"?: string,"customer_id"?: string,"customer_reference"?: string | null,"discount_total"?: number,"due_date"?: string | null,"id"?: string,"invoice_date"?: string,"invoice_number"?: string | null,"notes"?: string | null,"organization_id"?: string,"override_reason"?: string | null,"payment_terms_days"?: number,"posted_at"?: string | null,"posted_by"?: string | null,"reversal_document_id"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"status"?: string,"status_reason"?: string | null,"stock_document_id"?: string | null,"subtotal"?: number,"tax_total"?: number,"total_amount"?: number,"updated_at"?: string,"warehouse_id"?: string
                   }
                   Relationships: [
                     {
@@ -1263,6 +1319,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "organizations"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_invoices_reversal_document_fk"
+      columns: ["reversal_document_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "stock_documents"
+      referencedColumns: ["id","organization_id"]
     },{
       foreignKeyName: "sales_invoices_stock_document_fk"
       columns: ["stock_document_id","organization_id"]
@@ -2004,6 +2066,9 @@ isOneToOne: false
 "record_supplier_invoice":
 { Args: { "p_id": string,"p_invoice_date": string,"p_lines": Json,"p_notes": string,"p_purchase_order_id": string,"p_supplier_invoice_number": string,"p_tax_amount": number }; Returns: string
                            },
+"refund_customer":
+{ Args: { "p_amount": number,"p_method": string,"p_notes"?: string,"p_pos_session_id"?: string,"p_reference": string,"p_source_id": string,"p_source_type": string }; Returns: Json
+                           },
 "reject_purchase_order":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
@@ -2012,6 +2077,12 @@ isOneToOne: false
                            },
 "return_stock_count":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
+"reverse_credit_note":
+{ Args: { "p_id": string,"p_reason": string }; Returns: Json
+                           },
+"reverse_sales_invoice":
+{ Args: { "p_id": string,"p_reason": string }; Returns: Json
                            },
 "revoke_user_role":
 { Args: { "p_reason"?: string,"p_user_role_id": string }; Returns: undefined

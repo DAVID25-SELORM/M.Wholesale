@@ -24,6 +24,7 @@ import { CreditNotePage } from '@/modules/sales/CreditNotePage'
 import { CreditNotesPage } from '@/modules/sales/CreditNotesPage'
 import { CustomerPage } from '@/modules/sales/CustomerPage'
 import { CustomersPage } from '@/modules/sales/CustomersPage'
+import { RefundsPage } from '@/modules/sales/RefundsPage'
 import { PricingPage } from '@/modules/sales/PricingPage'
 import { ReceiptsPage } from '@/modules/sales/ReceiptsPage'
 import { ReceivablesPage } from '@/modules/sales/ReceivablesPage'
@@ -122,6 +123,7 @@ export const routes = [
               { path: 'sales/receivables', element: <ReceivablesPage /> },
             ],
           },
+          { element: <RequirePermission anyOf={['refunds.view']} />, children: [{ path: 'sales/refunds', element: <RefundsPage /> }] },
           { element: <RequirePermission anyOf={['pricing.view']} />, children: [{ path: 'sales/pricing', element: <PricingPage /> }] },
           { element: <RequirePermission anyOf={['products.create', 'suppliers.create', 'inventory.opening_stock']} />, children: [{ path: 'admin/import', element: <ImportPage /> }] },
           { element: <RequirePermission anyOf={['inventory.valuation']} />, children: [{ path: 'inventory/valuation', element: <ValuationPage /> }] },

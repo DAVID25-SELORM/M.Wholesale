@@ -3,9 +3,9 @@ import { sanitizeForOrFilter } from '@/lib/utils'
 import type { PageParams, Paged, Tables } from '@/types/domain'
 import { emptyToNull, rangeFor, unwrap, unwrapPaged } from './common'
 
-export const INVOICE_STATUSES = ['DRAFT', 'POSTED', 'CANCELLED'] as const
+export const INVOICE_STATUSES = ['DRAFT', 'POSTED', 'CANCELLED', 'REVERSED'] as const
 export type SalesStatus = (typeof INVOICE_STATUSES)[number]
-export const SALES_STATUS_LABEL: Record<SalesStatus, string> = { DRAFT: 'Draft', POSTED: 'Posted', CANCELLED: 'Cancelled' }
+export const SALES_STATUS_LABEL: Record<SalesStatus, string> = { DRAFT: 'Draft', POSTED: 'Posted', CANCELLED: 'Cancelled', REVERSED: 'Reversed' }
 
 export type SalesInvoice = Tables<'sales_invoices'> & {
   customer: { code: string; name: string } | null
@@ -113,6 +113,11 @@ export async function postSalesInvoice(id: string, overrideReason?: string, paym
     }),
     'sales.post',
   ) as unknown as PostResult
+}
+
+export async function reverseSalesInvoice(id: string, reason: string): Promise<{ stock_document_number: string; credit_released: number }> {
+  const r = unwrap(await supabase.rpc('reverse_sales_invoice', { p_id: id, p_reason: reason }), 'sales.reverse') as unknown as { stock_document_number: string; credit_released: number }
+  return { stock_document_number: r.stock_document_number, credit_released: Number(r.credit_released) }
 }
 
 export async function cancelSalesInvoice(id: string, reason: string): Promise<void> {

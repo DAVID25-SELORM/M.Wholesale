@@ -8,7 +8,7 @@ import { formatDateTime } from '@/lib/utils'
 import { ReasonDialog } from '@/modules/purchasing/shared'
 import { useSession } from '@/modules/session/SessionProvider'
 import {
-  CREDIT_REASONS, CREDIT_REASON_LABEL, RETURN_CONDITIONS, RETURN_CONDITION_LABEL, applyCreditNote, cancelCreditNote, getCreditNote, getCreditable, listCreditNoteAllocations,
+  CREDIT_REASONS, CREDIT_REASON_LABEL, reverseCreditNote, RETURN_CONDITIONS, RETURN_CONDITION_LABEL, applyCreditNote, cancelCreditNote, getCreditNote, getCreditable, listCreditNoteAllocations,
   listCreditNoteLines, listCreditNoteReturns, postCreditNote, saveCreditNote, type CreditNote, type CreditNoteLine, type CreditReason,
 } from '@/services/creditNotes'
 import { fmtQty } from '@/services/inventory'
@@ -17,6 +17,7 @@ import { getSalesInvoice, listSalesAllocations, listSalesLines, moneyFmt } from 
 import { listWarehouseOptions } from '@/services/warehouses'
 import { buildCreditLines, draftsFromLines, type CreditLineDraft, type InvoiceLineInfo } from './creditLines'
 import { CreditStatusBadge } from './CreditNotesPage'
+import { RefundDialog } from './RefundDialog'
 
 export function CreditNotePage() {
   const { id } = useParams()
@@ -266,6 +267,18 @@ function CreditView({ note }: { note: CreditNote }) {
   const returns = useQuery({ queryKey: ['credit-note-returns', note.id], queryFn: () => listCreditNoteReturns(note.id), enabled: note.status === 'POSTED' })
   const allocs = useQuery({ queryKey: ['credit-note-allocations', note.id], queryFn: () => listCreditNoteAllocations(note.id), enabled: note.status === 'POSTED' })
   const org = useQuery({ queryKey: ['organization'], queryFn: getOrganization, staleTime: 5 * 60_000 })
+  const [reversing, setReversing] = useState(false)
+  const [reverseError, setReverseError] = useState<string | null>(null)
+  const [refunding, setRefunding] = useState(false)
+  const reverse = useMutation({
+    mutationFn: (reason: string) => reverseCreditNote(note.id, reason),
+    onSuccess: async () => {
+      toast.success('Credit note reversed. The credit is withdrawn and the goods are out of stock again.')
+      setReversing(false)
+      await Promise.all(['credit-note', 'credit-notes', 'credit-note-allocations', 'credit-note-returns', 'creditable', 'sales-invoice', 'sales-invoices', 'customer-credit', 'customer-statement', 'open-invoices', 'unused-credit', 'receivables', 'balances', 'stock-documents', 'dashboard'].map((k) => qc.invalidateQueries({ queryKey: [k] })))
+    },
+    onError: (e) => setReverseError(toAppError(e).message),
+  })
   const apply = useMutation({
     mutationFn: () => applyCreditNote(note.id),
     onSuccess: async (n) => {
@@ -291,6 +304,8 @@ function CreditView({ note }: { note: CreditNote }) {
             <div className="flex flex-wrap items-center gap-2">
               <CreditStatusBadge status={note.status} />
               {note.status === 'POSTED' && unapplied > 0 && ability.can('credit_notes.post', note.branch_id) && <Button onClick={() => apply.mutate()} loading={apply.isPending}>Apply {moneyFmt(unapplied)} to invoices</Button>}
+              {note.status === 'POSTED' && unapplied > 0 && ability.can('refunds.create', note.branch_id) && <Button variant="secondary" onClick={() => setRefunding(true)}>Pay back</Button>}
+              {note.status === 'POSTED' && ability.can('credit_notes.reverse', note.branch_id) && <Button variant="ghost" onClick={() => { setReverseError(null); setReversing(true) }}>Reverse</Button>}
               {note.status === 'POSTED' && <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" aria-hidden /> Print</Button>}
             </div>
           }
@@ -300,6 +315,7 @@ function CreditView({ note }: { note: CreditNote }) {
         )}
       </div>
 
+      {note.status === 'REVERSED' && <p className="print-hidden mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">This credit note was reversed on {formatDateTime(note.reversed_at)}: {note.reversal_reason}. The credit is withdrawn and the goods are out of stock again.</p>}
       <div id="print-area" className="rounded-xl border border-slate-200 bg-white">
         <div className="space-y-5 p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -310,7 +326,7 @@ function CreditView({ note }: { note: CreditNote }) {
               {o?.tax_number && <p className="text-sm text-slate-600">Tax no. {o.tax_number}</p>}
             </div>
             <div className="text-right">
-              <p className="text-xl font-bold tracking-wide text-slate-900">{note.status === 'CANCELLED' ? 'CANCELLED' : 'CREDIT NOTE'}</p>
+              <p className="text-xl font-bold tracking-wide text-slate-900">{note.status === 'CANCELLED' ? 'CANCELLED' : note.status === 'REVERSED' ? 'REVERSED' : 'CREDIT NOTE'}</p>
               <p className="font-mono text-sm font-semibold">{note.credit_note_number}</p>
               <p className="text-sm text-slate-600">Date {note.credit_date}</p>
               <p className="text-sm text-slate-600">Invoice {note.invoice?.invoice_number}</p>
@@ -375,6 +391,12 @@ function CreditView({ note }: { note: CreditNote }) {
           </Card>
         </div>
       )}
+      <ReasonDialog
+        open={reversing} title={`Reverse ${note.credit_note_number}`} confirmLabel="Reverse credit note" tone="danger"
+        description="Withdraws the credit: what it cleared on invoices is owed again, and any goods it brought back are taken out of stock (this fails if they were meanwhile sold or moved). Not possible once part of it has been refunded. This cannot be undone."
+        busy={reverse.isPending} error={reverseError} onConfirm={(r) => reverse.mutate(r)} onClose={() => setReversing(false)}
+      />
+      {refunding && <RefundDialog source={{ type: 'CREDIT_NOTE', id: note.id, label: note.credit_note_number ?? 'credit note', customerName: note.customer?.name ?? 'the customer', unused: unapplied, branchId: note.branch_id }} onClose={() => setRefunding(false)} />}
       {note.status === 'CANCELLED' && note.status_reason && <p className="print-hidden mt-4 text-sm text-slate-600"><Badge>Cancelled</Badge> {note.status_reason}</p>}
     </>
   )

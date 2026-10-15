@@ -7,11 +7,13 @@ import { toAppError } from '@/lib/errors'
 import { formatDateTime } from '@/lib/utils'
 import { useSession } from '@/modules/session/SessionProvider'
 import { applyCreditNote, listUnusedCredit } from '@/services/creditNotes'
+import { listUnallocatedReceipts } from '@/services/refunds'
 import { CUSTOMER_TYPE_LABEL, getCustomer, getCustomerCredit, getCustomerStatement, listCustomerOptions, type CustomerType } from '@/services/customers'
 import { listOpenInvoices, moneyFmt } from '@/services/sales'
 import { CustomerForm } from './CustomerForm'
 import { LicenceBadge } from './CustomersPage'
 import { RecordReceiptDialog } from './RecordReceiptDialog'
+import { RefundDialog, type RefundSourceInfo } from './RefundDialog'
 
 export function CustomerPage() {
   const { id = '' } = useParams()
@@ -24,6 +26,8 @@ export function CustomerPage() {
   const open = useQuery({ queryKey: ['open-invoices', id], queryFn: () => listOpenInvoices(id), enabled: Boolean(id) && ability.canAnywhere('sales.view') })
   const qc = useQueryClient()
   const unused = useQuery({ queryKey: ['unused-credit', id], queryFn: () => listUnusedCredit(id), enabled: Boolean(id) && ability.canAnywhere('credit_notes.view') })
+  const unallocated = useQuery({ queryKey: ['unallocated-receipts', id], queryFn: () => listUnallocatedReceipts(id), enabled: Boolean(id) && ability.canAnywhere('receipts.view') })
+  const [refunding, setRefunding] = useState<RefundSourceInfo | null>(null)
   const applyCredit = useMutation({
     mutationFn: (noteId: string) => applyCreditNote(noteId),
     onSuccess: async () => { await Promise.all(['unused-credit', 'customer-credit', 'customer-statement', 'open-invoices', 'receivables', 'credit-notes', 'sales-invoices', 'dashboard'].map((k) => qc.invalidateQueries({ queryKey: [k] }))) },
@@ -79,10 +83,10 @@ export function CustomerPage() {
         </Card>
       )}
 
-      {(unused.data ?? []).length > 0 && (
+      {((unused.data ?? []).length > 0 || (unallocated.data ?? []).length > 0) && (
         <div className="mt-5">
           <Card>
-            <CardHeader title="Unused credit notes" description="Credit that has not been applied to an invoice yet. It counts against what the customer owes." />
+            <CardHeader title="Unused credit" description="Credit not applied to an invoice yet: it counts against what the customer owes. Apply it to invoices, or pay it back." />
             <CardBody>
               <ul className="divide-y divide-slate-100 rounded-md border border-slate-200">
                 {(unused.data ?? []).map((n) => (
@@ -91,6 +95,16 @@ export function CustomerPage() {
                     <span className="flex items-center gap-3">
                       <span className="tabular-nums">{moneyFmt(n.unapplied_amount)}</span>
                       {ability.can('credit_notes.post', n.branch_id) && <Button size="sm" variant="secondary" loading={applyCredit.isPending && applyCredit.variables === n.id} onClick={() => applyCredit.mutate(n.id)}>Apply to invoices</Button>}
+                      {ability.can('refunds.create', n.branch_id) && <Button size="sm" variant="ghost" onClick={() => setRefunding({ type: 'CREDIT_NOTE', id: n.id, label: n.credit_note_number ?? 'credit note', customerName: c.name, unused: Number(n.unapplied_amount), branchId: n.branch_id })}>Pay back</Button>}
+                    </span>
+                  </li>
+                ))}
+                {(unallocated.data ?? []).map((r) => (
+                  <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <span><span className="font-mono text-xs font-semibold">{r.receipt_number}</span> <span className="text-slate-500">payment not applied to an invoice</span></span>
+                    <span className="flex items-center gap-3">
+                      <span className="tabular-nums">{moneyFmt(r.unallocated_amount)}</span>
+                      {ability.can('refunds.create', r.branch_id) && <Button size="sm" variant="ghost" onClick={() => setRefunding({ type: 'RECEIPT', id: r.id, label: r.receipt_number, customerName: c.name, unused: Number(r.unallocated_amount), branchId: r.branch_id })}>Pay back</Button>}
                     </span>
                   </li>
                 ))}
@@ -175,6 +189,7 @@ export function CustomerPage() {
       )}
 
       <CustomerForm open={editing} customer={c} canEdit={ability.can('customers.edit')} onClose={() => setEditing(false)} />
+      {refunding && <RefundDialog source={refunding} onClose={() => setRefunding(null)} />}
       {paying && <RecordReceiptDialog customers={options.data ?? []} presetCustomerId={c.id} onClose={() => setPaying(false)} />}
     </>
   )

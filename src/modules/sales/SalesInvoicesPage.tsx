@@ -10,7 +10,7 @@ import { listCustomerOptions } from '@/services/customers'
 import { INVOICE_STATUSES, SALES_STATUS_LABEL, listSalesInvoices, moneyFmt, type SalesInvoice, type SalesStatus } from '@/services/sales'
 
 const PAGE_SIZE = 20
-const TONE = { DRAFT: 'amber', POSTED: 'green', CANCELLED: 'slate' } as const
+const TONE = { DRAFT: 'amber', POSTED: 'green', CANCELLED: 'slate', REVERSED: 'red' } as const
 
 export function SalesStatusBadge({ status }: { status: string }) {
   return <Badge tone={TONE[status as SalesStatus] ?? 'slate'}>{SALES_STATUS_LABEL[status as SalesStatus] ?? status}</Badge>

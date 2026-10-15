@@ -10,6 +10,7 @@ import { useSession } from '@/modules/session/SessionProvider'
 import { listCustomerOptions } from '@/services/customers'
 import { RECEIPT_METHOD_LABEL, allocateReceipt, listReceipts, moneyFmt, voidReceipt, type CustomerReceipt, type ReceiptMethod } from '@/services/sales'
 import { RecordReceiptDialog } from './RecordReceiptDialog'
+import { RefundDialog, type RefundSourceInfo } from './RefundDialog'
 
 const PAGE_SIZE = 20
 
@@ -24,6 +25,7 @@ export function ReceiptsPage() {
   const [recording, setRecording] = useState(false)
   const [voiding, setVoiding] = useState<CustomerReceipt | null>(null)
   const [voidError, setVoidError] = useState<string | null>(null)
+  const [refunding, setRefunding] = useState<RefundSourceInfo | null>(null)
 
   const customers = useQuery({ queryKey: ['customer-options'], queryFn: listCustomerOptions, staleTime: 60_000 })
   const params = { page, pageSize: PAGE_SIZE, search, customerId, status }
@@ -54,6 +56,7 @@ export function ReceiptsPage() {
       render: (r) => r.status !== 'POSTED' ? null : (
         <span className="flex justify-end gap-2">
           {Number(r.unallocated_amount) > 0 && ability.can('receipts.create', r.branch_id) && <Button size="sm" variant="secondary" loading={allocate.isPending && allocate.variables === r.id} onClick={() => allocate.mutate(r.id)}>Apply</Button>}
+          {Number(r.unallocated_amount) > 0 && ability.can('refunds.create', r.branch_id) && <Button size="sm" variant="ghost" onClick={() => setRefunding({ type: 'RECEIPT', id: r.id, label: r.receipt_number, customerName: r.customer?.name ?? 'the customer', unused: Number(r.unallocated_amount), branchId: r.branch_id })}>Pay back</Button>}
           {ability.can('receipts.void', r.branch_id) && <Button size="sm" variant="ghost" onClick={() => { setVoidError(null); setVoiding(r) }}>Void</Button>}
         </span>
       ),
@@ -92,6 +95,7 @@ export function ReceiptsPage() {
         />
         <Pagination page={page} pageSize={PAGE_SIZE} total={query.data?.total} hasNext={query.data?.hasNext} onPageChange={setPage} loading={query.isFetching} />
       </Card>
+      {refunding && <RefundDialog source={refunding} onClose={() => setRefunding(null)} />}
       {recording && <RecordReceiptDialog customers={customers.data ?? []} onClose={() => setRecording(false)} />}
       <ReasonDialog
         open={voiding !== null} title={`Void ${voiding?.receipt_number ?? 'payment'}`} confirmLabel="Void payment" tone="danger"

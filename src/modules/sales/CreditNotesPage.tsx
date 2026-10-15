@@ -9,7 +9,7 @@ import { listCustomerOptions } from '@/services/customers'
 import { moneyFmt } from '@/services/sales'
 
 const PAGE_SIZE = 20
-const TONE = { DRAFT: 'amber', POSTED: 'green', CANCELLED: 'slate' } as const
+const TONE = { DRAFT: 'amber', POSTED: 'green', CANCELLED: 'slate', REVERSED: 'red' } as const
 
 export function CreditStatusBadge({ status }: { status: string }) {
   return <Badge tone={TONE[status as CreditStatus] ?? 'slate'}>{CREDIT_STATUS_LABEL[status as CreditStatus] ?? status}</Badge>
