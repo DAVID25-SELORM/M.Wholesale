@@ -10,7 +10,7 @@ Scope: security of the whole schema, behaviour under the browser's production se
 | Production headers (CSP etc.) | `node scripts/preview-prod.mjs` serves the production build with the exact `vercel.json` headers | Sign-in, PDF generation and Excel import work with no CSP violations. |
 | Speed at volume | `npm run test:perf` (3,000 products, 6,000 batches, 600 customers, 30,000 invoices, 15,000 receipts, 20,000 stock movements) | **One real problem found and fixed** (below). |
 | Backup / restore | Dump and restore drill (section 3) | Restored copy matches the source row for row. |
-| Route-by-route browser crawl, mobile spot checks | Not done in this pass | Still open; do a manual walk-through of each menu on a phone-width window before go-live. |
+| Route crawl on a phone-size screen (375 px) | Production build, signed in as owner, all 44 menu pages opened in turn, watching console errors, crashes and sideways scrolling | No console errors, no crashes, no horizontal overflow. (Demo data is nearly empty, so pages full of long real rows still deserve a look during the parallel week.) |
 
 ### The performance problem
 
@@ -85,4 +85,4 @@ Store it encrypted (it contains customer and licence data), in two places.
 
 - Volume figures come from a local database; hosted latency adds the network round trip (typically 50-150 ms per call) but not more database time. Re-run `npm run test:perf` after schema changes.
 - The perf test seeds data with triggers switched off for speed; it measures reads and one posting, not bulk-posting throughput.
-- Not yet done: manual route-by-route console/mobile walk-through; GRA e-VAT integration, accounting ledger/bank reconciliation, customer portal (waiting on your inputs, see `docs/phase12/`).
+- Not yet done: GRA e-VAT integration and the customer portal (waiting on your inputs, see `docs/phase12/`). The accounting ledger and bank reconciliation are built (Phase 13, `docs/phase13/`).

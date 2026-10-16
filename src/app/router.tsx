@@ -22,6 +22,13 @@ import { QuotationPage } from '@/modules/sales/QuotationPage'
 import { QuotationsPage } from '@/modules/sales/QuotationsPage'
 import { SalesOrderPage } from '@/modules/sales/SalesOrderPage'
 import { SalesOrdersPage } from '@/modules/sales/SalesOrdersPage'
+import { AccountingOverviewPage } from '@/modules/accounting/AccountingOverviewPage'
+import { BankPage } from '@/modules/accounting/BankPage'
+import { ChartPage } from '@/modules/accounting/ChartPage'
+import { JournalsPage } from '@/modules/accounting/JournalsPage'
+import { LedgerPage } from '@/modules/accounting/LedgerPage'
+import { ReconcilePage } from '@/modules/accounting/ReconcilePage'
+import { StatementsPage } from '@/modules/accounting/StatementsPage'
 import { ControlledRegisterPage } from '@/modules/reports/ControlledRegisterPage'
 import { SalesReportPage } from '@/modules/reports/SalesReportPage'
 import { RemindersPage } from '@/modules/sales/RemindersPage'
@@ -131,6 +138,23 @@ export const routes = [
           { element: <RequirePermission anyOf={['reminders.view']} />, children: [{ path: 'sales/reminders', element: <RemindersPage /> }] },
           { element: <RequirePermission anyOf={['reports.stock']} />, children: [{ path: 'reports/stock', element: <StockInsightsPage /> }] },
           { element: <RequirePermission anyOf={['reports.tax']} />, children: [{ path: 'reports/vat', element: <VatReportPage /> }] },
+          {
+            element: <RequirePermission anyOf={['accounting.view']} />,
+            children: [
+              { path: 'accounting', element: <AccountingOverviewPage /> },
+              { path: 'accounting/accounts', element: <ChartPage /> },
+              { path: 'accounting/journals', element: <JournalsPage /> },
+              { path: 'accounting/statements', element: <StatementsPage /> },
+              { path: 'accounting/ledger', element: <LedgerPage /> },
+            ],
+          },
+          {
+            element: <RequirePermission anyOf={['bank.view']} />,
+            children: [
+              { path: 'accounting/bank', element: <BankPage /> },
+              { path: 'accounting/bank/statements/:id', element: <ReconcilePage /> },
+            ],
+          },
           {
             element: <RequirePermission anyOf={['deliveries.view']} />,
             children: [

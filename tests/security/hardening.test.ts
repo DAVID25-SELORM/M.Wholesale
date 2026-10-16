@@ -121,6 +121,12 @@ describe('catalog hardening', () => {
       // Phase 12
       'public.prepare_delivery_note', 'public.dispatch_delivery_note', 'public.confirm_delivery', 'public.fail_delivery', 'public.cancel_delivery_note', 'public.delivery_pick_list',
       'public.reorder_suggestions', 'public.slow_moving_stock', 'public.expiry_risk', 'public.vat_report',
+      // Phase 13
+      'public.save_gl_account', 'public.suggest_opening_balances', 'public.start_accounting', 'public.set_period_lock', 'public.post_manual_journal', 'public.reverse_journal',
+      'public.trial_balance', 'public.income_statement', 'public.balance_sheet', 'public.account_ledger', 'public.accounting_checks',
+      'public.create_bank_account', 'public.save_bank_account', 'public.import_bank_statement', 'public.suggest_bank_matches', 'public.match_bank_line', 'public.auto_match_statement',
+      'public.unmatch_bank_line', 'public.post_bank_entry', 'public.clear_ledger_lines', 'public.unclear_ledger_line', 'public.bank_ledger_lines', 'public.bank_reconciliation',
+      'public.finalize_reconciliation',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))

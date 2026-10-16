@@ -31,6 +31,8 @@ const conflicts = [
   ['credit_notes.create', 'credit_notes.post', 'drafts AND posts credit notes'],
   ['sales.discount', 'sales.price_override', 'gives discounts AND overrides prices'],
   ['sales.override_credit', 'receipts.void', 'overrides credit limits AND voids payments'],
+  ['journals.create', 'bank.reconcile', 'posts journals AND reconciles the bank'],
+  ['accounting.manage', 'journals.create', 'changes the chart of accounts / closes periods AND posts journals'],
 ]
 const code = (s) => '`' + s + '`'
 const out = []

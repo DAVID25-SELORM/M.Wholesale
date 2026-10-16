@@ -5,7 +5,27 @@ export type Database = {
   
   "public": {
           Tables: {
-            "audit_logs": {
+            "accounting_settings": {
+                  Row: {
+                    "go_live_date": string,"id": string,"locked_through": string | null,"organization_id": string,"started_at": string,"started_by": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "go_live_date": string,"id"?: string,"locked_through"?: string | null,"organization_id"?: string,"started_at"?: string,"started_by"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "go_live_date"?: string,"id"?: string,"locked_through"?: string | null,"organization_id"?: string,"started_at"?: string,"started_by"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "accounting_settings_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: true
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"audit_logs": {
                   Row: {
                     "action": string,"actor_user_id": string | null,"branch_id": string | null,"created_at": string,"entity_id": string | null,"entity_type": string,"id": string,"metadata": Json | null,"new_values": Json | null,"organization_id": string,"previous_values": Json | null,"reason": string | null
                   }
@@ -23,6 +43,104 @@ export type Database = {
 isOneToOne: false
       referencedRelation: "organizations"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"bank_accounts": {
+                  Row: {
+                    "account_ref": string | null,"bank_name": string | null,"created_at": string,"gl_account_id": string,"id": string,"is_active": boolean,"is_default": boolean,"name": string,"organization_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "account_ref"?: string | null,"bank_name"?: string | null,"created_at"?: string,"gl_account_id": string,"id"?: string,"is_active"?: boolean,"is_default"?: boolean,"name": string,"organization_id"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "account_ref"?: string | null,"bank_name"?: string | null,"created_at"?: string,"gl_account_id"?: string,"id"?: string,"is_active"?: boolean,"is_default"?: boolean,"name"?: string,"organization_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "bank_accounts_gl_fk"
+      columns: ["gl_account_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "gl_accounts"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "bank_accounts_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"bank_matches": {
+                  Row: {
+                    "bank_account_id": string,"id": string,"journal_line_id": string,"matched_at": string,"matched_by": string | null,"note": string | null,"organization_id": string,"statement_line_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bank_account_id": string,"id"?: string,"journal_line_id": string,"matched_at"?: string,"matched_by"?: string | null,"note"?: string | null,"organization_id"?: string,"statement_line_id"?: string | null
+                  }
+                  Update: {
+                    "bank_account_id"?: string,"id"?: string,"journal_line_id"?: string,"matched_at"?: string,"matched_by"?: string | null,"note"?: string | null,"organization_id"?: string,"statement_line_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "bank_matches_account_fk"
+      columns: ["bank_account_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "bank_accounts"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "bank_matches_journal_line_fk"
+      columns: ["journal_line_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "gl_journal_lines"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "bank_matches_statement_line_fk"
+      columns: ["statement_line_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "bank_statement_lines"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
+                },"bank_statement_lines": {
+                  Row: {
+                    "amount": number,"bank_account_id": string,"created_at": string,"description": string | null,"id": string,"line_no": number,"matched": boolean,"organization_id": string,"reference": string | null,"statement_id": string,"txn_date": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"bank_account_id": string,"created_at"?: string,"description"?: string | null,"id"?: string,"line_no": number,"matched"?: boolean,"organization_id"?: string,"reference"?: string | null,"statement_id": string,"txn_date": string
+                  }
+                  Update: {
+                    "amount"?: number,"bank_account_id"?: string,"created_at"?: string,"description"?: string | null,"id"?: string,"line_no"?: number,"matched"?: boolean,"organization_id"?: string,"reference"?: string | null,"statement_id"?: string,"txn_date"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "bank_statement_lines_statement_fk"
+      columns: ["statement_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "bank_statements"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
+                },"bank_statements": {
+                  Row: {
+                    "bank_account_id": string,"closing_balance": number,"file_name": string | null,"id": string,"imported_at": string,"imported_by": string | null,"opening_balance": number,"organization_id": string,"period_from": string,"period_to": string,"reconciled_at": string | null,"reconciled_by": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bank_account_id": string,"closing_balance": number,"file_name"?: string | null,"id"?: string,"imported_at"?: string,"imported_by"?: string | null,"opening_balance": number,"organization_id"?: string,"period_from": string,"period_to": string,"reconciled_at"?: string | null,"reconciled_by"?: string | null,"status"?: string
+                  }
+                  Update: {
+                    "bank_account_id"?: string,"closing_balance"?: number,"file_name"?: string | null,"id"?: string,"imported_at"?: string,"imported_by"?: string | null,"opening_balance"?: number,"organization_id"?: string,"period_from"?: string,"period_to"?: string,"reconciled_at"?: string | null,"reconciled_by"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "bank_statements_account_fk"
+      columns: ["bank_account_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "bank_accounts"
+      referencedColumns: ["id","organization_id"]
     }
                   ]
                 },"batch_costs": {
@@ -294,6 +412,90 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"gl_accounts": {
+                  Row: {
+                    "account_type": string,"allow_manual": boolean,"code": string,"created_at": string,"id": string,"is_active": boolean,"is_system": boolean,"name": string,"normal_side": string,"organization_id": string,"system_key": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "account_type": string,"allow_manual"?: boolean,"code": string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"is_system"?: boolean,"name": string,"normal_side": string,"organization_id"?: string,"system_key"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "account_type"?: string,"allow_manual"?: boolean,"code"?: string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"is_system"?: boolean,"name"?: string,"normal_side"?: string,"organization_id"?: string,"system_key"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gl_accounts_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gl_journal_lines": {
+                  Row: {
+                    "account_id": string,"branch_id": string | null,"credit": number,"debit": number,"id": string,"journal_date": string,"journal_id": string,"line_no": number,"memo": string | null,"organization_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "account_id": string,"branch_id"?: string | null,"credit"?: number,"debit"?: number,"id"?: string,"journal_date": string,"journal_id": string,"line_no": number,"memo"?: string | null,"organization_id": string
+                  }
+                  Update: {
+                    "account_id"?: string,"branch_id"?: string | null,"credit"?: number,"debit"?: number,"id"?: string,"journal_date"?: string,"journal_id"?: string,"line_no"?: number,"memo"?: string | null,"organization_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gl_journal_lines_account_fk"
+      columns: ["account_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "gl_accounts"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "gl_journal_lines_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "gl_journal_lines_journal_fk"
+      columns: ["journal_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "gl_journals"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
+                },"gl_journals": {
+                  Row: {
+                    "branch_id": string | null,"created_at": string,"created_by": string | null,"description": string,"event": string,"id": string,"journal_date": string,"journal_number": string,"organization_id": string,"reason": string | null,"reverses_journal_id": string | null,"source_id": string | null,"source_type": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "branch_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"description": string,"event"?: string,"id"?: string,"journal_date": string,"journal_number": string,"organization_id": string,"reason"?: string | null,"reverses_journal_id"?: string | null,"source_id"?: string | null,"source_type": string
+                  }
+                  Update: {
+                    "branch_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string,"event"?: string,"id"?: string,"journal_date"?: string,"journal_number"?: string,"organization_id"?: string,"reason"?: string | null,"reverses_journal_id"?: string | null,"source_id"?: string | null,"source_type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gl_journals_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "gl_journals_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gl_journals_reverses_fk"
+      columns: ["reverses_journal_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "gl_journals"
+      referencedColumns: ["id","organization_id"]
+    }
                   ]
                 },"goods_receipt_lines": {
                   Row: {
@@ -2183,7 +2385,17 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "allocate_receipt":
+            "account_ledger":
+{ Args: { "p_account_id": string,"p_branch_id"?: string,"p_from": string,"p_limit"?: number,"p_to": string }; Returns: {
+              "credit": number,"debit": number,"description": string,"journal_date": string,"journal_id": string,"journal_number": string,"line_id": string,"memo": string,"running": number
+            }[]
+                           },
+"accounting_checks":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "check_code": string,"difference": number,"label": string,"ledger": number,"operational": number
+            }[]
+                           },
+"allocate_receipt":
 { Args: { "p_allocations"?: Json,"p_receipt_id": string }; Returns: Json
                            },
 "apply_credit_note":
@@ -2200,6 +2412,24 @@ isOneToOne: false
                            },
 "assign_user_role":
 { Args: { "p_branch_id"?: string,"p_reason"?: string,"p_role_id": string,"p_user_id": string }; Returns: string
+                           },
+"auto_match_statement":
+{ Args: { "p_statement_id": string }; Returns: number
+                           },
+"balance_sheet":
+{ Args: { "p_as_of": string,"p_branch_id"?: string }; Returns: {
+              "account_id": string,"amount": number,"code": string,"name": string,"section": string
+            }[]
+                           },
+"bank_ledger_lines":
+{ Args: { "p_bank_account_id": string,"p_from"?: string,"p_only_open"?: boolean,"p_to"?: string }; Returns: {
+              "amount": number,"cleared": boolean,"description": string,"journal_date": string,"journal_id": string,"journal_line_id": string,"journal_number": string,"memo": string,"note": string
+            }[]
+                           },
+"bank_reconciliation":
+{ Args: { "p_statement_id": string }; Returns: {
+              "amount": number,"item": string,"label": string
+            }[]
                            },
 "cancel_credit_note":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
@@ -2227,6 +2457,9 @@ isOneToOne: false
                            },
 "cancel_transfer":
 { Args: { "p_id": string,"p_reason": string }; Returns: Json
+                           },
+"clear_ledger_lines":
+{ Args: { "p_bank_account_id": string,"p_journal_line_ids": (string)[],"p_note": string }; Returns: number
                            },
 "close_pos_session":
 { Args: { "p_counted_cash": number,"p_id": string,"p_notes"?: string }; Returns: Json
@@ -2262,6 +2495,9 @@ isOneToOne: false
 "convert_quotation_to_order":
 { Args: { "p_id": string }; Returns: string
                            },
+"create_bank_account":
+{ Args: { "p_account_ref"?: string,"p_bank_name"?: string,"p_name": string }; Returns: string
+                           },
 "customer_credit":
 { Args: { "p_customer_id": string }; Returns: {
               "available": number,"credit_held": number,"credit_limit": number,"on_hold": boolean,"outstanding": number,"overdue": number
@@ -2296,14 +2532,25 @@ isOneToOne: false
 "fail_delivery":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
+"finalize_reconciliation":
+{ Args: { "p_statement_id": string }; Returns: undefined
+                           },
 "get_session_context":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"import_bank_statement":
+{ Args: { "p_bank_account_id": string,"p_closing": number,"p_file_name"?: string,"p_lines": Json,"p_opening": number,"p_period_from": string,"p_period_to": string }; Returns: string
                            },
 "import_products":
 { Args: { "p_dry_run"?: boolean,"p_rows": Json }; Returns: Json
                            },
 "import_suppliers":
 { Args: { "p_dry_run"?: boolean,"p_rows": Json }; Returns: Json
+                           },
+"income_statement":
+{ Args: { "p_branch_id"?: string,"p_from": string,"p_to": string }; Returns: {
+              "account_id": string,"account_type": string,"amount": number,"code": string,"name": string
+            }[]
                            },
 "invoice_creditable":
 { Args: { "p_invoice_id": string }; Returns: {
@@ -2312,6 +2559,9 @@ isOneToOne: false
                            },
 "invoice_sales_order":
 { Args: { "p_lines"?: Json,"p_order_id": string }; Returns: string
+                           },
+"match_bank_line":
+{ Args: { "p_journal_line_ids": (string)[],"p_statement_line_id": string }; Returns: undefined
                            },
 "open_pos_session":
 { Args: { "p_opening_float"?: number,"p_warehouse_id": string }; Returns: string
@@ -2340,8 +2590,14 @@ isOneToOne: false
 "pos_session_summary":
 { Args: { "p_session_id": string }; Returns: Json
                            },
+"post_bank_entry":
+{ Args: { "p_account_id": string,"p_description"?: string,"p_statement_line_id": string }; Returns: string
+                           },
 "post_credit_note":
 { Args: { "p_id": string }; Returns: Json
+                           },
+"post_manual_journal":
+{ Args: { "p_branch_id"?: string,"p_date": string,"p_description": string,"p_lines": Json,"p_reason"?: string }; Returns: string
                            },
 "post_purchase_return":
 { Args: { "p_lines": Json,"p_notes"?: string,"p_purchase_order_id"?: string,"p_reason": string,"p_supplier_id": string,"p_warehouse_id": string }; Returns: Json
@@ -2413,6 +2669,9 @@ isOneToOne: false
 "reverse_credit_note":
 { Args: { "p_id": string,"p_reason": string }; Returns: Json
                            },
+"reverse_journal":
+{ Args: { "p_journal_id": string,"p_reason": string }; Returns: string
+                           },
 "reverse_sales_invoice":
 { Args: { "p_id": string,"p_reason": string }; Returns: Json
                            },
@@ -2424,11 +2683,17 @@ isOneToOne: false
               "cost": number,"credits": number,"group_key": string,"group_label": string,"invoices": number,"margin": number,"margin_pct": number,"net_sales": number,"sales": number,"tax": number,"uncosted_lines": number,"units": number
             }[]
                            },
+"save_bank_account":
+{ Args: { "p_account_ref": string,"p_bank_name": string,"p_id": string,"p_is_active"?: boolean,"p_make_default"?: boolean,"p_name": string }; Returns: string
+                           },
 "save_count_entries":
 { Args: { "p_entries": Json,"p_id": string }; Returns: number
                            },
 "save_credit_note":
 { Args: { "p_id": string,"p_invoice_id": string,"p_lines": Json,"p_notes": string,"p_reason_code": string,"p_warehouse_id": string }; Returns: string
+                           },
+"save_gl_account":
+{ Args: { "p_account_type": string,"p_code": string,"p_id": string,"p_is_active"?: boolean,"p_name": string }; Returns: string
                            },
 "save_purchase_order":
 { Args: { "p_expected_date": string,"p_id": string,"p_lines": Json,"p_notes": string,"p_payment_terms_days"?: number,"p_supplier_id": string,"p_warehouse_id": string }; Returns: string
@@ -2450,6 +2715,9 @@ isOneToOne: false
 "send_quotation":
 { Args: { "p_id": string }; Returns: string
                            },
+"set_period_lock":
+{ Args: { "p_reason"?: string,"p_through": string }; Returns: string
+                           },
 "set_user_active":
 { Args: { "p_is_active": boolean,"p_reason"?: string,"p_user_id": string }; Returns: undefined
                            },
@@ -2457,6 +2725,9 @@ isOneToOne: false
 { Args: { "p_days"?: number }; Returns: {
               "base_unit": string,"days_since_sale": number,"earliest_expiry": string,"last_sale_date": string,"on_hand": number,"product_id": string,"product_name": string,"sku": string,"stock_value": number
             }[]
+                           },
+"start_accounting":
+{ Args: { "p_go_live": string,"p_opening": Json }; Returns: string
                            },
 "start_stock_count":
 { Args: { "p_location_id"?: string,"p_notes"?: string,"p_product_ids"?: (string)[],"p_warehouse_id": string }; Returns: string
@@ -2482,10 +2753,31 @@ isOneToOne: false
 "submit_stock_count":
 { Args: { "p_id": string }; Returns: undefined
                            },
+"suggest_bank_matches":
+{ Args: { "p_statement_id": string }; Returns: {
+              "amount": number,"description": string,"journal_date": string,"journal_line_id": string,"journal_number": string,"score": number,"statement_line_id": string
+            }[]
+                           },
 "suggest_fefo_allocation":
 { Args: { "p_min_shelf_life_days"?: number,"p_product_id": string,"p_quantity": number,"p_warehouse_id": string }; Returns: {
               "allocate": number,"batch_id": string,"batch_number": string,"expiry_date": string,"location_id": string,"on_hand": number
             }[]
+                           },
+"suggest_opening_balances":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "account_id": string,"basis": string,"code": string,"name": string,"suggested": number
+            }[]
+                           },
+"trial_balance":
+{ Args: { "p_branch_id"?: string,"p_from": string,"p_to": string }; Returns: {
+              "account_id": string,"account_type": string,"closing": number,"code": string,"name": string,"normal_side": string,"opening": number,"period_credit": number,"period_debit": number
+            }[]
+                           },
+"unclear_ledger_line":
+{ Args: { "p_journal_line_id": string }; Returns: undefined
+                           },
+"unmatch_bank_line":
+{ Args: { "p_statement_line_id": string }; Returns: undefined
                            },
 "vat_report":
 { Args: { "p_branch_id"?: string,"p_from": string,"p_to": string }; Returns: {

@@ -3,7 +3,7 @@
 // `anyOf` only decides visibility - the database enforces access independently.
 
 import {
-  BarChart3, Boxes, Building2, ClipboardList, FileText, Gauge, Handshake, Landmark, LayoutDashboard,
+  BarChart3, BookOpen, Boxes, Building2, ClipboardList, FileText, Gauge, Handshake, Landmark, LayoutDashboard,
   MapPinned, Settings, ShieldCheck, ShoppingCart, Truck, Users, Warehouse, type LucideIcon,
 } from 'lucide-react'
 
@@ -109,6 +109,17 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'intelligence', label: 'Intelligence', icon: Gauge, collapsedByDefault: true,
     items: ['Stock insights', 'Replenishment', 'Customer insights', 'Product performance', 'Procurement insights']
       .map((l) => planned(`int-${l}`, l)),
+  },
+  {
+    id: 'accounting', label: 'Accounting', icon: BookOpen,
+    items: [
+      { id: 'accounting-overview', label: 'Overview', to: '/accounting', anyOf: ['accounting.view'] },
+      { id: 'accounting-journals', label: 'Journals', to: '/accounting/journals', anyOf: ['accounting.view'] },
+      { id: 'accounting-statements', label: 'Financial statements', to: '/accounting/statements', anyOf: ['accounting.view'] },
+      { id: 'accounting-ledger', label: 'Account ledger', to: '/accounting/ledger', anyOf: ['accounting.view'] },
+      { id: 'accounting-accounts', label: 'Chart of accounts', to: '/accounting/accounts', anyOf: ['accounting.view'] },
+      { id: 'accounting-bank', label: 'Bank reconciliation', to: '/accounting/bank', anyOf: ['bank.view'] },
+    ],
   },
   {
     id: 'reports', label: 'Reports', icon: BarChart3,

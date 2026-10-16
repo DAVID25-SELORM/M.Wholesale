@@ -1,7 +1,7 @@
 # Pharmacy Wholesale ERP
 
 Multi-tenant ERP for pharmaceutical wholesalers (Ghana first, built to be international).
-**Status: Phase 0 (secure foundation), Phase 1 (product master, pharmaceutical identity, units, suppliers), Phase 2 (inventory core: batches, stock ledger, expiry) and Phase 3 (purchase orders with approval, goods received), Phase 4 (costing and valuation, purchase returns, stock counts, supplier invoices with 3-way match, payables), Phase 5 (in-transit transfers, bulk import from Excel/CSV), Phase 6 (customers, price lists, tax, sales invoices with FEFO picking, receipts, receivables) Phase 7 (credit notes: sales returns and price corrections) Phase 8 (point of sale: till shifts, counter sales, receipts) Phase 9 (refunds, reversal of invoices and credit notes) Phase 10 (quotations, sales orders with stock reservation) Phase 11 (sales and margin reports, controlled-drugs register, payment reminders, PDF export) and Phase 12 (deliveries and picking, stock insights, VAT summary, access review) built.**
+**Status: Phase 0 (secure foundation), Phase 1 (product master, pharmaceutical identity, units, suppliers), Phase 2 (inventory core: batches, stock ledger, expiry) and Phase 3 (purchase orders with approval, goods received), Phase 4 (costing and valuation, purchase returns, stock counts, supplier invoices with 3-way match, payables), Phase 5 (in-transit transfers, bulk import from Excel/CSV), Phase 6 (customers, price lists, tax, sales invoices with FEFO picking, receipts, receivables) Phase 7 (credit notes: sales returns and price corrections) Phase 8 (point of sale: till shifts, counter sales, receipts) Phase 9 (refunds, reversal of invoices and credit notes) Phase 10 (quotations, sales orders with stock reservation) Phase 11 (sales and margin reports, controlled-drugs register, payment reminders, PDF export) Phase 12 (deliveries and picking, stock insights, VAT summary, access review) and Phase 13 (accounting ledger, financial statements, bank reconciliation) built.**
 Sales, finance and delivery arrive in later phases.
 
 * Stack: React + TypeScript + Vite + Tailwind · Supabase (PostgreSQL 17, Auth, RLS) — see
@@ -27,6 +27,7 @@ Sales, finance and delivery arrive in later phases.
 | [docs/phase10/QUOTATIONS_AND_ORDERS.md](docs/phase10/QUOTATIONS_AND_ORDERS.md) | Phase 10: quotations, sales orders, stock reservation, invoicing orders |
 | [docs/phase11/REPORTS_REGISTERS_REMINDERS.md](docs/phase11/REPORTS_REGISTERS_REMINDERS.md) | Phase 11: sales and margin reports, controlled-drugs register, payment reminders, PDF export |
 | [docs/phase12/DELIVERIES_INSIGHTS_VAT_ACCESS.md](docs/phase12/DELIVERIES_INSIGHTS_VAT_ACCESS.md) | Phase 12: delivery notes and pick lists, stock insights, VAT summary, access review (and what was deliberately not built) |
+| [docs/phase13/ACCOUNTING_BANK.md](docs/phase13/ACCOUNTING_BANK.md) | Phase 13: accounting ledger (automatic journals), chart of accounts, manual journals, period close, financial statements, bank reconciliation |
 | [docs/ACCESS_REVIEW.md](docs/ACCESS_REVIEW.md) | who can do what, per role, with separation-of-duties checks (generated) |
 | [docs/README.md](docs/README.md) | original planning pack (architecture/roadmap/requirements) |
 
