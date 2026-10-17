@@ -6,6 +6,7 @@ import { toAppError } from '@/lib/errors'
 import { ProductPicker } from '@/modules/catalog/ProductPicker'
 import { useSession } from '@/modules/session/SessionProvider'
 import { getProduct, listProductUnits, type ProductRow } from '@/services/catalog'
+import { requestControlledAdjustment } from '@/services/controlled'
 import {
   ADJUSTMENT_REASONS, DOCUMENT_PERMISSION, DOCUMENT_TYPE_LABEL, STATUS_CHANGE_REASONS, STOCK_STATUSES, STOCK_STATUS_LABEL,
   daysUntil, fmtQty, listLocationOptions, listProductBalances, postStockDocument, type DocumentType, type StockStatus,
@@ -46,17 +47,26 @@ function Inner({ type, onClose }: { type: DocumentType; onClose: () => void }) {
 
   const patch = (key: string, p: Partial<LineDraft>) => setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...p } : l)))
 
+  // a controlled medicine is never adjusted by one person: the same lines become a request for a second person to approve
+  const controlledLines = type === 'ADJUSTMENT' ? lines.filter((l) => l.product?.product_class === 'CONTROLLED').length : 0
+  const asRequest = controlledLines > 0
+
   const post = useMutation({
-    mutationFn: (built: ReturnType<typeof buildPostLines> & { ok: true }) =>
-      postStockDocument({
+    mutationFn: async (built: ReturnType<typeof buildPostLines> & { ok: true }) => {
+      if (asRequest) {
+        const r = await requestControlledAdjustment({ warehouseId, lines: built.lines, reasonCode: reason, notes })
+        return { document_id: r.id, document_number: r.request_number, requested: true as const }
+      }
+      return { ...(await postStockDocument({
         type, warehouseId, lines: built.lines,
         ...(type === 'TRANSFER' ? { toWarehouseId } : {}),
         ...(reason ? { reasonCode: reason } : {}),
         ...(notes.trim() ? { notes } : {}),
-      }),
+      })), requested: false as const }
+    },
     onSuccess: async (r) => {
-      toast.success(`${DOCUMENT_TYPE_LABEL[type]} ${r.document_number} posted.`)
-      await Promise.all(['stock', 'balances', 'expiring', 'stock-documents', 'movements'].map((k) => qc.invalidateQueries({ queryKey: [k] })))
+      toast.success(r.requested ? `Request ${r.document_number} sent. A second person must approve it before the stock changes.` : `${DOCUMENT_TYPE_LABEL[type]} ${r.document_number} posted.`)
+      await Promise.all(['stock', 'balances', 'expiring', 'stock-documents', 'movements', 'controlled-adjustments'].map((k) => qc.invalidateQueries({ queryKey: [k] })))
       onClose()
     },
     onError: (e) => setError(toAppError(e).message),
@@ -69,6 +79,8 @@ function Inner({ type, onClose }: { type: DocumentType; onClose: () => void }) {
     if (type === 'ADJUSTMENT' && !reason) { setError('Choose a reason for the adjustment.'); return }
     const built = buildPostLines(type, lines)
     if (!built.ok) { setError(built.error); return }
+    if (asRequest && controlledLines !== lines.length) { setError('Controlled medicines are adjusted by request. Put them on their own adjustment, separate from other products.'); return }
+    if (asRequest && notes.trim().length < 5) { setError('Explain the adjustment in Notes (at least 5 characters): the approver needs to know why.'); return }
     setError(null)
     post.mutate(built)
   }
@@ -83,12 +95,13 @@ function Inner({ type, onClose }: { type: DocumentType; onClose: () => void }) {
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={post.isPending}>Cancel</Button>
-          <Button type="submit" form="stock-form" loading={post.isPending}>Post {DOCUMENT_TYPE_LABEL[type].toLowerCase()}</Button>
+          <Button type="submit" form="stock-form" loading={post.isPending}>{asRequest ? 'Send for approval' : `Post ${DOCUMENT_TYPE_LABEL[type].toLowerCase()}`}</Button>
         </>
       }
     >
       <form id="stock-form" onSubmit={submit} noValidate className="space-y-4">
         <InlineError message={error} />
+        {asRequest && <p role="status" className="rounded-md bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-inset ring-amber-600/20">This adjusts a controlled medicine, so it is sent as a request. Nothing changes until a second person (usually the pharmacist) approves it under Warehouse → Controlled adjustments.</p>}
         {warehouses.isSuccess && sources.length === 0 && (
           <InlineError message="You do not have permission to post this kind of document in any warehouse." />
         )}

@@ -215,6 +215,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"controlled_adjustments": {
+                  Row: {
+                    "branch_id": string,"created_at": string,"decided_at": string | null,"decided_by": string | null,"decision_note": string | null,"id": string,"lines": NonNullable<Json>,"notes": string,"organization_id": string,"reason_code": string,"request_number": string,"requested_at": string,"requested_by": string,"status": string,"stock_document_id": string | null,"updated_at": string,"warehouse_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "branch_id": string,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"id"?: string,"lines": NonNullable<Json>,"notes": string,"organization_id"?: string,"reason_code": string,"request_number": string,"requested_at"?: string,"requested_by"?: string,"status"?: string,"stock_document_id"?: string | null,"updated_at"?: string,"warehouse_id": string
+                  }
+                  Update: {
+                    "branch_id"?: string,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"id"?: string,"lines"?: NonNullable<Json>,"notes"?: string,"organization_id"?: string,"reason_code"?: string,"request_number"?: string,"requested_at"?: string,"requested_by"?: string,"status"?: string,"stock_document_id"?: string | null,"updated_at"?: string,"warehouse_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "controlled_adjustments_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "controlled_adjustments_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "controlled_adjustments_stock_document_id_fkey"
+      columns: ["stock_document_id"]
+isOneToOne: false
+      referencedRelation: "stock_documents"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "controlled_adjustments_warehouse_fk"
+      columns: ["warehouse_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "warehouses"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
                 },"credit_note_allocations": {
                   Row: {
                     "amount": number,"branch_id": string,"created_at": string,"credit_note_id": string,"id": string,"is_reversed": boolean,"organization_id": string,"sales_invoice_id": string
@@ -2401,6 +2439,9 @@ isOneToOne: false
 "apply_credit_note":
 { Args: { "p_allocations"?: Json,"p_id": string }; Returns: Json
                            },
+"approve_controlled_adjustment":
+{ Args: { "p_id": string }; Returns: Json
+                           },
 "approve_purchase_order":
 { Args: { "p_id": string }; Returns: undefined
                            },
@@ -2430,6 +2471,9 @@ isOneToOne: false
 { Args: { "p_statement_id": string }; Returns: {
               "amount": number,"item": string,"label": string
             }[]
+                           },
+"cancel_controlled_adjustment":
+{ Args: { "p_id": string }; Returns: undefined
                            },
 "cancel_credit_note":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
@@ -2649,6 +2693,9 @@ isOneToOne: false
 "refund_customer":
 { Args: { "p_amount": number,"p_method": string,"p_notes"?: string,"p_pos_session_id"?: string,"p_reference": string,"p_source_id": string,"p_source_type": string }; Returns: Json
                            },
+"reject_controlled_adjustment":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
 "reject_purchase_order":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
@@ -2659,6 +2706,9 @@ isOneToOne: false
 { Args: { "p_cover_days"?: number,"p_history_days"?: number,"p_warehouse_id"?: string }; Returns: {
               "avg_daily": number,"base_unit": string,"days_cover": number,"free": number,"lead_time_days": number,"on_hand": number,"on_order": number,"product_id": string,"product_name": string,"reserved": number,"sku": string,"suggested_qty": number,"supplier_name": string,"target_stock": number
             }[]
+                           },
+"request_controlled_adjustment":
+{ Args: { "p_lines": Json,"p_notes": string,"p_reason_code": string,"p_warehouse_id": string }; Returns: Json
                            },
 "resolve_price":
 { Args: { "p_customer_id": string,"p_product_unit_id": string }; Returns: number

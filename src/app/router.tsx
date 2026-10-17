@@ -10,6 +10,7 @@ import { CatalogSetupPage } from '@/modules/catalog/CatalogSetupPage'
 import { ProductDetailPage } from '@/modules/catalog/ProductDetailPage'
 import { ProductsPage } from '@/modules/catalog/ProductsPage'
 import { ExpiryPage } from '@/modules/inventory/ExpiryPage'
+import { ControlledAdjustmentsPage } from '@/modules/inventory/ControlledAdjustmentsPage'
 import { StockDocumentsPage } from '@/modules/inventory/StockDocumentsPage'
 import { StockPage } from '@/modules/inventory/StockPage'
 import { ImportPage } from '@/modules/imports/ImportPage'
@@ -196,6 +197,7 @@ export const routes = [
               { path: 'inventory/stock', element: <StockPage /> },
               { path: 'inventory/expiry', element: <ExpiryPage /> },
               { path: 'inventory/documents', element: <StockDocumentsPage /> },
+              { path: 'inventory/controlled-adjustments', element: <ControlledAdjustmentsPage /> },
               { path: 'inventory/counts', element: <StockCountsPage /> },
               { path: 'inventory/transfers', element: <TransfersPage /> },
               { path: 'inventory/counts/:id', element: <StockCountDetailPage /> },

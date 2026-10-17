@@ -137,7 +137,9 @@ describe('controlled-drugs register', () => {
     await ok(call(owner, `select public.post_credit_note($1) as r`, [n]))
     const bal = (await q(`select batch_id from public.stock_balances where product_id = $1 and stock_status = 'QUARANTINE'`, [C.id]))[0]
     await ok(call(owner, `select public.post_stock_document('STATUS_CHANGE', $1, $2::jsonb, null, 'QUALITY_RELEASE') as r`, [wh, JSON.stringify([{ product_id: C.id, batch_id: bal.batch_id, quantity: 3, status: 'QUARANTINE', to_status: 'AVAILABLE' }])]))
-    await ok(call(owner, `select public.post_stock_document('ADJUSTMENT', $1, $2::jsonb, null, 'DAMAGE') as r`, [wh, JSON.stringify([{ product_id: C.id, batch_id: bal.batch_id, quantity: 1, direction: 'OUT' }])]))
+    // an adjustment of a controlled medicine is requested by one person and approved by another
+    const adj = (await rows(call(owner, `select public.request_controlled_adjustment($1, $2::jsonb, 'DAMAGE', 'One pack damaged in transit') as r`, [wh, JSON.stringify([{ product_id: C.id, batch_id: bal.batch_id, quantity: 1, direction: 'OUT' }])])))[0].r
+    await ok(call(pharmacist, `select public.approve_controlled_adjustment($1)`, [adj.id]))
 
     const reg = await rows(call(pharmacist, `select line_no::int n, is_opening, document_number, movement_type, quantity::float8 q, balance::float8 bal, counterparty, licence_number, reference, posted_by_name, batch_number from public.controlled_drug_register($1, $2, $3)`, [C.id, day(0), day(0)]))
     expect(reg.map((r) => [r.movement_type, r.q, r.bal])).toEqual([['OPENING_BALANCE', null, 0], ['OPENING', 100, 100], ['SALE_OUT', -10, 90], ['SALE_RETURN_IN', 3, 93], ['ADJUSTMENT_OUT', -1, 92]])

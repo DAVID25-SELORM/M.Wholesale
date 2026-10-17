@@ -127,6 +127,8 @@ describe('catalog hardening', () => {
       'public.create_bank_account', 'public.save_bank_account', 'public.import_bank_statement', 'public.suggest_bank_matches', 'public.match_bank_line', 'public.auto_match_statement',
       'public.unmatch_bank_line', 'public.post_bank_entry', 'public.clear_ledger_lines', 'public.unclear_ledger_line', 'public.bank_ledger_lines', 'public.bank_reconciliation',
       'public.finalize_reconciliation',
+      // Phase 14
+      'public.request_controlled_adjustment', 'public.approve_controlled_adjustment', 'public.reject_controlled_adjustment', 'public.cancel_controlled_adjustment',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))

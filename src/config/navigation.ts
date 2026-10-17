@@ -74,6 +74,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'stock', label: 'Stock', to: '/inventory/stock', anyOf: ['inventory.view'] },
       { id: 'expiry', label: 'Expiry', to: '/inventory/expiry', anyOf: ['inventory.view'] },
       { id: 'stock-documents', label: 'Stock documents', to: '/inventory/documents', anyOf: ['inventory.view'] },
+      { id: 'stock-controlled', label: 'Controlled adjustments', to: '/inventory/controlled-adjustments', anyOf: ['inventory.adjust', 'inventory.controlled_approve'] },
       { id: 'stock-transfers', label: 'Transfers', to: '/inventory/transfers', anyOf: ['inventory.view'] },
       { id: 'stock-counts', label: 'Stock counts', to: '/inventory/counts', anyOf: ['inventory.view'] },
       { id: 'stock-valuation', label: 'Stock valuation', to: '/inventory/valuation', anyOf: ['inventory.valuation'] },

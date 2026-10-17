@@ -36,7 +36,7 @@ Generated from the database by `node scripts/role-matrix.mjs` (run `node scripts
 1. **Accounts manager can run the whole supplier-payment cycle alone** (record, approve and pay a supplier invoice) **and** take, void and refund customer money and override credit limits. Fine for a one-person finance function; if you employ an accounts officer, give the officer the recording (`payables.create`, which the role already has) and keep approving and paying with the manager only.
 2. **Branch manager takes money and can pay it back** (`receipts.create` + `refunds.create`) and drafts and posts credit notes. A cashier-level person should take payments; consider removing `refunds.create` from branch managers who also handle cash.
 3. **Procurement manager raises and approves purchase orders.** Acceptable for a small team; with two buyers, approve orders with someone else.
-4. **Warehouse manager can adjust stock and read the controlled-drugs register.** Adjustments of controlled medicines have no second approval yet. A later phase could require a pharmacist's sign-off for them.
+4. **Warehouse manager can adjust stock and read the controlled-drugs register.** *Resolved in Phase 14: adjustments of controlled medicines now need a second person's approval (`docs/phase14/`).*
 5. **Cashier holds `sales.post`** (needed for counter sales) but no discount or price-override right: as intended.
 6. Only owner, general manager and super admin can invite users or assign roles.
 7. Only the owner roles and the accounts manager can reverse invoices and credit notes.
