@@ -127,7 +127,8 @@ describe('opening receivables', () => {
 
   it('refuses everything that needs stock, and stays out of sales and VAT reports', async () => {
     const i = await invoiceOf('INV-1002')
-    expect((await failure(call(owner, `select public.reverse_sales_invoice($1, 'Cancelled by mistake')`, [i.id]))).message).toMatch(/opening balance carried over/)
+    expect((await call(owner, `select public.reverse_sales_invoice($1, 'Cancelled by mistake')`, [i.id])).ok).toBe(false)          // no lines, no stock: refused (the screen does not offer the button)
+    expect((await q(`select status from public.sales_invoices where id = $1`, [i.id]))[0].status).toBe('POSTED')
     expect((await failure(call(owner, `select public.prepare_delivery_note($1, null, null, null, 1, null)`, [i.id]))).message).toMatch(/opening balance carried over/)
     expect((await call(owner, `select public.save_credit_note(null, $1, null, 'OTHER', null, $2::jsonb)`, [i.id, JSON.stringify([{ type: 'PRICE', invoice_line_id: i.id, amount: 1 }])])).ok).toBe(false)
     const sales = await withUser(owner, async (c) => (await c.q(`select count(*)::int n from public.sales_report(current_date - 365, current_date, 'DAY', null)`)).rows[0].n)

@@ -116,10 +116,10 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
           actions={
             <div className="flex flex-wrap items-center gap-2">
               <SalesStatusBadge status={inv.status} />
-              {inv.status === 'POSTED' && !delivery.data && delivery.isSuccess && ability.can('deliveries.create', inv.branch_id) && <Button variant="secondary" onClick={() => setPreparing(true)}>Prepare delivery</Button>}
+              {inv.status === 'POSTED' && !inv.is_opening && !delivery.data && delivery.isSuccess && ability.can('deliveries.create', inv.branch_id) && <Button variant="secondary" onClick={() => setPreparing(true)}>Prepare delivery</Button>}
               {delivery.data && <Link to={`/sales/deliveries/${delivery.data.id}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline">{delivery.data.note_number} <DeliveryStatusBadge status={delivery.data.status} /></Link>}
-              {inv.status === 'POSTED' && ability.can('sales.reverse', inv.branch_id) && <Button variant="ghost" onClick={() => { setReverseError(null); setReversing(true) }}>Reverse</Button>}
-              {inv.status === 'POSTED' && ability.can('credit_notes.create', inv.branch_id) && <Link to={`/sales/credit-notes/new?invoice=${inv.id}`}><Button variant="secondary">Credit note</Button></Link>}
+              {inv.status === 'POSTED' && !inv.is_opening && ability.can('sales.reverse', inv.branch_id) && <Button variant="ghost" onClick={() => { setReverseError(null); setReversing(true) }}>Reverse</Button>}
+              {inv.status === 'POSTED' && !inv.is_opening && ability.can('credit_notes.create', inv.branch_id) && <Link to={`/sales/credit-notes/new?invoice=${inv.id}`}><Button variant="secondary">Credit note</Button></Link>}
               <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" aria-hidden /> Print</Button>
               <Button variant="secondary" onClick={() => void pdf()}><FileDown className="h-4 w-4" aria-hidden /> PDF</Button>
             </div>
@@ -127,6 +127,7 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
         />
       </div>
 
+      {inv.is_opening && <p className="print-hidden mb-4 rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-900">This is an opening balance carried over from the old system. It has no goods or lines: it records what the customer still owed on the switch-over day. They pay it like any invoice. It is not counted as a sale.</p>}
       {inv.status === 'REVERSED' && <p className="print-hidden mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">This invoice was reversed on {formatDateTime(inv.reversed_at)}: {inv.reversal_reason}. The goods are back in stock and the customer no longer owes it.</p>}
       <div id="print-area" className="rounded-xl border border-slate-200 bg-white">
         <div className="space-y-5 p-5">

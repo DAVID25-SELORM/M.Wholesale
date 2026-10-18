@@ -417,7 +417,9 @@ begin
     if v_inv.amount_paid > 0 or v_inv.amount_credited > 0 then
       raise exception 'payments have been applied to this invoice: void them first' using errcode = '22023';
     end if;
+    perform set_config('app.removing_opening_balance', 'on', true);
     update public.sales_invoices set status = 'REVERSED', reversed_at = now(), reversed_by = auth.uid(), reversal_reason = btrim(p_reason) where id = v_inv.id;
+    perform set_config('app.removing_opening_balance', 'off', true);
   elsif p_kind = 'PAYABLE' then
     select * into v_si from public.supplier_invoices where id = p_id and organization_id = v_org and is_opening for update;
     if not found then raise exception 'opening invoice not found' using errcode = 'P0002'; end if;
@@ -431,26 +433,46 @@ $$;
 
 -- ---------------------------------------------------------------------------------------------------------
 -- everything that needs stock refuses an opening invoice; the ledger skips them (the opening balances carry them)
+-- Guards are triggers (not patches to the reversal and delivery functions), so they hold however those functions are written.
 -- ---------------------------------------------------------------------------------------------------------
+create function private.opening_invoice_guard()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if current_setting('app.removing_opening_balance', true) is distinct from 'on' then
+    raise exception 'this is an opening balance carried over from the old system: it has no stock to bring back. Remove it before accounting starts, or ask your accountant' using errcode = '22023';
+  end if;
+  return new;
+end;
+$$;
+create trigger sales_invoices_opening_guard before update of status on public.sales_invoices
+  for each row when (old.is_opening and new.status is distinct from old.status) execute function private.opening_invoice_guard();
+
+create function private.opening_delivery_guard()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if exists (select 1 from public.sales_invoices i where i.id = new.sales_invoice_id and i.is_opening) then
+    raise exception 'this is an opening balance carried over from the old system: there are no goods to deliver' using errcode = '22023';
+  end if;
+  return new;
+end;
+$$;
+create trigger delivery_notes_opening_guard before insert on public.delivery_notes
+  for each row execute function private.opening_delivery_guard();
+
+-- the ledger skips opening invoices (carried by the opening balances); paying one later is a real payment and is journalled
 do $$
 declare
-  def text;
+  def   text := replace(pg_get_functiondef('private.gl_capture()'::regprocedure), E'\r', '');
   fixed text;
 begin
-  def := pg_get_functiondef('public.reverse_sales_invoice(uuid, text)'::regprocedure);
-  fixed := replace(def, E'    raise exception ''only a posted invoice can be reversed (this one is %)'', v_inv.status using errcode = ''22023'';\n  end if;\n',
-    E'    raise exception ''only a posted invoice can be reversed (this one is %)'', v_inv.status using errcode = ''22023'';\n  end if;\n  if v_inv.is_opening then\n    raise exception ''this is an opening balance carried over from the old system: it has no stock to bring back. Remove it before accounting starts, or ask your accountant'' using errcode = ''22023'';\n  end if;\n');
-  if fixed = def then raise exception 'reverse_sales_invoice not as expected'; end if;
-  execute fixed;
-
-  def := pg_get_functiondef('public.prepare_delivery_note(uuid, text, text, text, integer, text)'::regprocedure);
-  fixed := replace(def, E'    raise exception ''only a posted invoice can be delivered (this one is %)'', v_inv.status using errcode = ''22023'';\n  end if;\n',
-    E'    raise exception ''only a posted invoice can be delivered (this one is %)'', v_inv.status using errcode = ''22023'';\n  end if;\n  if v_inv.is_opening then\n    raise exception ''this is an opening balance carried over from the old system: there are no goods to deliver'' using errcode = ''22023'';\n  end if;\n');
-  if fixed = def then raise exception 'prepare_delivery_note not as expected'; end if;
-  execute fixed;
-
-  def := pg_get_functiondef('private.gl_capture()'::regprocedure);
-  fixed := replace(def, E'  if v_kind = ''SALES_INVOICE'' then\n', E'  if coalesce((to_jsonb(new) ->> ''is_opening'')::boolean, false) and (to_jsonb(new) ->> ''status'') is distinct from ''PAID'' then\n    return null;                         -- opening invoices are carried by the opening balances\n  end if;\n\n  if v_kind = ''SALES_INVOICE'' then\n');
+  fixed := replace(def, E'  if v_kind = ''SALES_INVOICE'' then\n',
+    E'  if coalesce((to_jsonb(new) ->> ''is_opening'')::boolean, false) and (to_jsonb(new) ->> ''status'') is distinct from ''PAID'' then\n    return null;                         -- opening invoices are carried by the opening balances; paying one later is a real payment and is journalled\n  end if;\n\n  if v_kind = ''SALES_INVOICE'' then\n');
   if fixed = def then raise exception 'gl_capture not as expected'; end if;
   execute fixed;
 end $$;
