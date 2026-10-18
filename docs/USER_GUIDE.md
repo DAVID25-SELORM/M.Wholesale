@@ -56,6 +56,10 @@ For the people who use the system every day. Menus you cannot see are rights you
 - Every movement appears in the **controlled-drugs register** with a running balance, the customer and licence, and who posted it.
 - Adjustments need two people (see above). Reasons and explanations are mandatory.
 
+## Switching over from the old system (owner and accounts manager)
+
+*Administration → Import data* brings your lists in from Excel or CSV; every file is checked row by row before anything is saved. Suggested order: products, suppliers, customers, **opening stock**, then **opening receivables** (customer invoices still unpaid) and **opening payables** (supplier invoices still unpaid), and only then **start accounting**. Opening invoices carry the old invoice number and what is still owed; customers pay them like any invoice, and they are not counted as sales. A wrong one can be removed until accounting starts. The full plan, with go/no-go checks and rollback, is in `docs/CUTOVER.md`.
+
 ## Something went wrong
 
 - **A message in red**: read it, it says what to fix (for example "credit limit exceeded" or "batch expired"). It is the system protecting you or the customer, not a fault.

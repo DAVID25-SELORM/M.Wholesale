@@ -30,7 +30,7 @@ export function SalesInvoicesPage() {
   const today = new Date().toISOString().slice(0, 10)
 
   const columns: Column<SalesInvoice>[] = [
-    { key: 'no', header: 'Invoice', render: (i) => <Link to={`/sales/invoices/${i.id}`} className="font-mono text-xs font-semibold text-brand-700 hover:underline">{i.invoice_number ?? 'Draft'}</Link> },
+    { key: 'no', header: 'Invoice', render: (i) => <span className="whitespace-nowrap"><Link to={`/sales/invoices/${i.id}`} className="font-mono text-xs font-semibold text-brand-700 hover:underline">{i.invoice_number ?? 'Draft'}</Link>{i.is_opening && <Badge tone="blue" className="ml-2">Opening balance</Badge>}</span> },
     { key: 'cust', header: 'Customer', render: (i) => <span className="font-medium text-slate-900">{i.customer?.name ?? '—'}</span> },
     { key: 'wh', header: 'From', hideOnMobile: true, render: (i) => i.warehouse?.name ?? '—' },
     { key: 'status', header: 'Status', render: (i) => <SalesStatusBadge status={i.status} /> },

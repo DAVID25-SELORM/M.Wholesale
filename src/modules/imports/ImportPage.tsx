@@ -10,7 +10,10 @@ import { planOpeningStock, type OpeningPlanRow } from './openingStock'
 import { FileProblem, readTable } from './parseFile'
 import { SPECS, matchHeaders, templateCsv, toImportRows, type HeaderMatch, type ImportKind, type ImportRow } from './specs'
 
-const PERMISSION: Record<ImportKind, string> = { products: 'products.create', suppliers: 'suppliers.create', opening_stock: 'inventory.opening_stock' }
+const PERMISSION: Record<ImportKind, string> = {
+  products: 'products.create', suppliers: 'suppliers.create', customers: 'customers.create', opening_stock: 'inventory.opening_stock',
+  opening_receivables: 'opening.balances', opening_payables: 'opening.balances',
+}
 type Phase = 'idle' | 'reading' | 'ready' | 'checking' | 'checked' | 'importing' | 'done'
 
 function download(name: string, text: string) {
@@ -109,12 +112,12 @@ export function ImportPage() {
   const busy = phase === 'reading' || phase === 'checking' || phase === 'importing'
 
   if (allowed.length === 0) {
-    return <><PageHeader title="Import data" /><Card><CardBody><p className="text-sm text-slate-600">Importing needs permission to create products, suppliers or opening stock for the whole organization.</p></CardBody></Card></>
+    return <><PageHeader title="Import data" /><Card><CardBody><p className="text-sm text-slate-600">Importing needs permission to create products, suppliers, customers, opening stock or opening balances for the whole organization.</p></CardBody></Card></>
   }
 
   return (
     <>
-      <PageHeader title="Import data" description="Bring your existing lists in from Excel or CSV. Every file is checked first, row by row, before anything is saved." />
+      <PageHeader title="Import data" description="Bring your existing lists in from Excel or CSV. Every file is checked first, row by row, before anything is saved. Suggested order when switching over: products, suppliers, customers, opening stock, then opening receivables and payables, and only then start accounting." />
       <div className="mb-4">
         <Tabs
           label="What to import"
@@ -210,7 +213,7 @@ export function ImportPage() {
                   <Button onClick={() => void doImport()}>Import {importable.toLocaleString()} {importable === 1 ? 'row' : 'rows'}</Button>
                   <p className="text-sm text-slate-600">
                     {problems.length > 0 ? `The ${problems.length} problem rows are skipped. ` : ''}
-                    {kind === 'opening_stock' ? 'This adds to stock, so import a stock file only once. Every row is recorded in a stock document.' : 'Rows already in the system are left unchanged.'}
+                    {kind === 'opening_stock' ? 'This adds to stock, so import a stock file only once. Every row is recorded in a stock document.' : kind === 'opening_receivables' || kind === 'opening_payables' ? 'These are real invoices owed from today. A reference already imported is refused, never doubled. Check the total against your old system before importing.' : 'Rows already in the system are left unchanged.'}
                   </p>
                 </div>
               )}

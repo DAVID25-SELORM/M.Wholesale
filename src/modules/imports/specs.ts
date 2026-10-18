@@ -1,6 +1,6 @@
 import { toCsv } from './csv'
 
-export type ImportKind = 'products' | 'suppliers' | 'opening_stock'
+export type ImportKind = 'products' | 'suppliers' | 'customers' | 'opening_stock' | 'opening_receivables' | 'opening_payables'
 
 export interface ColumnSpec {
   key: string
@@ -77,6 +77,66 @@ export const SPECS: Record<ImportKind, ImportSpec> = {
       { key: 'notes', label: 'Notes', aliases: ['remarks'], hint: '', example: '' },
     ],
     example2: { code: 'KOF', name: 'Kofi Medical Imports', supplier_type: 'IMPORTER', payment_terms_days: '14', city: 'Tema', country: 'GH' },
+  },
+  customers: {
+    kind: 'customers',
+    title: 'Customers',
+    summary: 'Your customers with their licence, payment terms and credit limit. Existing customer codes are left unchanged.',
+    keyColumn: 'code',
+    columns: [
+      { key: 'code', label: 'Customer code', required: true, aliases: ['customercode', 'id', 'accountno', 'account'], hint: 'Your short unique code: letters, numbers, - and _', example: 'ADOM' },
+      { key: 'name', label: 'Name', required: true, aliases: ['customername', 'company'], hint: '', example: 'Adom Pharmacy' },
+      { key: 'customer_type', label: 'Type', aliases: ['type'], hint: 'PHARMACY, HOSPITAL, CLINIC, WHOLESALER, RETAILER or OTHER (default PHARMACY)', example: 'PHARMACY' },
+      { key: 'licence_number', label: 'Licence number', aliases: ['licence', 'license', 'licensenumber', 'pharmacycouncil'], hint: 'Pharmacy Council / FDA licence; needed to sell prescription and controlled medicines', example: 'PC/1234' },
+      { key: 'licence_expiry', label: 'Licence expiry', aliases: ['licenceexpiry', 'licenseexpiry', 'expiry'], hint: 'YYYY-MM-DD. An expired licence blocks sales of regulated medicines', example: '2027-03-31' },
+      { key: 'registered_pharmacist', label: 'Registered pharmacist', aliases: ['pharmacist', 'superintendent'], hint: '', example: 'Kwame Mensah' },
+      { key: 'controlled_drugs_authorised', label: 'May buy controlled drugs', aliases: ['controlled', 'controlleddrugs', 'authorised'], hint: 'yes / no (default no)', example: 'no' },
+      { key: 'payment_terms_days', label: 'Payment terms (days)', aliases: ['terms', 'paymentterms', 'creditdays'], hint: '0 to 365 (default 0 = cash)', example: '30' },
+      { key: 'credit_limit', label: 'Credit limit', aliases: ['creditlimit', 'limit'], hint: 'The most this customer may owe (default 0)', example: '5000' },
+      { key: 'min_shelf_life_days', label: 'Minimum shelf life (days)', aliases: ['minshelflife', 'shelflife'], hint: 'Do not sell this customer stock expiring sooner than this (default 0)', example: '90' },
+      { key: 'contact_name', label: 'Contact person', aliases: ['contact'], hint: '', example: 'Ama Boateng' },
+      { key: 'phone', label: 'Phone', aliases: ['telephone', 'mobile', 'tel'], hint: '', example: '0244000000' },
+      { key: 'email', label: 'Email', aliases: ['emailaddress'], hint: '', example: 'adom@example.com' },
+      { key: 'address', label: 'Address', aliases: [], hint: '', example: '4 Market Road' },
+      { key: 'city', label: 'City', aliases: ['town'], hint: '', example: 'Kumasi' },
+      { key: 'region', label: 'Region', aliases: [], hint: '', example: 'Ashanti' },
+      { key: 'country', label: 'Country', aliases: [], hint: 'Two letters, for example GH', example: 'GH' },
+      { key: 'tax_number', label: 'Tax no.', aliases: ['tin', 'taxid', 'vatnumber'], hint: '', example: '' },
+      { key: 'notes', label: 'Notes', aliases: ['remarks'], hint: '', example: '' },
+    ],
+    example2: { code: 'KORLE', name: 'Korle Clinic', customer_type: 'CLINIC', payment_terms_days: '14', credit_limit: '2000', city: 'Accra', country: 'GH' },
+  },
+  opening_receivables: {
+    kind: 'opening_receivables',
+    title: 'Opening receivables',
+    summary: 'Customer invoices still unpaid on the day you switch over: one row per invoice, with what is still owed. They appear in receivables, statements and reminders, and customers pay them like any invoice. They carry no stock and are not counted as sales. Import customers first, and do this before starting accounting.',
+    keyColumn: 'reference',
+    columns: [
+      { key: 'customer_code', label: 'Customer code', required: true, aliases: ['customer', 'code', 'customerid'], hint: 'An existing customer', example: 'ADOM' },
+      { key: 'reference', label: 'Old invoice number', required: true, aliases: ['invoice', 'invoiceno', 'invoicenumber', 'ref'], hint: 'The invoice number in your old system: letters, numbers and . _ / - (a number already imported is refused)', example: 'INV-10442' },
+      { key: 'invoice_date', label: 'Invoice date', required: true, aliases: ['date', 'invoicedate'], hint: 'YYYY-MM-DD or DD/MM/YYYY, in the past', example: '2026-09-20' },
+      { key: 'due_date', label: 'Due date', aliases: ['due', 'duedate'], hint: 'Blank = invoice date plus the customer\'s payment terms', example: '2026-10-20' },
+      { key: 'amount', label: 'Amount still owed', required: true, aliases: ['balance', 'outstanding', 'amountdue', 'total'], hint: 'Tax included, at most 2 decimals; only what is still unpaid', example: '1200.50' },
+      { key: 'branch', label: 'Branch code', aliases: ['branchcode'], hint: 'Blank = head office', example: '' },
+      { key: 'notes', label: 'Notes', aliases: ['remarks'], hint: '', example: '' },
+    ],
+    example2: { customer_code: 'KORLE', reference: 'INV-10450', invoice_date: '2026-10-02', amount: '999.99' },
+  },
+  opening_payables: {
+    kind: 'opening_payables',
+    title: 'Opening payables',
+    summary: 'Supplier invoices you still owe on the day you switch over: one row per invoice. They appear in payables and are paid like any supplier invoice (already approved). Import suppliers first, and do this before starting accounting.',
+    keyColumn: 'reference',
+    columns: [
+      { key: 'supplier_code', label: 'Supplier code', required: true, aliases: ['supplier', 'code', 'supplierid'], hint: 'An existing supplier', example: 'EMP' },
+      { key: 'reference', label: 'Supplier invoice number', required: true, aliases: ['invoice', 'invoiceno', 'invoicenumber', 'ref'], hint: 'The number on the supplier\'s invoice (an invoice already on file for that supplier is refused)', example: 'SI-88201' },
+      { key: 'invoice_date', label: 'Invoice date', required: true, aliases: ['date', 'invoicedate'], hint: 'YYYY-MM-DD or DD/MM/YYYY, in the past', example: '2026-09-25' },
+      { key: 'due_date', label: 'Due date', aliases: ['due', 'duedate'], hint: 'Blank = invoice date plus the supplier\'s payment terms', example: '2026-10-25' },
+      { key: 'amount', label: 'Amount still owed', required: true, aliases: ['balance', 'outstanding', 'amountdue', 'total'], hint: 'Tax included, at most 2 decimals; only what is still unpaid', example: '2500.00' },
+      { key: 'branch', label: 'Branch code', aliases: ['branchcode'], hint: 'Blank = head office', example: '' },
+      { key: 'notes', label: 'Notes', aliases: ['remarks'], hint: '', example: '' },
+    ],
+    example2: { supplier_code: 'KOF', reference: 'SI-88300', invoice_date: '2026-10-05', amount: '800.25' },
   },
   opening_stock: {
     kind: 'opening_stock',

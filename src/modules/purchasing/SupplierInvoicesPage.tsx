@@ -42,7 +42,7 @@ export function SupplierInvoicesPage() {
   const columns: Column<SupplierInvoice>[] = [
     { key: 'no', header: 'Invoice', render: (i) => <button type="button" className="text-left" onClick={() => setOpen(i)}><span className="block font-mono text-xs font-semibold text-brand-700 hover:underline">{i.invoice_number}</span><span className="block text-xs text-slate-500">their no. {i.supplier_invoice_number}</span></button> },
     { key: 'supplier', header: 'Supplier', render: (i) => <span className="font-medium text-slate-900">{i.supplier?.name ?? '—'}</span> },
-    { key: 'po', header: 'Order', hideOnMobile: true, render: (i) => (i.purchase_order ? <Link className="font-mono text-xs hover:underline" to={`/purchasing/orders/${i.purchase_order_id}`}>{i.purchase_order.po_number}</Link> : '—') },
+    { key: 'po', header: 'Order', hideOnMobile: true, render: (i) => (i.purchase_order ? <Link className="font-mono text-xs hover:underline" to={`/purchasing/orders/${i.purchase_order_id}`}>{i.purchase_order.po_number}</Link> : i.is_opening ? <Badge tone="blue">Opening balance</Badge> : '—') },
     { key: 'status', header: 'Status', render: (i) => <InvoiceStatusBadge status={i.status} /> },
     { key: 'total', header: 'Total', className: 'text-right', render: (i) => <span className="whitespace-nowrap tabular-nums">{money(i.total_amount, i.currency_code)}</span> },
     { key: 'due', header: 'Due', hideOnMobile: true, render: (i) => <span className={i.status === 'APPROVED' && i.due_date < today() ? 'font-semibold text-red-700' : 'text-slate-600'}>{i.due_date}</span> },
@@ -166,7 +166,7 @@ function RecordDialog({ invoice, onClose, onSaved }: { invoice: SupplierInvoice 
             <Select value={poId} disabled={Boolean(invoice)} onChange={(e) => { setPoId(e.target.value); setDrafts(null); setLoadedFor('') }}>
               <option value="">Select…</option>
               {eligible.map((o) => <option key={o.id} value={o.id}>{o.po_number} · {o.supplier?.name}</option>)}
-              {invoice && !eligible.some((o) => o.id === invoice.purchase_order_id) && <option value={invoice.purchase_order_id}>{invoice.purchase_order?.po_number}</option>}
+              {invoice?.purchase_order_id && !eligible.some((o) => o.id === invoice.purchase_order_id) && <option value={invoice.purchase_order_id}>{invoice.purchase_order?.po_number}</option>}
             </Select>
           </Field>
           <Field label="Supplier’s invoice number" required><Input value={number} maxLength={60} onChange={(e) => setNumber(e.target.value)} autoComplete="off" /></Field>

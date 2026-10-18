@@ -24,7 +24,7 @@ interface ServerRow { row: number; key: string; status: RowStatus; message: stri
 
 /** Products and suppliers: the database checks (dry run) or creates (real run) each row on its own. */
 export async function runDatabaseImport(
-  kind: Extract<ImportKind, 'products' | 'suppliers'>,
+  kind: Exclude<ImportKind, 'opening_stock'>,
   rows: ImportRow[],
   dryRun: boolean,
   onProgress: (done: number) => void,
@@ -33,12 +33,13 @@ export async function runDatabaseImport(
   let done = 0
   for (const part of chunks(rows, CHUNK)) {
     const payload = part.map((r) => r.values)
-    const res = unwrap(
-      kind === 'products'
-        ? await supabase.rpc('import_products', { p_rows: payload as unknown as never, p_dry_run: dryRun })
-        : await supabase.rpc('import_suppliers', { p_rows: payload as unknown as never, p_dry_run: dryRun }),
-      `import.${kind}`,
-    ) as unknown as ServerRow[]
+    const args = { p_rows: payload as unknown as never, p_dry_run: dryRun }
+    const call = kind === 'products' ? supabase.rpc('import_products', args)
+      : kind === 'suppliers' ? supabase.rpc('import_suppliers', args)
+      : kind === 'customers' ? supabase.rpc('import_customers', args)
+      : kind === 'opening_receivables' ? supabase.rpc('import_opening_receivables', args)
+      : supabase.rpc('import_opening_payables', args)
+    const res = unwrap(await call, `import.${kind}`) as unknown as ServerRow[]
     for (const r of res) out.push({ line: part[r.row - 1]!.line, key: r.key, status: r.status, message: r.message })
     done += part.length
     onProgress(done)

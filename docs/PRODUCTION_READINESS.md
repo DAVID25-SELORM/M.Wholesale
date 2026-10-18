@@ -55,7 +55,7 @@ Other change: production source maps are now `hidden` (still generated for error
 - [ ] Supabase email alerts for database size, CPU and failed requests.
 - [ ] Someone looks at the audit log weekly (Reports → audit) for unusual reversals, refunds and stock adjustments.
 
-**Data import and cutover**
+**Data import and cutover** (the detailed, tick-box version is `docs/CUTOVER.md`; Phase 16 added the customer import and the opening receivables and payables imports that this needs)
 1. Freeze: agree a cut-off date; stop entering transactions in the old system.
 2. Import (Excel import is built): products, customers, suppliers, price lists, then opening stock by batch and expiry as an OPENING stock document, opening customer balances as opening invoices.
 3. Reconcile: stock valuation and receivables ageing against the old system's totals; sign off by owner and accountant.
