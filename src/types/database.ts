@@ -215,6 +215,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"client_errors": {
+                  Row: {
+                    "app_version": string | null,"created_at": string,"id": string,"message": string,"organization_id": string,"page_path": string | null,"source": string,"stack": string | null,"user_agent": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "app_version"?: string | null,"created_at"?: string,"id"?: string,"message": string,"organization_id": string,"page_path"?: string | null,"source": string,"stack"?: string | null,"user_agent"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "app_version"?: string | null,"created_at"?: string,"id"?: string,"message"?: string,"organization_id"?: string,"page_path"?: string | null,"source"?: string,"stack"?: string | null,"user_agent"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "client_errors_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"controlled_adjustments": {
                   Row: {
                     "branch_id": string,"created_at": string,"decided_at": string | null,"decided_by": string | null,"decision_note": string | null,"id": string,"lines": NonNullable<Json>,"notes": string,"organization_id": string,"reason_code": string,"request_number": string,"requested_at": string,"requested_by": string,"status": string,"stock_document_id": string | null,"updated_at": string,"warehouse_id": string
@@ -2706,6 +2726,9 @@ isOneToOne: false
 { Args: { "p_cover_days"?: number,"p_history_days"?: number,"p_warehouse_id"?: string }; Returns: {
               "avg_daily": number,"base_unit": string,"days_cover": number,"free": number,"lead_time_days": number,"on_hand": number,"on_order": number,"product_id": string,"product_name": string,"reserved": number,"sku": string,"suggested_qty": number,"supplier_name": string,"target_stock": number
             }[]
+                           },
+"report_client_error":
+{ Args: { "p_app_version"?: string,"p_message": string,"p_page_path"?: string,"p_source": string,"p_stack"?: string,"p_user_agent"?: string }; Returns: undefined
                            },
 "request_controlled_adjustment":
 { Args: { "p_lines": Json,"p_notes": string,"p_reason_code": string,"p_warehouse_id": string }; Returns: Json

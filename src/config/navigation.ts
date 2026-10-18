@@ -41,6 +41,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'users', label: 'Users', to: '/admin/users', anyOf: ['users.view'] },
       { id: 'roles', label: 'Roles & permissions', to: '/admin/roles', anyOf: ['roles.view'] },
       { id: 'audit', label: 'Audit log', to: '/admin/audit', anyOf: ['audit.view'] },
+      { id: 'client-errors', label: 'Application errors', to: '/admin/errors', anyOf: ['audit.view'] },
       { id: 'products', label: 'Products', to: '/catalog/products', anyOf: ['products.view'] },
       { id: 'catalog-setup', label: 'Catalogue setup', to: '/catalog/setup', anyOf: ['products.view'] },
       { id: 'import', label: 'Import data', to: '/admin/import', anyOf: ['products.create', 'suppliers.create', 'inventory.opening_stock'] },

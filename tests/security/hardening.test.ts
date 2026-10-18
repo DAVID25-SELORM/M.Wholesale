@@ -128,6 +128,8 @@ describe('catalog hardening', () => {
       'public.unmatch_bank_line', 'public.post_bank_entry', 'public.clear_ledger_lines', 'public.unclear_ledger_line', 'public.bank_ledger_lines', 'public.bank_reconciliation',
       'public.finalize_reconciliation',
       // Phase 14
+      // Phase 15
+      'public.report_client_error',
       'public.request_controlled_adjustment', 'public.approve_controlled_adjustment', 'public.reject_controlled_adjustment', 'public.cancel_controlled_adjustment',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)

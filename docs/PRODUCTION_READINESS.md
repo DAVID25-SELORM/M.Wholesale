@@ -51,7 +51,7 @@ Other change: production source maps are now `hidden` (still generated for error
 - [ ] Custom domain with HTTPS; update the Supabase redirect URLs and the `connect-src` entry in `vercel.json` if the project URL changes.
 
 **Monitoring**
-- [ ] Error tracking (e.g. Sentry) with the hidden source maps uploaded at build time.
+- [x] Application errors are built in: a crashed screen shows a calm message and is reported (page path, error, stack, build version, no form data or tokens) to **Administration → Application errors**, which owners and auditors read. Apply `scripts/apply-phase15.sql` to switch it on. A third-party tracker (e.g. Sentry) is optional on top; if you add one, allow its host in `connect-src` in `vercel.json` and upload the hidden source maps at build time.
 - [ ] Supabase email alerts for database size, CPU and failed requests.
 - [ ] Someone looks at the audit log weekly (Reports → audit) for unusual reversals, refunds and stock adjustments.
 

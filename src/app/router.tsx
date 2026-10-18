@@ -1,6 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '@/layouts/AppShell'
 import { AuditLogPage } from '@/modules/audit/AuditLogPage'
+import { ClientErrorsPage } from '@/modules/audit/ClientErrorsPage'
+import { RouteError } from '@/components/ErrorBoundary'
 import { RequireAuth, RequirePermission } from '@/modules/auth/guards'
 import { AccessDisabledPage, LoginPage, NoAccessPage, NotFoundPage, UnauthorizedPage } from '@/modules/auth/pages'
 import { ForgotPasswordPage, SetPasswordPage } from '@/modules/auth/PasswordPages'
@@ -72,6 +74,7 @@ export const routes = [
   { path: '/no-access', element: <NoAccessPage /> },
   {
     element: <RequireAuth />,
+    errorElement: <RouteError />,
     children: [
       { path: '/unauthorized', element: <UnauthorizedPage /> },
       {
@@ -84,7 +87,7 @@ export const routes = [
           { element: <RequirePermission anyOf={['warehouse_locations.view']} />, children: [{ path: 'admin/locations', element: <LocationsPage /> }] },
           { element: <RequirePermission anyOf={['users.view']} />, children: [{ path: 'admin/users', element: <UsersPage /> }] },
           { element: <RequirePermission anyOf={['roles.view']} />, children: [{ path: 'admin/roles', element: <RolesPage /> }] },
-          { element: <RequirePermission anyOf={['audit.view']} />, children: [{ path: 'admin/audit', element: <AuditLogPage /> }] },
+          { element: <RequirePermission anyOf={['audit.view']} />, children: [{ path: 'admin/audit', element: <AuditLogPage /> }, { path: 'admin/errors', element: <ClientErrorsPage /> }] },
           {
             element: <RequirePermission anyOf={['products.view']} />,
             children: [

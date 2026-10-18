@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useMemo, type ReactNode } from 'react'
 import { RouterProvider } from 'react-router-dom'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ToastProvider } from '@/components/ui'
 import { AuthProvider } from '@/modules/auth/AuthProvider'
 import { createRouter } from './router'
@@ -35,8 +36,10 @@ export function Providers({ children, client }: { children: ReactNode; client?: 
 export function App() {
   const router = useMemo(() => createRouter(), [])
   return (
-    <Providers>
-      <RouterProvider router={router} />
-    </Providers>
+    <ErrorBoundary>
+      <Providers>
+        <RouterProvider router={router} />
+      </Providers>
+    </ErrorBoundary>
   )
 }

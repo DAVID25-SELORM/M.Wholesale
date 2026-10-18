@@ -30,4 +30,6 @@ export default defineConfig({
     },
   },
   build: { sourcemap: 'hidden' },
+  // the commit this build came from (Vercel sets it), shown next to every reported error
+  define: { 'import.meta.env.VITE_APP_VERSION': JSON.stringify((process.env.VERCEL_GIT_COMMIT_SHA ?? 'dev').slice(0, 7)) },
 })
