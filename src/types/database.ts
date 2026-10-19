@@ -471,6 +471,38 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"drivers": {
+                  Row: {
+                    "branch_id": string,"code": string,"created_at": string,"id": string,"is_active": boolean,"licence_class": string | null,"licence_expiry": string | null,"licence_number": string | null,"name": string,"notes": string | null,"organization_id": string,"phone": string | null,"profile_id": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "branch_id": string,"code": string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"licence_class"?: string | null,"licence_expiry"?: string | null,"licence_number"?: string | null,"name": string,"notes"?: string | null,"organization_id"?: string,"phone"?: string | null,"profile_id"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "branch_id"?: string,"code"?: string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"licence_class"?: string | null,"licence_expiry"?: string | null,"licence_number"?: string | null,"name"?: string,"notes"?: string | null,"organization_id"?: string,"phone"?: string | null,"profile_id"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "drivers_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "drivers_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "drivers_profile_fk"
+      columns: ["profile_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
                 },"gl_accounts": {
                   Row: {
                     "account_type": string,"allow_manual": boolean,"code": string,"created_at": string,"id": string,"is_active": boolean,"is_system": boolean,"name": string,"normal_side": string,"organization_id": string,"system_key": string | null,"updated_at": string
@@ -2394,6 +2426,32 @@ isOneToOne: false
       columns: ["role_id"]
 isOneToOne: false
       referencedRelation: "roles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vehicles": {
+                  Row: {
+                    "branch_id": string,"capacity_kg": number | null,"capacity_packages": number | null,"created_at": string,"id": string,"insurance_expiry": string | null,"is_active": boolean,"name": string | null,"notes": string | null,"organization_id": string,"refrigerated": boolean,"registration_number": string,"roadworthy_expiry": string | null,"updated_at": string,"vehicle_type": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "branch_id": string,"capacity_kg"?: number | null,"capacity_packages"?: number | null,"created_at"?: string,"id"?: string,"insurance_expiry"?: string | null,"is_active"?: boolean,"name"?: string | null,"notes"?: string | null,"organization_id"?: string,"refrigerated"?: boolean,"registration_number": string,"roadworthy_expiry"?: string | null,"updated_at"?: string,"vehicle_type"?: string
+                  }
+                  Update: {
+                    "branch_id"?: string,"capacity_kg"?: number | null,"capacity_packages"?: number | null,"created_at"?: string,"id"?: string,"insurance_expiry"?: string | null,"is_active"?: boolean,"name"?: string | null,"notes"?: string | null,"organization_id"?: string,"refrigerated"?: boolean,"registration_number"?: string,"roadworthy_expiry"?: string | null,"updated_at"?: string,"vehicle_type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vehicles_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "vehicles_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
       referencedColumns: ["id"]
     }
                   ]

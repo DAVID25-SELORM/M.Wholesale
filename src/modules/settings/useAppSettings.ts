@@ -16,6 +16,7 @@ export interface TypedSettings {
   /** the warehouse the selected branch sells from by default, when one is set */
   defaultSalesWarehouse: string | null
   idleTimeoutMinutes: number
+  fleetExpiryWarningDays: number
 }
 
 const num = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback)
@@ -34,6 +35,7 @@ export function typed(s: AppSettings, loaded: boolean): TypedSettings {
     nearExpiryDays: num(s['inventory.near_expiry_days'], num(d['inventory.near_expiry_days'], 90)),
     defaultSalesWarehouse: typeof s['inventory.default_sales_warehouse'] === 'string' ? (s['inventory.default_sales_warehouse'] as string) : null,
     idleTimeoutMinutes: num(s['security.idle_timeout_minutes'], 0),
+    fleetExpiryWarningDays: num(s['fleet.expiry_warning_days'], num(d['fleet.expiry_warning_days'], 30)),
   }
 }
 

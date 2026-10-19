@@ -18,6 +18,7 @@ export const SETTING_DEFAULTS: AppSettings = {
   'inventory.near_expiry_days': 90,
   'inventory.default_sales_warehouse': null,
   'security.idle_timeout_minutes': 0,
+  'fleet.expiry_warning_days': 30,
 }
 
 /** Effective values for the signed-in member's organization (and the given branch's overrides). Open to every member; settings never hold secrets. */

@@ -121,7 +121,7 @@ describe('who may read and write', () => {
     expect(await code(call(cashier, `select * from public.settings_overview()`))).toBe('42501')
     const rows = await withUser(viewer, async (c) => (await c.q(`select category || '.' || key as k, source, value from public.settings_overview($1)`, [branch2])).rows)
     const by = Object.fromEntries(rows.map((r) => [r.k, r]))
-    expect(Object.keys(by).length).toBe(9)
+    expect(Object.keys(by).length).toBe(10)
     expect(by['sales.quotation_validity_days']).toMatchObject({ source: 'organization', value: 21 })
     expect(by['purchasing.default_payment_terms_days']).toMatchObject({ source: 'default', value: 30 })
     expect(by['inventory.default_sales_warehouse']).toMatchObject({ source: 'branch', value: whB2 })

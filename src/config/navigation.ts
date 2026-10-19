@@ -105,7 +105,11 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     id: 'delivery', label: 'Delivery', icon: Truck, collapsedByDefault: true,
-    items: ['Dispatch', 'Delivery runs', 'Drivers', 'Vehicles'].map((l) => planned(`del-${l}`, l)),
+    items: [
+      ...['Dispatch', 'Delivery runs'].map((l) => planned(`del-${l}`, l)),
+      { id: 'del-drivers', label: 'Drivers', to: '/delivery/drivers', anyOf: ['fleet.view'] },
+      { id: 'del-vehicles', label: 'Vehicles', to: '/delivery/vehicles', anyOf: ['fleet.view'] },
+    ],
   },
   {
     id: 'intelligence', label: 'Intelligence', icon: Gauge, collapsedByDefault: true,

@@ -44,7 +44,7 @@ describe('schema audit: tables', () => {
     // tables whose rows users legitimately edit directly (master data, always column-limited): everything else must have SELECT only
     const editable = new Set([
       'branches', 'warehouses', 'warehouse_locations', 'profiles', 'system_settings', 'manufacturers', 'product_categories', 'product_identities', 'products', 'product_units',
-      'product_barcodes', 'product_aliases', 'suppliers', 'supplier_contacts', 'supplier_products', 'customers', 'tax_codes', 'price_lists', 'price_list_items', 'organizations',
+      'product_barcodes', 'product_aliases', 'suppliers', 'supplier_contacts', 'supplier_products', 'customers', 'tax_codes', 'price_lists', 'price_list_items', 'organizations', 'drivers', 'vehicles',
     ])
     const rows = await q(`select table_name, string_agg(distinct privilege_type, ',') p from information_schema.role_table_grants
       where grantee = 'authenticated' and table_schema = 'public' and privilege_type in ('INSERT', 'UPDATE') group by 1 order by 1`)

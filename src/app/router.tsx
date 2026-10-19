@@ -8,6 +8,8 @@ import { RequireAuth, RequirePermission } from '@/modules/auth/guards'
 import { AccessDisabledPage, LoginPage, NoAccessPage, NotFoundPage, UnauthorizedPage } from '@/modules/auth/pages'
 import { ForgotPasswordPage, SetPasswordPage } from '@/modules/auth/PasswordPages'
 import { BranchesPage } from '@/modules/branches/BranchesPage'
+import { DriversPage } from '@/modules/fleet/DriversPage'
+import { VehiclesPage } from '@/modules/fleet/VehiclesPage'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { CatalogSetupPage } from '@/modules/catalog/CatalogSetupPage'
 import { ProductDetailPage } from '@/modules/catalog/ProductDetailPage'
@@ -84,6 +86,7 @@ export const routes = [
           { index: true, element: <DashboardPage /> },
           { element: <RequirePermission anyOf={['organizations.view']} />, children: [{ path: 'admin/organization', element: <OrganizationPage /> }] },
           { element: <RequirePermission anyOf={['branches.view']} />, children: [{ path: 'admin/branches', element: <BranchesPage /> }] },
+          { element: <RequirePermission anyOf={['fleet.view']} />, children: [{ path: 'delivery/drivers', element: <DriversPage /> }, { path: 'delivery/vehicles', element: <VehiclesPage /> }] },
           { element: <RequirePermission anyOf={['warehouses.view']} />, children: [{ path: 'admin/warehouses', element: <WarehousesPage /> }] },
           { element: <RequirePermission anyOf={['warehouse_locations.view']} />, children: [{ path: 'admin/locations', element: <LocationsPage /> }] },
           { element: <RequirePermission anyOf={['users.view']} />, children: [{ path: 'admin/users', element: <UsersPage /> }] },

@@ -11,10 +11,10 @@ import {
 } from '@/services/settings'
 import { APP_SETTINGS_KEY } from './useAppSettings'
 
-type SectionId = 'documents' | 'sales' | 'purchasing' | 'inventory' | 'numbering' | 'security' | 'integrations'
+type SectionId = 'documents' | 'sales' | 'purchasing' | 'inventory' | 'delivery' | 'numbering' | 'security' | 'integrations'
 const SECTIONS: { id: SectionId; label: string }[] = [
   { id: 'documents', label: 'Company and documents' }, { id: 'sales', label: 'Sales and credit' }, { id: 'purchasing', label: 'Purchasing' },
-  { id: 'inventory', label: 'Inventory and warehouses' }, { id: 'numbering', label: 'Document numbering' }, { id: 'security', label: 'Security and session' },
+  { id: 'inventory', label: 'Inventory and warehouses' }, { id: 'delivery', label: 'Delivery' }, { id: 'numbering', label: 'Document numbering' }, { id: 'security', label: 'Security and session' },
   { id: 'integrations', label: 'Notifications and integrations' },
 ]
 
@@ -27,6 +27,7 @@ const META: Record<string, Meta> = {
   'credit.default_credit_limit': { label: 'Default credit limit for new customers', hint: 'The most a new customer may owe until you set their own limit. 0 means cash only.', suffix: 'GHS' },
   'purchasing.default_payment_terms_days': { label: 'Default payment terms for new suppliers', hint: 'Days you have to pay a new supplier. You can still change it on each supplier.', suffix: 'days' },
   'inventory.near_expiry_days': { label: 'Near-expiry window', hint: 'Stock expiring within this many days is flagged as near expiry on the Stock and Expiry screens.', suffix: 'days' },
+  'fleet.expiry_warning_days': { label: 'Licence and insurance warning window', hint: 'Drivers and vehicles show "Expiring soon" when a driving licence, insurance or roadworthy date is within this many days.', suffix: 'days' },
   'security.idle_timeout_minutes': { label: 'Sign out after inactivity', hint: '0 turns it off. Otherwise a signed-in browser is signed out after this many minutes without use (at least 5). This protects shared counters and unattended screens; it is enforced by the app in the browser, not by the server.', suffix: 'minutes' },
 }
 
@@ -74,6 +75,7 @@ export function SettingsPage() {
               ]} />
             </>
           )}
+          {section === 'delivery' && <>{card('fleet.expiry_warning_days')}</>}
           {section === 'numbering' && <NumberingSection canManage={canManage} />}
           {section === 'security' && (
             <>

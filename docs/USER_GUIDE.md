@@ -56,6 +56,10 @@ For the people who use the system every day. Menus you cannot see are rights you
 - Every movement appears in the **controlled-drugs register** with a running balance, the customer and licence, and who posted it.
 - Adjustments need two people (see above). Reasons and explanations are mandatory.
 
+## Drivers and vehicles (dispatcher, branch manager)
+
+*Delivery → Drivers* and *Delivery → Vehicles* hold the people and vehicles used for deliveries. For each driver: code, name, phone, branch, licence number, class and expiry. For each vehicle: registration (stored in capitals without spaces, so "gr 1234-24" and "GR1234-24" are the same vehicle), type, capacity, refrigerated or not, insurance and roadworthy expiry. Dates show a badge: Valid, Expiring soon (inside the warning window set in *Settings → Delivery*, 30 days by default) or Expired. Nothing is ever deleted: stop using a driver or vehicle by deactivating it. Branch managers see and manage only their own branch; warehouse managers and auditors can view but not change. Later stages use these records to plan delivery runs and will refuse an inactive driver or vehicle or an expired date.
+
 ## Settings (owner)
 
 *Administration → Settings* holds the choices the system really uses: the footer and payment instructions printed on invoices and receipts, default payment terms and credit limit for new customers and suppliers, how long quotations stay valid, the near-expiry window, each branch's default sales warehouse, how invoice and other document numbers look, and the sign-out-after-inactivity time. Every change is checked, recorded in the audit log, and security settings ask for a reason. Company details and branches are edited on their own pages (the Settings screen links to them). Anyone with only the view right sees the settings but cannot change them.
