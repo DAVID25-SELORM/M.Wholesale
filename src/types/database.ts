@@ -2456,6 +2456,9 @@ isOneToOne: false
 "allocate_receipt":
 { Args: { "p_allocations"?: Json,"p_receipt_id": string }; Returns: Json
                            },
+"app_settings":
+{ Args: { "p_branch_id"?: string }; Returns: Json
+                           },
 "apply_credit_note":
 { Args: { "p_allocations"?: Json,"p_id": string }; Returns: Json
                            },
@@ -2539,6 +2542,9 @@ isOneToOne: false
                            },
 "complete_invitation":
 { Args: { "p_actor_id": string,"p_branch_id"?: string,"p_first_name": string,"p_job_title"?: string,"p_last_name": string,"p_organization_id": string,"p_role_id": string,"p_user_id": string }; Returns: undefined
+                           },
+"configure_document_numbering":
+{ Args: { "p_document_type": string,"p_padding": number,"p_prefix": string,"p_reset_period": string }; Returns: undefined
                            },
 "confirm_delivery":
 { Args: { "p_id": string,"p_notes"?: string,"p_received_by_name": string }; Returns: undefined
@@ -2635,6 +2641,11 @@ isOneToOne: false
                            },
 "match_bank_line":
 { Args: { "p_journal_line_ids": (string)[],"p_statement_line_id": string }; Returns: undefined
+                           },
+"numbering_overview":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "configured": boolean,"document_type": string,"in_use": boolean,"next_number": number,"padding": number,"prefix": string,"reset_period": string
+            }[]
                            },
 "open_pos_session":
 { Args: { "p_opening_float"?: number,"p_warehouse_id": string }; Returns: string
@@ -2792,6 +2803,9 @@ isOneToOne: false
 "save_sales_order":
 { Args: { "p_customer_id": string,"p_customer_reference": string,"p_id": string,"p_lines": Json,"p_notes": string,"p_required_date": string,"p_reserved_until": string,"p_warehouse_id": string }; Returns: string
                            },
+"save_setting":
+{ Args: { "p_branch_id"?: string,"p_category": string,"p_key": string,"p_reason"?: string,"p_value": Json }; Returns: undefined
+                           },
 "search_products":
 { Args: { "p_limit"?: number,"p_offset"?: number,"p_query": string }; Returns: {
               "brand_name": string,"dosage_form": string,"generic_name": string,"is_active": boolean,"manufacturer_name": string,"matched_on": string,"product_class": string,"product_id": string,"sku": string,"strength_text": string
@@ -2805,6 +2819,11 @@ isOneToOne: false
                            },
 "set_user_active":
 { Args: { "p_is_active": boolean,"p_reason"?: string,"p_user_id": string }; Returns: undefined
+                           },
+"settings_overview":
+{ Args: { "p_branch_id"?: string }; Returns: {
+              "branch_scoped": boolean,"category": string,"default_value": Json,"key": string,"kind": string,"max_len": number,"max_num": number,"min_nonzero": number,"min_num": number,"sensitive": boolean,"source": string,"updated_at": string,"value": Json
+            }[]
                            },
 "slow_moving_stock":
 { Args: { "p_days"?: number }; Returns: {

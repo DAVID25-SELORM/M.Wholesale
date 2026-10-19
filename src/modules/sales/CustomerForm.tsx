@@ -6,6 +6,7 @@ import { toAppError } from '@/lib/errors'
 import { entityCode, optionalText, requiredText, validate } from '@/lib/validation'
 import { CUSTOMER_TYPES, CUSTOMER_TYPE_LABEL, MEDICINE_BUYERS, createCustomer, updateCustomer, type Customer, type CustomerType } from '@/services/customers'
 import { listPriceLists } from '@/services/pricing'
+import { useAppSettings } from '@/modules/settings/useAppSettings'
 
 const iso2 = z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/, 'Use a 2-letter code, e.g. GH').or(z.literal('')).optional().transform((v) => v || undefined)
 
@@ -64,7 +65,8 @@ function Inner({ customer, canEdit, onClose, onSaved }: { customer: Customer | n
   const qc = useQueryClient()
   const toast = useToast()
   const lists = useQuery({ queryKey: ['price-lists'], queryFn: listPriceLists, staleTime: 60_000 })
-  const [values, setValues] = useState<Values>(customer ? fromCustomer(customer) : blank)
+  const defaults = useAppSettings()
+  const [values, setValues] = useState<Values>(customer ? fromCustomer(customer) : { ...blank, payment_terms_days: String(defaults.defaultCustomerTerms), credit_limit: String(defaults.defaultCreditLimit) })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string | null>(null)
 

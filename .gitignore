@@ -11,3 +11,7 @@ supabase/.branches
 .stack
 dist-preview
 tsconfig.tsbuildinfo
+
+# end-to-end test artefacts (saved sessions, failure screenshots)
+tests/e2e/.auth
+tests/e2e/.results

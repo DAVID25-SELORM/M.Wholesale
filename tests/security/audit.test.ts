@@ -63,7 +63,7 @@ describe('audit coverage for Phase 0 entities', () => {
     await withUser(org.ownerId, async (c) => {
       whId = (await c.q(`insert into public.warehouses (branch_id, code, name) values ($1, 'AW1', 'Aud WH') returning id`, [mgrBranch])).rows[0].id
       await c.q(`insert into public.warehouse_locations (warehouse_id, code, aisle) values ($1, 'AL1', 'A')`, [whId])
-      await c.q(`insert into public.system_settings (category, key, value) values ('company', 'audit.test', '"x"')`)
+      await c.q(`insert into public.system_settings (category, key, value) values ('invoice', 'footer', '"x"')`)
       await c.q(`update public.organizations set trading_name = 'Audited Trading' where id = $1`, [org.id])
     }, { commit: true })
     const target = await addUser(org.id, 'READ_ONLY')

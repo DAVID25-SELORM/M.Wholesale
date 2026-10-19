@@ -15,6 +15,7 @@ import { listTaxCodes, resolvePrice } from '@/services/pricing'
 import { RECEIPT_METHOD_LABEL, computeLine, moneyFmt, round2, type ReceiptMethod } from '@/services/sales'
 import { listWarehouseOptions } from '@/services/warehouses'
 import { PosReceipt } from './PosReceipt'
+import { useAppSettings } from '@/modules/settings/useAppSettings'
 
 let seq = 0
 const nextKey = () => `p${++seq}`
@@ -39,7 +40,8 @@ function OpenShift() {
   const [warehouseId, setWarehouseId] = useState('')
   const [float, setFloat] = useState('0')
   const [error, setError] = useState<string | null>(null)
-  const chosen = warehouseId || (mine.find((w) => w.branch_id === selectedBranch) ?? mine[0])?.id || ''
+  const settings = useAppSettings()
+  const chosen = warehouseId || (mine.find((w) => w.id === settings.defaultSalesWarehouse) ?? mine.find((w) => w.branch_id === selectedBranch) ?? mine[0])?.id || ''
   const open = useMutation({
     mutationFn: () => openPosSession(chosen, Number(float)),
     onSuccess: async () => { toast.success('Shift started.'); await qc.invalidateQueries({ queryKey: ['pos-session'] }) },

@@ -130,6 +130,8 @@ describe('catalog hardening', () => {
       // Phase 14
       // Phase 15
       'public.report_client_error',
+      // Settings module
+      'public.app_settings', 'public.settings_overview', 'public.save_setting', 'public.numbering_overview', 'public.configure_document_numbering',
       // Phase 16
       'public.import_customers', 'public.import_opening_receivables', 'public.import_opening_payables', 'public.remove_opening_balance',
       'public.request_controlled_adjustment', 'public.approve_controlled_adjustment', 'public.reject_controlled_adjustment', 'public.cancel_controlled_adjustment',

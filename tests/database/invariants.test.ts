@@ -21,9 +21,9 @@ describe('database invariants (checked as the trusted server role, i.e. without 
     expect(await code(admin.query(
       'insert into public.user_roles (user_id, role_id, organization_id, branch_id) values ($1, $2, $3, $4)',
       [u, await roleId('CASHIER'), a.id, b.hq]))).toBe('23503')
-    // system settings / number sequences too
+    // number sequences too (a setting's own checks come first, see tests/security/settings.test.ts)
     expect(await code(admin.query(
-      `insert into public.system_settings (organization_id, branch_id, category, key, value) values ($1, $2, 'sales', 'k', '1')`,
+      `insert into public.number_sequences (organization_id, branch_id, document_type, prefix) values ($1, $2, 'XDOC', 'X')`,
       [a.id, b.hq]))).toBe('23503')
   })
 

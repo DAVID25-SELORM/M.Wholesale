@@ -44,14 +44,19 @@ async function ensureAuthUser(email) {
   if (res.ok) return (await res.json()).id
   const list = await fetch(`${authUrl}/admin/users?per_page=200`, { headers: svc })
   const found = (await list.json()).users?.find((u) => u.email === email)
-  if (found) return found.id
+  if (found) {
+    // an existing sign-in keeps its old password otherwise, which would make "the password you supplied" untrue on a re-seed
+    const upd = await fetch(`${authUrl}/admin/users/${found.id}`, { method: 'PUT', headers: svc, body: JSON.stringify({ password, email_confirm: true }) })
+    if (!upd.ok) throw new Error(`could not set the password of ${email}: ${upd.status} ${await upd.text()}`)
+    return found.id
+  }
   throw new Error(`could not create or find ${email}: ${res.status} ${await res.text()}`)
 }
 
 async function ensureOrg(name, owner) {
   const existing = await rest('GET', `/organizations?select=id&name=eq.${encodeURIComponent(name)}`)
+  const ownerId = await ensureAuthUser(owner.email)        // also on a re-seed: keeps the owner's password equal to the one supplied
   if (existing[0]) return existing[0].id
-  const ownerId = await ensureAuthUser(owner.email)
   return rest('POST', '/rpc/provision_organization', {
     p_user_id: ownerId, p_first_name: owner.first, p_last_name: owner.last, p_name: name,
     p_legal_name: `${name}`, p_branch_code: 'HQ', p_branch_name: 'Head Office',

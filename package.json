@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:db": "node scripts/db-test.mjs",
     "test:perf": "node scripts/perf-test.mjs",
+    "test:e2e": "node scripts/e2e.mjs",
     "test:all": "npm run typecheck && npm run lint && npm test && npm run test:db",
     "db:types": "node scripts/gen-types.mjs",
     "stack:up": "node scripts/dev-stack.mjs up",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",

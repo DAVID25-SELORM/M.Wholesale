@@ -6,7 +6,7 @@
 | Anonymous | Sign in; nothing else | `anon` has **no** table/column privileges and no function EXECUTE (tested) |
 | Signed-in user | Only what their organization + role + branch scope allow | RLS policies, column grants, triggers, guarded RPCs |
 | Browser code | Anon key + the user's own JWT | the SPA contains no service key (`grep` clean); `.env.example` documents this |
-| Server / CI | Provisioning, migrations | `service_role` key kept outside the browser; provisioning functions executable only by it |
+| Server / CI | Provisioning, migrations (see [SUPER_ADMIN.md](SUPER_ADMIN.md) for exactly which operations need the service role) | `service_role` key kept outside the browser; provisioning functions executable only by it |
 
 ## Tenant isolation (why Organization A can never touch Organization B)
 1. `private.current_organization_id()` resolves the caller's organization from `auth.uid()` (the verified JWT

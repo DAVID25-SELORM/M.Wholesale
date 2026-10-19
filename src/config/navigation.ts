@@ -47,7 +47,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'import', label: 'Import data', to: '/admin/import', anyOf: ['products.create', 'suppliers.create', 'inventory.opening_stock'] },
       planned('approvals', 'Approvals'),
       planned('integrations', 'Integrations'),
-      planned('settings', 'Settings'),
+      { id: 'settings', label: 'Settings', to: '/admin/settings', anyOf: ['settings.view'] },
     ],
   },
   {

@@ -16,6 +16,7 @@ import { moneyFmt } from '@/services/sales'
 import { listWarehouseOptions } from '@/services/warehouses'
 import { buildSalesLines, emptySalesLine, type SalesLineDraft } from './invoiceLines'
 import { LineRow } from './InvoiceEditor'
+import { useAppSettings } from '@/modules/settings/useAppSettings'
 
 export type DocKind = 'quotation' | 'order'
 
@@ -42,7 +43,8 @@ export function SalesDocEditor({ kind, doc, lines, presetCustomerId }: { kind: D
   const taxCodes = useQuery({ queryKey: ['tax-codes'], queryFn: listTaxCodes, staleTime: 60_000 })
 
   const mine = (warehouses.data ?? []).filter((w) => (w.is_active || w.id === doc?.warehouse_id) && ability.can(createPerm, w.branch_id))
-  const preferred = mine.find((w) => w.branch_id === selectedBranch) ?? mine[0]
+  const settings = useAppSettings()
+  const preferred = mine.find((w) => w.id === settings.defaultSalesWarehouse) ?? mine.find((w) => w.branch_id === selectedBranch) ?? mine[0]
   const q = doc as Quotation | null
   const o = doc as SalesOrder | null
 
@@ -50,7 +52,7 @@ export function SalesDocEditor({ kind, doc, lines, presetCustomerId }: { kind: D
   const [warehouseId, setWarehouseId] = useState(doc?.warehouse_id ?? '')
   const [reference, setReference] = useState(doc?.customer_reference ?? '')
   const [notes, setNotes] = useState(doc?.notes ?? '')
-  const [validUntil, setValidUntil] = useState(q?.valid_until ?? iso(30))
+  const [validUntil, setValidUntil] = useState(q?.valid_until ?? iso(settings.quotationValidityDays))
   const [requiredDate, setRequiredDate] = useState(o?.required_date ?? '')
   const [reservedUntil, setReservedUntil] = useState(o?.reserved_until ?? '')
   const [rows, setRows] = useState<SalesLineDraft[]>(() =>

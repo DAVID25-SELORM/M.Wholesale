@@ -3,6 +3,7 @@ import { formatDateTime } from '@/lib/utils'
 import { getOrganization } from '@/services/organization'
 import type { CheckoutResult } from '@/services/pos'
 import { RECEIPT_METHOD_LABEL, getSalesInvoice, listInvoicePayments, listSalesLines, moneyFmt, type ReceiptMethod } from '@/services/sales'
+import { useAppSettings } from '@/modules/settings/useAppSettings'
 
 /** A narrow till receipt (80 mm). Wrapped in #print-area by the caller, so window.print() prints only this. */
 export function PosReceipt({ sale }: { sale: CheckoutResult }) {
@@ -11,6 +12,7 @@ export function PosReceipt({ sale }: { sale: CheckoutResult }) {
   const lines = useQuery({ queryKey: ['sales-invoice-lines', sale.invoice_id], queryFn: () => listSalesLines(sale.invoice_id) })
   const pays = useQuery({ queryKey: ['invoice-payments', sale.invoice_id], queryFn: () => listInvoicePayments(sale.invoice_id) })
   const o = org.data
+  const settings = useAppSettings()
   const i = inv.data
   return (
     <div id="print-area" className="receipt-80 mx-auto w-full max-w-[80mm] bg-white p-3 font-mono text-xs leading-relaxed text-slate-900">
@@ -41,7 +43,7 @@ export function PosReceipt({ sale }: { sale: CheckoutResult }) {
         {sale.change > 0 && <p className="flex justify-between font-bold"><span>Change</span><span>{moneyFmt(sale.change)}</span></p>}
         {sale.owed > 0 && <p className="flex justify-between font-bold"><span>On account</span><span>{moneyFmt(sale.owed)}</span></p>}
       </div>
-      <p className="mt-3 text-center">Thank you</p>
+      <p className="mt-3 whitespace-pre-line text-center">{settings.invoiceFooter || 'Thank you'}</p>
     </div>
   )
 }

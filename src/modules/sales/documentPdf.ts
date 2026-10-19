@@ -5,6 +5,7 @@ import type { DeliveryNote, PickLine } from '@/services/deliveries'
 import { fmtQty } from '@/services/inventory'
 import type { DocLine, Quotation } from '@/services/orders'
 import type { Organization } from '@/services/organization'
+import { fetchAppSettings } from '@/services/settings'
 import { moneyFmt, type SalesInvoice, type SalesInvoiceLine } from '@/services/sales'
 
 const orgBlock = (o: Organization | undefined) => ({
@@ -12,6 +13,11 @@ const orgBlock = (o: Organization | undefined) => ({
   lines: [[o?.address, o?.city, o?.region].filter(Boolean).join(', '), [o?.phone, o?.email].filter(Boolean).join(' · '), o?.tax_number ? `Tax no. ${o.tax_number}` : ''],
 })
 const partyLines = (c: Customer | null | undefined) => [[c?.address, c?.city, c?.region].filter(Boolean).join(', '), c?.licence_number ? `Licence ${c.licence_number}` : '', c?.tax_number ? `Tax no. ${c.tax_number}` : '']
+/** The organization's footer line and (on invoices and quotations) payment instructions, as printed notes. */
+async function settingNotes(withPayment: boolean): Promise<string[]> {
+  const s = await fetchAppSettings()
+  return [...(withPayment && typeof s['invoice.payment_instructions'] === 'string' && s['invoice.payment_instructions'] ? [`Payment instructions: ${s['invoice.payment_instructions']}`] : []), ...(typeof s['invoice.footer'] === 'string' && s['invoice.footer'] ? [s['invoice.footer']] : [])]
+}
 const unitName = (factor: number, base: string | undefined, pack: string | undefined) => (factor === 1 ? base : pack) ?? ''
 
 export async function downloadInvoicePdf(i: { invoice: SalesInvoice; lines: SalesInvoiceLine[]; org: Organization | undefined; customer: Customer | null | undefined }): Promise<void> {
@@ -30,7 +36,7 @@ export async function downloadInvoicePdf(i: { invoice: SalesInvoice; lines: Sale
       ['Subtotal', moneyFmt(inv.subtotal)], ['Tax', moneyFmt(inv.tax_total)], [`Total (${inv.currency_code})`, moneyFmt(inv.total_amount)],
       ['Paid', moneyFmt(inv.amount_paid)], ...(Number(inv.amount_credited) > 0 ? [['Credited', moneyFmt(inv.amount_credited)] as [string, string]] : []), ['Balance due', moneyFmt(inv.balance_due)],
     ],
-    notes: inv.notes ? [inv.notes] : [], ...(inv.status === 'REVERSED' ? { stamp: 'REVERSED' } : inv.status === 'CANCELLED' ? { stamp: 'CANCELLED' } : {}),
+    notes: [...(inv.notes ? [inv.notes] : []), ...(await settingNotes(true))], ...(inv.status === 'REVERSED' ? { stamp: 'REVERSED' } : inv.status === 'CANCELLED' ? { stamp: 'CANCELLED' } : {}),
     filename: `invoice-${inv.invoice_number ?? inv.id}`,
   })
 }
@@ -48,7 +54,7 @@ export async function downloadCreditNotePdf(i: { note: CreditNote; lines: Credit
       moneyFmt(l.line_net), moneyFmt(l.line_tax), moneyFmt(l.line_total),
     ]),
     totals: [['Credit before tax', moneyFmt(n.subtotal)], ['Tax', moneyFmt(n.tax_total)], [`Total credit (${n.currency_code})`, moneyFmt(n.total_amount)]],
-    notes: n.notes ? [n.notes] : [], ...(n.status === 'REVERSED' ? { stamp: 'REVERSED' } : {}), filename: `credit-note-${n.credit_note_number ?? n.id}`,
+    notes: [...(n.notes ? [n.notes] : []), ...(await settingNotes(false))], ...(n.status === 'REVERSED' ? { stamp: 'REVERSED' } : {}), filename: `credit-note-${n.credit_note_number ?? n.id}`,
   })
 }
 
@@ -65,7 +71,7 @@ export async function downloadQuotationPdf(i: { quotation: Quotation; lines: Doc
       moneyFmt(l.unit_price), Number(l.discount_percent) > 0 ? String(Number(l.discount_percent)) : '', Number(l.tax_rate) > 0 ? `${Number(l.tax_rate)}%` : 'Exempt', moneyFmt(l.line_total),
     ]),
     totals: [['Subtotal', moneyFmt(q.subtotal)], ['Tax', moneyFmt(q.tax_total)], [`Total (${q.currency_code})`, moneyFmt(q.total_amount)]],
-    notes: [...(q.notes ? [q.notes] : []), 'Prices are for the quantities shown and subject to stock on acceptance.'], filename: `quotation-${q.quotation_number ?? q.id}`,
+    notes: [...(q.notes ? [q.notes] : []), 'Prices are for the quantities shown and subject to stock on acceptance.', ...(await settingNotes(true))], filename: `quotation-${q.quotation_number ?? q.id}`,
   })
 }
 
@@ -88,7 +94,7 @@ export async function downloadDeliveryNotePdf(i: { note: DeliveryNote; lines: Pi
     columns: [{ header: 'Location' }, { header: 'Item' }, { header: 'Batch' }, { header: 'Expiry' }, { header: 'Pick', align: 'right' }, { header: 'Ordered', align: 'right' }],
     rows: i.lines.map((l) => [l.location_code ?? '', `${l.product_name} (${l.sku})`, l.batch_number ?? '', l.expiry_date ?? '', `${fmtQty(l.base_quantity)} ${l.base_unit}`, `${fmtQty(l.line_quantity)} ${l.line_unit}`]),
     totals: [['Packages', String(n.packages)]],
-    notes: [n.notes ?? '', 'Picked by: ____________________     Received by: ____________________     Signature / date: ____________________'].filter(Boolean),
+    notes: [n.notes ?? '', 'Picked by: ____________________     Received by: ____________________     Signature / date: ____________________', ...(await settingNotes(false))].filter(Boolean),
     ...(n.status === 'CANCELLED' ? { stamp: 'CANCELLED' } : {}), filename: `delivery-note-${n.note_number}`,
   })
 }

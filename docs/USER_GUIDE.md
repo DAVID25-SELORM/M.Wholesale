@@ -56,6 +56,10 @@ For the people who use the system every day. Menus you cannot see are rights you
 - Every movement appears in the **controlled-drugs register** with a running balance, the customer and licence, and who posted it.
 - Adjustments need two people (see above). Reasons and explanations are mandatory.
 
+## Settings (owner)
+
+*Administration → Settings* holds the choices the system really uses: the footer and payment instructions printed on invoices and receipts, default payment terms and credit limit for new customers and suppliers, how long quotations stay valid, the near-expiry window, each branch's default sales warehouse, how invoice and other document numbers look, and the sign-out-after-inactivity time. Every change is checked, recorded in the audit log, and security settings ask for a reason. Company details and branches are edited on their own pages (the Settings screen links to them). Anyone with only the view right sees the settings but cannot change them.
+
 ## Switching over from the old system (owner and accounts manager)
 
 *Administration → Import data* brings your lists in from Excel or CSV; every file is checked row by row before anything is saved. Suggested order: products, suppliers, customers, **opening stock**, then **opening receivables** (customer invoices still unpaid) and **opening payables** (supplier invoices still unpaid), and only then **start accounting**. Opening invoices carry the old invoice number and what is still owed; customers pay them like any invoice, and they are not counted as sales. A wrong one can be removed until accounting starts. The full plan, with go/no-go checks and rollback, is in `docs/CUTOVER.md`.

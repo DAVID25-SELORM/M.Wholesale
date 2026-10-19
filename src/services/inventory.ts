@@ -56,12 +56,14 @@ export const NEAR_EXPIRY_DAYS = 90
 export interface StockSummaryParams extends PageParams {
   warehouseId: string
   search: string
+  /** the near-expiry window in days (the organization's setting); defaults to 90 */
+  nearDays?: number
 }
 
 export async function listStockSummary(p: StockSummaryParams): Promise<Paged<StockSummaryRow>> {
   const rows = unwrap(
     await supabase.rpc('stock_summary', {
-      p_warehouse_id: p.warehouseId || undefined, p_query: p.search.trim() || undefined, p_near_days: NEAR_EXPIRY_DAYS,
+      p_warehouse_id: p.warehouseId || undefined, p_query: p.search.trim() || undefined, p_near_days: p.nearDays ?? NEAR_EXPIRY_DAYS,
       p_limit: p.pageSize, p_offset: p.page * p.pageSize,
     }),
     'stock.summary',
@@ -241,10 +243,10 @@ export async function postStockDocument(i: PostDocumentInput): Promise<{ documen
 
 // ---- display helpers ------------------------------------------------------------------------------------------
 export type ExpiryTone = 'red' | 'amber' | 'slate'
-export function expiryTone(daysToExpiry: number): ExpiryTone {
+export function expiryTone(daysToExpiry: number, nearDays: number = NEAR_EXPIRY_DAYS): ExpiryTone {
   if (daysToExpiry < 0) return 'red'
-  if (daysToExpiry <= 30) return 'red'
-  if (daysToExpiry <= NEAR_EXPIRY_DAYS) return 'amber'
+  if (daysToExpiry <= Math.min(30, nearDays)) return 'red'
+  if (daysToExpiry <= nearDays) return 'amber'
   return 'slate'
 }
 export function expiryLabel(daysToExpiry: number): string {

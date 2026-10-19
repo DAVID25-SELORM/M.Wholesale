@@ -6,12 +6,13 @@ import { Badge, Button, Card, DataTable, PageHeader, Pagination, SearchInput, Se
 import { toAppError } from '@/lib/errors'
 import { useSession } from '@/modules/session/SessionProvider'
 import {
-  DOCUMENT_PERMISSION, DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL, NEAR_EXPIRY_DAYS, daysUntil, fmtQty, listStockSummary,
+  DOCUMENT_PERMISSION, DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL, daysUntil, fmtQty, listStockSummary,
   type DocumentType, type StockSummaryRow,
 } from '@/services/inventory'
 import { listWarehouseOptions } from '@/services/warehouses'
 import { ExpiryBadge } from './shared'
 import { StockPostingDialog } from './StockPostingDialog'
+import { useAppSettings } from '@/modules/settings/useAppSettings'
 
 const PAGE_SIZE = 20
 const ICON: Record<DocumentType, typeof PackagePlus> = {
@@ -26,7 +27,8 @@ export function StockPage() {
   const [posting, setPosting] = useState<DocumentType | null>(null)
 
   const warehouses = useQuery({ queryKey: ['warehouse-options', null], queryFn: () => listWarehouseOptions(null), staleTime: 60_000 })
-  const params = { page, pageSize: PAGE_SIZE, search, warehouseId }
+  const settings = useAppSettings()
+  const params = { page, pageSize: PAGE_SIZE, search, warehouseId, nearDays: settings.nearExpiryDays }
   const query = useQuery({ queryKey: ['stock', 'summary', params], queryFn: () => listStockSummary(params), placeholderData: (prev) => prev })
 
   const columns: Column<StockSummaryRow>[] = [
@@ -53,7 +55,7 @@ export function StockPage() {
       render: (r) => (
         <span className="flex flex-wrap items-center gap-1">
           {r.expired_unsold > 0 && <Badge tone="red">{fmtQty(r.expired_unsold)} expired, unsold</Badge>}
-          {r.near_expiry > 0 && <Badge tone="amber">{fmtQty(r.near_expiry)} within {NEAR_EXPIRY_DAYS} d</Badge>}
+          {r.near_expiry > 0 && <Badge tone="amber">{fmtQty(r.near_expiry)} within {settings.nearExpiryDays} d</Badge>}
           {r.earliest_expiry && r.expired_unsold === 0 && r.near_expiry === 0 && <ExpiryBadge days={daysUntil(r.earliest_expiry)} />}
         </span>
       ),

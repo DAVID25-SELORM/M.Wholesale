@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { addBranch, addUser, admin, closePool, createOrg, roleId, withUser, type Org } from '../helpers/db'
+import { addBranch, addUser, addWarehouse, admin, closePool, createOrg, roleId, withUser, type Org } from '../helpers/db'
 
 let org: Org
 let branch2: string
@@ -186,27 +186,28 @@ describe('security 7: unauthorized settings modification fails', () => {
   it('only settings.manage may write; settings.view may read; branch scope is respected', async () => {
     const viewer = await addUser(org.id, 'AUDITOR') // has settings.view only
     const manager = await addUser(org.id, 'BRANCH_MANAGER', org.hq) // settings.view only, branch scoped
+    const branch2Warehouse = await addWarehouse(org.id, branch2, 'SWH2')
     await withUser(org.ownerId, async (c) => {
       expect((await c.attempt(
-        `insert into public.system_settings (category, key, value) values ('sales', 'default.tax', '{"rate":0}')`)).ok).toBe(true)
+        `insert into public.system_settings (category, key, value) values ('sales', 'quotation_validity_days', '21')`)).ok).toBe(true)
       expect((await c.attempt(
-        `insert into public.system_settings (branch_id, category, key, value) values ($1, 'sales', 'branch.only', '1')`, [branch2])).ok).toBe(true)
+        `insert into public.system_settings (branch_id, category, key, value) values ($1, 'inventory', 'default_sales_warehouse', to_jsonb($2::text))`, [branch2, branch2Warehouse])).ok).toBe(true)
       await c.q(`select 1`) // keep tx open; commit below
     }, { commit: true })
 
     for (const user of [viewer, manager]) {
       await withUser(user, async (c) => {
         expect((await c.q(`select count(*)::int n from public.system_settings`)).rows[0].n).toBeGreaterThan(0)
-        const w = await c.attempt(`insert into public.system_settings (category, key, value) values ('sales', 'evil', '1')`)
+        const w = await c.attempt(`insert into public.system_settings (category, key, value) values ('sales', 'default_payment_terms_days', '1')`)
         expect(w.ok).toBe(false)
         if (!w.ok) expect(w.code).toBe('42501')
-        expect((await c.q(`update public.system_settings set value = '{"rate":99}'`)).rowCount).toBe(0)
+        expect((await c.q(`update public.system_settings set value = '99'`)).rowCount).toBe(0)
       })
     }
     // branch-scoped manager must not even see the other branch's setting
     await withUser(manager, async (c) => {
       const rows = await c.q(`select key from public.system_settings`)
-      expect(rows.rows.map((r) => r.key)).not.toContain('branch.only')
+      expect(rows.rows.map((r) => r.key)).not.toContain('default_sales_warehouse')
     })
   })
 

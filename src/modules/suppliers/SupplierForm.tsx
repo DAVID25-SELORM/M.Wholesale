@@ -5,6 +5,7 @@ import { Button, Checkbox, DateInput, Field, InlineError, Input, Modal, Select, 
 import { toAppError } from '@/lib/errors'
 import { entityCode, optionalText, requiredText, validate } from '@/lib/validation'
 import { SUPPLIER_TYPES, createSupplier, updateSupplier, type Supplier, type SupplierType } from '@/services/suppliers'
+import { useAppSettings } from '@/modules/settings/useAppSettings'
 
 export const SUPPLIER_TYPE_LABEL: Record<SupplierType, string> = {
   MANUFACTURER: 'Manufacturer', IMPORTER: 'Importer', DISTRIBUTOR: 'Distributor', WHOLESALER: 'Wholesaler', OTHER: 'Other',
@@ -54,7 +55,8 @@ export function SupplierForm({ open, supplier, canEdit, onClose }: { open: boole
 function Inner({ supplier, canEdit, onClose }: { supplier: Supplier | null; canEdit: boolean; onClose: () => void }) {
   const qc = useQueryClient()
   const toast = useToast()
-  const [values, setValues] = useState<Values>(supplier ? fromSupplier(supplier) : blank)
+  const defaults = useAppSettings()
+  const [values, setValues] = useState<Values>(supplier ? fromSupplier(supplier) : { ...blank, payment_terms_days: String(defaults.defaultSupplierTerms) })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string | null>(null)
 

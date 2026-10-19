@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '@/layouts/AppShell'
 import { AuditLogPage } from '@/modules/audit/AuditLogPage'
 import { ClientErrorsPage } from '@/modules/audit/ClientErrorsPage'
+import { SettingsPage } from '@/modules/settings/SettingsPage'
 import { RouteError } from '@/components/ErrorBoundary'
 import { RequireAuth, RequirePermission } from '@/modules/auth/guards'
 import { AccessDisabledPage, LoginPage, NoAccessPage, NotFoundPage, UnauthorizedPage } from '@/modules/auth/pages'
@@ -88,6 +89,7 @@ export const routes = [
           { element: <RequirePermission anyOf={['users.view']} />, children: [{ path: 'admin/users', element: <UsersPage /> }] },
           { element: <RequirePermission anyOf={['roles.view']} />, children: [{ path: 'admin/roles', element: <RolesPage /> }] },
           { element: <RequirePermission anyOf={['audit.view']} />, children: [{ path: 'admin/audit', element: <AuditLogPage /> }, { path: 'admin/errors', element: <ClientErrorsPage /> }] },
+          { element: <RequirePermission anyOf={['settings.view']} />, children: [{ path: 'admin/settings', element: <SettingsPage /> }] },
           {
             element: <RequirePermission anyOf={['products.view']} />,
             children: [

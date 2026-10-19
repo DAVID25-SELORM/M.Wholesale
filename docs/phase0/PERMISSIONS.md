@@ -67,6 +67,8 @@ structure they work in until their modules exist.
 * Reasons are recorded in the audit log (`app.audit_reason`).
 
 ## SUPER_ADMIN
+The full account (assignment, why it is organization-scoped, who may provision or revoke it, escalation controls, tenant isolation, service-role operations and auditing) is in [SUPER_ADMIN.md](SUPER_ADMIN.md). In short:
+
 `SUPER_ADMIN` here is an **organization-level** technical administrator: it has every permission *inside its own
 organization*. It is deliberately **not** a cross-tenant role. No RLS policy, helper function or RPC can grant
 access outside `private.current_organization_id()`, so there is no flag a browser could flip. Platform-level

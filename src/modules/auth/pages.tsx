@@ -27,6 +27,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const signedOutForIdle = new URLSearchParams(location.search).get('idle') === '1'
 
   if (auth.status === 'signedIn') return <Navigate to={from} replace />
 
@@ -55,6 +56,7 @@ export function LoginPage() {
         </div>
         <form onSubmit={onSubmit} noValidate className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           {envProblem && <InlineError message={envProblem} />}
+          {signedOutForIdle && <p role="status" className="rounded-md bg-sky-50 p-3 text-sm text-sky-900">You were signed out after a period of inactivity. Sign in again to continue.</p>}
           <InlineError message={error} />
           <Field label="Email" required>
             <Input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />

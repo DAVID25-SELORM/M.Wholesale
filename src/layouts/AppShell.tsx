@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { IdleSignOut } from '@/modules/settings/IdleSignOut'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 
@@ -41,6 +42,7 @@ export function AppShell() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <IdleSignOut />
         <Topbar onOpenMenu={() => setMenuOpen(true)} />
         <main id="main" className="min-w-0 flex-1 p-4 sm:p-6">
           <div className="mx-auto w-full max-w-7xl">

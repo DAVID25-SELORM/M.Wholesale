@@ -14,7 +14,9 @@ Sales, finance and delivery arrive in later phases.
 | [docs/phase0/DATABASE.md](docs/phase0/DATABASE.md) | migrations, entities, constraints, numbering |
 | [docs/phase0/PERMISSIONS.md](docs/phase0/PERMISSIONS.md) | user → role → permission, branch scope, SUPER_ADMIN |
 | [docs/phase0/SECURITY.md](docs/phase0/SECURITY.md) | trust boundaries, tenant isolation, audit, production checklist |
-| [docs/phase0/DEVELOPMENT.md](docs/phase0/DEVELOPMENT.md) | setup, env vars, migrations, tests |
+| [docs/phase0/DEVELOPMENT.md](docs/phase0/DEVELOPMENT.md) | setup, env vars, migrations, tests (unit, database, end-to-end, volume) |
+| [docs/phase0/SUPER_ADMIN.md](docs/phase0/SUPER_ADMIN.md) | SUPER_ADMIN: scope, assignment, revocation, escalation controls, service-role operations, auditing |
+| [docs/phase0/SETTINGS.md](docs/phase0/SETTINGS.md) | the Settings module: registry, authority, audit, what each setting controls, document numbering |
 | [docs/phase1/CATALOG_AND_SUPPLIERS.md](docs/phase1/CATALOG_AND_SUPPLIERS.md) | Phase 1: product identity model, units, barcodes, aliases, search, suppliers |
 | [docs/phase2/INVENTORY.md](docs/phase2/INVENTORY.md) | Phase 2: batches, stock ledger and balances, posting rules, statuses, FEFO, expiry |
 | [docs/phase3/PURCHASING.md](docs/phase3/PURCHASING.md) | Phase 3: purchase orders, approval workflow, receiving goods into stock |

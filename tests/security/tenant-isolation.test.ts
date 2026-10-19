@@ -22,7 +22,7 @@ beforeAll(async () => {
   aWh1 = await addWarehouse(a.id, a.hq, 'WH1')
   aWh2 = await addWarehouse(a.id, aBranch2, 'WH2')
   await admin.query(
-    `insert into public.system_settings (organization_id, category, key, value) values ($1, 'sales', 'secret.b', '{"x":1}')`,
+    `insert into public.system_settings (organization_id, category, key, value) values ($1, 'invoice', 'footer', '"secret B footer"')`,
     [b.id],
   )
 })
@@ -82,7 +82,7 @@ describe('security 3: organization A cannot READ organization B', () => {
       expect((await c.q('select 1 from public.warehouse_locations where id = $1', [bLoc])).rowCount).toBe(0)
       expect((await c.q('select 1 from public.profiles where id = $1', [b.ownerId])).rowCount).toBe(0)
       expect((await c.q('select 1 from public.user_roles where user_id = $1', [b.ownerId])).rowCount).toBe(0)
-      expect((await c.q(`select 1 from public.system_settings where key = 'secret.b'`)).rowCount).toBe(0)
+      expect((await c.q(`select 1 from public.system_settings where key = 'footer'`)).rowCount).toBe(0)
       expect((await c.q('select 1 from public.audit_logs where organization_id = $1', [b.id])).rowCount).toBe(0)
     })
   })
@@ -97,7 +97,7 @@ describe('security 4: organization A cannot MUTATE organization B', () => {
         ['update public.warehouses set name = $2 where id = $1', [bWh, 'pwned']],
         ['update public.warehouse_locations set description = $2 where id = $1', [bLoc, 'pwned']],
         ['update public.profiles set first_name = $2 where id = $1', [b.ownerId, 'pwned']],
-        [`update public.system_settings set value = '{"x":2}' where organization_id = $1 and $2::text is not null`, [b.id, 'x']],
+        [`update public.system_settings set value = '"pwned"' where organization_id = $1 and $2::text is not null`, [b.id, 'x']],
       ]
       for (const [sql, params] of stmts) {
         const r = await c.attempt(sql, params)

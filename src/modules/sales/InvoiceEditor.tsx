@@ -14,6 +14,7 @@ import { listTaxCodes, resolvePrice } from '@/services/pricing'
 import { cancelSalesInvoice, computeLine, moneyFmt, saveSalesInvoice, type SalesInvoice, type SalesInvoiceLine } from '@/services/sales'
 import { listWarehouseOptions } from '@/services/warehouses'
 import { buildSalesLines, effectivePrice, emptySalesLine, type SalesLineDraft } from './invoiceLines'
+import { useAppSettings } from '@/modules/settings/useAppSettings'
 
 let seq = 0
 const nextKey = () => `s${++seq}`
@@ -34,7 +35,8 @@ export function InvoiceEditor({ invoice, lines, presetCustomerId }: { invoice: S
   const taxCodes = useQuery({ queryKey: ['tax-codes'], queryFn: listTaxCodes, staleTime: 60_000 })
 
   const sellFrom = (warehouses.data ?? []).filter((w) => (w.is_active || w.id === invoice?.warehouse_id) && ability.can('sales.create', w.branch_id))
-  const preferred = sellFrom.find((w) => w.branch_id === selectedBranch) ?? sellFrom[0]
+  const settings = useAppSettings()
+  const preferred = sellFrom.find((w) => w.id === settings.defaultSalesWarehouse) ?? sellFrom.find((w) => w.branch_id === selectedBranch) ?? sellFrom[0]
 
   const [customerId, setCustomerId] = useState(invoice?.customer_id ?? presetCustomerId)
   const [warehouseId, setWarehouseId] = useState(invoice?.warehouse_id ?? '')
