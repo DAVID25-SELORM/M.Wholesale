@@ -9,6 +9,7 @@
 | Server / CI | Provisioning, migrations (see [SUPER_ADMIN.md](SUPER_ADMIN.md) for exactly which operations need the service role) | `service_role` key kept outside the browser; provisioning functions executable only by it |
 
 ## Tenant isolation (why Organization A can never touch Organization B)
+The permanent, forward-looking rule for all modules, APIs, jobs, and reports is documented in the [multi-tenancy policy](../MULTI_TENANCY_POLICY.md). This section describes the database mechanisms currently in place.
 1. `private.current_organization_id()` resolves the caller's organization from `auth.uid()` (the verified JWT
    subject) → `profiles` → `organizations`. It returns `NULL` for unknown users, **inactive users and inactive
    organizations**, so all tenant policies fail closed.

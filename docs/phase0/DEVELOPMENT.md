@@ -86,3 +86,4 @@ Failures leave a screenshot in `tests/e2e/.results` (git-ignored). The tests cre
 3. Explicit `REVOKE ALL … FROM public, anon, authenticated`, then `GRANT SELECT` and column-level INSERT/UPDATE.
 4. `private.set_updated_at()` and `private.audit_row_change('<entity>')` triggers.
 5. Add tests to `tests/security` and let `hardening.test.ts` prove the catalog rules.
+6. Before adding any module, apply the [permanent multi-tenancy policy](../MULTI_TENANCY_POLICY.md) to its API functions, jobs, integrations, exports, and reports too. Include cross-tenant read/write and branch/warehouse tests in the same development phase.

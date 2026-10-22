@@ -503,6 +503,94 @@ isOneToOne: false
       referencedColumns: ["id","organization_id"]
     }
                   ]
+                },"fulfilment_exceptions": {
+                  Row: {
+                    "branch_id": string,"created_at": string,"decision": string | null,"fulfilment_order_id": string,"id": string,"kind": string,"organization_id": string,"pick_line_id": string,"raised_at": string,"raised_by": string | null,"reason": string,"resolution_reason": string | null,"resolved_at": string | null,"resolved_by": string | null,"short_quantity": number,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "branch_id": string,"created_at"?: string,"decision"?: string | null,"fulfilment_order_id": string,"id"?: string,"kind"?: string,"organization_id"?: string,"pick_line_id": string,"raised_at"?: string,"raised_by"?: string | null,"reason": string,"resolution_reason"?: string | null,"resolved_at"?: string | null,"resolved_by"?: string | null,"short_quantity": number,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "branch_id"?: string,"created_at"?: string,"decision"?: string | null,"fulfilment_order_id"?: string,"id"?: string,"kind"?: string,"organization_id"?: string,"pick_line_id"?: string,"raised_at"?: string,"raised_by"?: string | null,"reason"?: string,"resolution_reason"?: string | null,"resolved_at"?: string | null,"resolved_by"?: string | null,"short_quantity"?: number,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fulfilment_exceptions_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "fulfilment_exceptions_line_fk"
+      columns: ["pick_line_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "pick_lines"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "fulfilment_exceptions_order_fk"
+      columns: ["fulfilment_order_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "fulfilment_orders"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "fulfilment_exceptions_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fulfilment_orders": {
+                  Row: {
+                    "branch_id": string,"cancel_reason": string | null,"cancelled_at": string | null,"created_at": string,"customer_id": string,"id": string,"notes": string | null,"order_number": string,"organization_id": string,"picked_at": string | null,"picker_id": string | null,"picking_started_at": string | null,"priority": number,"released_at": string,"released_by": string | null,"required_by": string | null,"sales_invoice_id": string,"status": string,"updated_at": string,"warehouse_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "branch_id": string,"cancel_reason"?: string | null,"cancelled_at"?: string | null,"created_at"?: string,"customer_id": string,"id"?: string,"notes"?: string | null,"order_number": string,"organization_id"?: string,"picked_at"?: string | null,"picker_id"?: string | null,"picking_started_at"?: string | null,"priority"?: number,"released_at"?: string,"released_by"?: string | null,"required_by"?: string | null,"sales_invoice_id": string,"status"?: string,"updated_at"?: string,"warehouse_id": string
+                  }
+                  Update: {
+                    "branch_id"?: string,"cancel_reason"?: string | null,"cancelled_at"?: string | null,"created_at"?: string,"customer_id"?: string,"id"?: string,"notes"?: string | null,"order_number"?: string,"organization_id"?: string,"picked_at"?: string | null,"picker_id"?: string | null,"picking_started_at"?: string | null,"priority"?: number,"released_at"?: string,"released_by"?: string | null,"required_by"?: string | null,"sales_invoice_id"?: string,"status"?: string,"updated_at"?: string,"warehouse_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fulfilment_orders_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "fulfilment_orders_customer_fk"
+      columns: ["customer_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "customers"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "fulfilment_orders_invoice_fk"
+      columns: ["sales_invoice_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "sales_invoices"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "fulfilment_orders_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fulfilment_orders_picker_fk"
+      columns: ["picker_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "fulfilment_orders_warehouse_fk"
+      columns: ["warehouse_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "warehouses"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
                 },"gl_accounts": {
                   Row: {
                     "account_type": string,"allow_manual": boolean,"code": string,"created_at": string,"id": string,"is_active": boolean,"is_system": boolean,"name": string,"normal_side": string,"organization_id": string,"system_key": string | null,"updated_at": string
@@ -792,6 +880,62 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"pick_lines": {
+                  Row: {
+                    "allocation_id": string,"batch_id": string | null,"branch_id": string,"created_at": string,"expected_quantity": number,"fulfilment_order_id": string,"id": string,"line_no": number,"location_id": string | null,"organization_id": string,"picked_at": string | null,"picked_by": string | null,"picked_quantity": number | null,"product_id": string,"short_note": string | null,"short_reason": string | null,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "allocation_id": string,"batch_id"?: string | null,"branch_id": string,"created_at"?: string,"expected_quantity": number,"fulfilment_order_id": string,"id"?: string,"line_no": number,"location_id"?: string | null,"organization_id"?: string,"picked_at"?: string | null,"picked_by"?: string | null,"picked_quantity"?: number | null,"product_id": string,"short_note"?: string | null,"short_reason"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "allocation_id"?: string,"batch_id"?: string | null,"branch_id"?: string,"created_at"?: string,"expected_quantity"?: number,"fulfilment_order_id"?: string,"id"?: string,"line_no"?: number,"location_id"?: string | null,"organization_id"?: string,"picked_at"?: string | null,"picked_by"?: string | null,"picked_quantity"?: number | null,"product_id"?: string,"short_note"?: string | null,"short_reason"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "pick_lines_allocation_id_fkey"
+      columns: ["allocation_id"]
+isOneToOne: false
+      referencedRelation: "sales_invoice_allocations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pick_lines_batch_fk"
+      columns: ["batch_id","product_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "batches"
+      referencedColumns: ["id","product_id","organization_id"]
+    },{
+      foreignKeyName: "pick_lines_branch_fk"
+      columns: ["branch_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "branches"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "pick_lines_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "warehouse_locations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pick_lines_order_fk"
+      columns: ["fulfilment_order_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "fulfilment_orders"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "pick_lines_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pick_lines_picker_fk"
+      columns: ["picked_by","organization_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id","organization_id"]
+    }
                   ]
                 },"pos_sale_payments": {
                   Row: {
@@ -2532,6 +2676,9 @@ isOneToOne: false
 "approve_supplier_invoice":
 { Args: { "p_id": string,"p_variance_reason"?: string }; Returns: undefined
                            },
+"assign_picker":
+{ Args: { "p_id": string,"p_user": string }; Returns: undefined
+                           },
 "assign_user_role":
 { Args: { "p_branch_id"?: string,"p_reason"?: string,"p_role_id": string,"p_user_id": string }; Returns: string
                            },
@@ -2562,6 +2709,9 @@ isOneToOne: false
 "cancel_delivery_note":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
+"cancel_fulfilment_order":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
 "cancel_purchase_order":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
@@ -2582,6 +2732,9 @@ isOneToOne: false
                            },
 "cancel_transfer":
 { Args: { "p_id": string,"p_reason": string }; Returns: Json
+                           },
+"claim_fulfilment_order":
+{ Args: { "p_id": string }; Returns: undefined
                            },
 "clear_ledger_lines":
 { Args: { "p_bank_account_id": string,"p_journal_line_ids": (string)[],"p_note": string }; Returns: number
@@ -2606,6 +2759,9 @@ isOneToOne: false
                            },
 "confirm_delivery":
 { Args: { "p_id": string,"p_notes"?: string,"p_received_by_name": string }; Returns: undefined
+                           },
+"confirm_pick_line":
+{ Args: { "p_line_id": string,"p_quantity": number,"p_scanned_barcode"?: string,"p_scanned_batch"?: string,"p_short_note"?: string,"p_short_reason"?: string }; Returns: Json
                            },
 "confirm_sales_order":
 { Args: { "p_id": string }; Returns: Json
@@ -2662,6 +2818,16 @@ isOneToOne: false
                            },
 "finalize_reconciliation":
 { Args: { "p_statement_id": string }; Returns: undefined
+                           },
+"fulfilment_pick_list":
+{ Args: { "p_id": string }; Returns: {
+              "base_unit": string,"batch_number": string,"exception_id": string,"exception_status": string,"expected_quantity": number,"expiry_date": string,"line_id": string,"line_no": number,"location_code": string,"picked_quantity": number,"picking_sequence": number,"product_name": string,"short_note": string,"short_reason": string,"sku": string,"status": string
+            }[]
+                           },
+"fulfilment_queue":
+{ Args: { "p_mine"?: boolean,"p_status"?: string }; Returns: {
+              "branch_id": string,"branch_name": string,"customer_name": string,"id": string,"invoice_id": string,"invoice_number": string,"line_count": number,"lines_done": number,"open_exceptions": number,"order_number": string,"picker_id": string,"picker_name": string,"priority": number,"released_at": string,"required_by": string,"status": string,"warehouse_name": string
+            }[]
                            },
 "get_session_context":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -2724,6 +2890,11 @@ isOneToOne: false
 "payables_summary":
 { Args: Record<PropertyKey, never>; Returns: {
               "awaiting_approval": number,"credit_expected": number,"currency_code": string,"not_due": number,"outstanding": number,"overdue_1_30": number,"overdue_31_60": number,"overdue_61_90": number,"overdue_over_90": number,"supplier_id": string,"supplier_name": string
+            }[]
+                           },
+"picker_options":
+{ Args: { "p_branch_id": string }; Returns: {
+              "id": string,"name": string
             }[]
                            },
 "pos_checkout":
@@ -2800,6 +2971,12 @@ isOneToOne: false
 "reject_quotation":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
                            },
+"release_fulfilment_claim":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"release_to_warehouse":
+{ Args: { "p_invoice_id": string,"p_notes"?: string,"p_priority"?: number,"p_required_by"?: string }; Returns: string
+                           },
 "remove_opening_balance":
 { Args: { "p_id": string,"p_kind": string,"p_reason": string }; Returns: undefined
                            },
@@ -2814,8 +2991,14 @@ isOneToOne: false
 "request_controlled_adjustment":
 { Args: { "p_lines": Json,"p_notes": string,"p_reason_code": string,"p_warehouse_id": string }; Returns: Json
                            },
+"reset_pick_line":
+{ Args: { "p_line_id": string,"p_reason": string }; Returns: undefined
+                           },
 "resolve_price":
 { Args: { "p_customer_id": string,"p_product_unit_id": string }; Returns: number
+                           },
+"resolve_short_pick":
+{ Args: { "p_exception_id": string,"p_reason": string }; Returns: string
                            },
 "return_stock_count":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined

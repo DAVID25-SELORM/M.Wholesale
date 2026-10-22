@@ -79,7 +79,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'stock-transfers', label: 'Transfers', to: '/inventory/transfers', anyOf: ['inventory.view'] },
       { id: 'stock-counts', label: 'Stock counts', to: '/inventory/counts', anyOf: ['inventory.view'] },
       { id: 'stock-valuation', label: 'Stock valuation', to: '/inventory/valuation', anyOf: ['inventory.valuation'] },
-      ...['Picking', 'Packing', 'Dispatch'].map((l) => planned(`wh-${l}`, l)),
+      { id: 'wh-picking', label: 'Picking', to: '/warehouse/picking', anyOf: ['fulfilment.view'] },
+      ...['Packing', 'Dispatch'].map((l) => planned(`wh-${l}`, l)),
     ],
   },
   {

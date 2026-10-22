@@ -10,6 +10,9 @@ import { useSession } from '@/modules/session/SessionProvider'
 import { CREDIT_REASON_LABEL, listCreditNotes, type CreditReason } from '@/services/creditNotes'
 import { getCustomer, listCustomerOptions } from '@/services/customers'
 import { getInvoiceDelivery } from '@/services/deliveries'
+import { FulfilmentStatusBadge } from '@/modules/fulfilment/PickingQueuePage'
+import { ReleaseDialog } from '@/modules/fulfilment/ReleaseDialog'
+import { FULFILMENT_STATUS_LABEL, getInvoiceFulfilment } from '@/services/fulfilment'
 import { getSalesOrder } from '@/services/orders'
 import { fmtQty } from '@/services/inventory'
 import { getOrganization } from '@/services/organization'
@@ -73,6 +76,8 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
   const qc = useQueryClient()
   const toast = useToast()
   const [preparing, setPreparing] = useState(false)
+  const fulfilment = useQuery({ queryKey: ['invoice-fulfilment', invoiceId], queryFn: () => getInvoiceFulfilment(invoiceId), enabled: ability.canAnywhere('fulfilment.view') })
+  const [releasing, setReleasing] = useState(false)
   const delivery = useQuery({ queryKey: ['invoice-delivery', invoiceId], queryFn: () => getInvoiceDelivery(invoiceId), enabled: ability.canAnywhere('deliveries.view') })
   const [reversing, setReversing] = useState(false)
   const [reverseError, setReverseError] = useState<string | null>(null)
@@ -116,6 +121,8 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
           actions={
             <div className="flex flex-wrap items-center gap-2">
               <SalesStatusBadge status={inv.status} />
+              {inv.status === 'POSTED' && !inv.is_opening && !fulfilment.data && fulfilment.isSuccess && ability.can('fulfilment.release', inv.branch_id) && <Button variant="secondary" onClick={() => setReleasing(true)}>Release to warehouse</Button>}
+              {fulfilment.data && <Link to={`/warehouse/picking/${fulfilment.data.id}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline" title={FULFILMENT_STATUS_LABEL[fulfilment.data.status]}>{fulfilment.data.order_number} <FulfilmentStatusBadge status={fulfilment.data.status} /></Link>}
               {inv.status === 'POSTED' && !inv.is_opening && !delivery.data && delivery.isSuccess && ability.can('deliveries.create', inv.branch_id) && <Button variant="secondary" onClick={() => setPreparing(true)}>Prepare delivery</Button>}
               {delivery.data && <Link to={`/sales/deliveries/${delivery.data.id}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline">{delivery.data.note_number} <DeliveryStatusBadge status={delivery.data.status} /></Link>}
               {inv.status === 'POSTED' && !inv.is_opening && ability.can('sales.reverse', inv.branch_id) && <Button variant="ghost" onClick={() => { setReverseError(null); setReversing(true) }}>Reverse</Button>}
@@ -217,6 +224,7 @@ function PostedView({ invoiceId }: { invoiceId: string }) {
         </div>
       )}
 
+      {releasing && <ReleaseDialog invoiceId={inv.id} canView={ability.canAnywhere('fulfilment.view')} onClose={() => setReleasing(false)} />}
       {preparing && <PrepareDeliveryDialog invoiceId={inv.id} customer={c} onClose={() => setPreparing(false)} />}
       <ReasonDialog
         open={reversing} title={`Reverse ${inv.invoice_number}`} confirmLabel="Reverse invoice" tone="danger"

@@ -120,6 +120,8 @@ describe('catalog hardening', () => {
       'public.sales_report', 'public.controlled_drug_summary', 'public.controlled_drug_register', 'public.overdue_customers', 'public.record_payment_reminder',
       // Phase 12
       'public.prepare_delivery_note', 'public.dispatch_delivery_note', 'public.confirm_delivery', 'public.fail_delivery', 'public.cancel_delivery_note', 'public.delivery_pick_list',
+      'public.release_to_warehouse', 'public.claim_fulfilment_order', 'public.release_fulfilment_claim', 'public.assign_picker', 'public.confirm_pick_line', 'public.reset_pick_line',
+      'public.resolve_short_pick', 'public.cancel_fulfilment_order', 'public.fulfilment_queue', 'public.fulfilment_pick_list', 'public.picker_options',
       'public.reorder_suggestions', 'public.slow_moving_stock', 'public.expiry_risk', 'public.vat_report',
       // Phase 13
       'public.save_gl_account', 'public.suggest_opening_balances', 'public.start_accounting', 'public.set_period_lock', 'public.post_manual_journal', 'public.reverse_journal',

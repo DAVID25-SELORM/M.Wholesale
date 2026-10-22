@@ -14,7 +14,7 @@ const SIZES = [
 const PAGES = [
   '/', '/admin/branches', '/admin/users', '/admin/audit', '/admin/settings', '/catalog/products', '/sales/invoices', '/sales/customers', '/sales/receivables',
   '/pos', '/inventory/stock', '/inventory/expiry', '/purchasing/orders', '/reports/sales', '/reports/stock', '/accounting', '/accounting/statements', '/accounting/bank',
-  '/delivery/drivers', '/delivery/vehicles',
+  '/delivery/drivers', '/delivery/vehicles', '/warehouse/picking',
 ]
 
 async function overflow(page: Page) {

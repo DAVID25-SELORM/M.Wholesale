@@ -68,6 +68,9 @@ describe('tenant sweep: every table with an organization_id', () => {
   })
 })
 
+// This automatic sweep covers every report-style function callable with no arguments.
+// Parameterized reports are exercised in their module security suites (reporting.test.ts,
+// accounting.test.ts, phase12.test.ts, and picking.test.ts) with foreign tenant records.
 describe('tenant sweep: report-style functions (those callable with no arguments)', () => {
   it('return no id that belongs to another organization, for either organization', async () => {
     const fns = await q(`select p.proname from pg_proc p where p.pronamespace = 'public'::regnamespace and p.prokind = 'f' and p.proretset

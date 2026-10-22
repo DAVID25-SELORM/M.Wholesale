@@ -8,6 +8,8 @@ import { RequireAuth, RequirePermission } from '@/modules/auth/guards'
 import { AccessDisabledPage, LoginPage, NoAccessPage, NotFoundPage, UnauthorizedPage } from '@/modules/auth/pages'
 import { ForgotPasswordPage, SetPasswordPage } from '@/modules/auth/PasswordPages'
 import { BranchesPage } from '@/modules/branches/BranchesPage'
+import { PickTaskPage } from '@/modules/fulfilment/PickTaskPage'
+import { PickingQueuePage } from '@/modules/fulfilment/PickingQueuePage'
 import { DriversPage } from '@/modules/fleet/DriversPage'
 import { VehiclesPage } from '@/modules/fleet/VehiclesPage'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
@@ -86,6 +88,7 @@ export const routes = [
           { index: true, element: <DashboardPage /> },
           { element: <RequirePermission anyOf={['organizations.view']} />, children: [{ path: 'admin/organization', element: <OrganizationPage /> }] },
           { element: <RequirePermission anyOf={['branches.view']} />, children: [{ path: 'admin/branches', element: <BranchesPage /> }] },
+          { element: <RequirePermission anyOf={['fulfilment.view']} />, children: [{ path: 'warehouse/picking', element: <PickingQueuePage /> }, { path: 'warehouse/picking/:id', element: <PickTaskPage /> }] },
           { element: <RequirePermission anyOf={['fleet.view']} />, children: [{ path: 'delivery/drivers', element: <DriversPage /> }, { path: 'delivery/vehicles', element: <VehiclesPage /> }] },
           { element: <RequirePermission anyOf={['warehouses.view']} />, children: [{ path: 'admin/warehouses', element: <WarehousesPage /> }] },
           { element: <RequirePermission anyOf={['warehouse_locations.view']} />, children: [{ path: 'admin/locations', element: <LocationsPage /> }] },
