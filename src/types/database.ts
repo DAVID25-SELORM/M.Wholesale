@@ -2645,6 +2645,15 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
+            start_packing: { Args: { p_id: string }; Returns: undefined },
+            create_package: { Args: { p_id: string; p_kind: string; p_cold_chain?: boolean; p_fragile?: boolean }; Returns: string },
+            pack_line: { Args: { p_package_id: string; p_line_id: string; p_quantity: number }; Returns: undefined },
+            void_package: { Args: { p_id: string; p_reason: string }; Returns: undefined },
+            verify_packed_line: { Args: { p_id: string }; Returns: undefined },
+            finish_packing: { Args: { p_id: string }; Returns: undefined },
+            packing_detail: { Args: { p_id: string }; Returns: Json },
+            packed_dispatch_queue: { Args: Record<PropertyKey, never>; Returns: { id: string }[] },
+            prepare_packed_delivery: { Args: { p_id: string; p_address: string; p_contact_name: string; p_contact_phone: string; p_notes: string }; Returns: string },
             "account_ledger":
 { Args: { "p_account_id": string,"p_branch_id"?: string,"p_from": string,"p_limit"?: number,"p_to": string }; Returns: {
               "credit": number,"debit": number,"description": string,"journal_date": string,"journal_id": string,"journal_number": string,"line_id": string,"memo": string,"running": number

@@ -80,7 +80,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'stock-counts', label: 'Stock counts', to: '/inventory/counts', anyOf: ['inventory.view'] },
       { id: 'stock-valuation', label: 'Stock valuation', to: '/inventory/valuation', anyOf: ['inventory.valuation'] },
       { id: 'wh-picking', label: 'Picking', to: '/warehouse/picking', anyOf: ['fulfilment.view'] },
-      ...['Packing', 'Dispatch'].map((l) => planned(`wh-${l}`, l)),
+      { id: 'wh-packing', label: 'Packing', to: '/warehouse/packing', anyOf: ['fulfilment.view'] },
+      { id: 'wh-dispatch', label: 'Dispatch', to: '/warehouse/dispatch', anyOf: ['fulfilment.view'] },
     ],
   },
   {

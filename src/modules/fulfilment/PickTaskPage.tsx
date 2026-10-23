@@ -72,6 +72,7 @@ function TaskView({ order }: { order: QueueRow }) {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <FulfilmentStatusBadge status={order.status} />
+            {['PICKED', 'PACKING', 'PACKED', 'READY'].includes(order.status) && <Link to={`/warehouse/packing/${order.id}`} className="text-sm font-semibold text-brand-700 hover:underline">Open packing and dispatch →</Link>}
             <Badge tone={order.priority === 1 ? 'red' : 'slate'}>{PRIORITY_LABEL[order.priority]}</Badge>
             {order.required_by && <Badge tone="amber">Needed by {order.required_by}</Badge>}
             {live && canWork && order.picker_id === null && <Button onClick={() => run.mutate({ kind: 'claim' })} loading={run.isPending}>Claim this order</Button>}

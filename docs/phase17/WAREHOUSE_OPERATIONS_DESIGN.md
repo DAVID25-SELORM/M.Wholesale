@@ -1,4 +1,6 @@
-# Advanced Warehouse Operations: design (for approval, nothing built yet)
+# Advanced Warehouse Operations: design and staged implementation
+
+Implementation update: fleet and picking are implemented. Packing and the dispatch handoff to existing delivery notes are described in [PACKING_DISPATCH.md](PACKING_DISPATCH.md). Multi-stop delivery runs and advanced exceptions remain separate stages below.
 
 Scope: separate **picking**, **packing**, **dispatch**, **delivery runs**, **drivers** and **vehicles**, on top of what already exists. This document is the plan to approve or change before any code is written.
 
@@ -116,4 +118,4 @@ Every stage ends with the full regression (database, frontend, end-to-end, typec
 3. **Proof of delivery: receiver's name, time and notes** now, tied to runs. Signature or photo comes later with tenant-scoped file storage.
 4. **Batch substitution and short-pick handling are in the first release,** as stage 17e (substitute with ledger correction, ship short with a credit note, or hold the order).
 
-Status: design approved on these four points; **no code has been written**. Next step on approval: stage 17a (drivers and vehicles).
+Status: design approved on these four points. Fleet and picking are implemented; packing and the existing delivery-note dispatch handoff are implemented in the next migration. Full delivery runs (17d) and advanced exceptions (17e) remain outstanding.

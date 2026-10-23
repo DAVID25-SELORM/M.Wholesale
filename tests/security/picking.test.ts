@@ -80,6 +80,93 @@ async function released() {
   return { id, inv, far, near }
 }
 
+describe('packing and dispatch', () => {
+  async function picked() {
+    const r = await released()
+    const ls = await lines(r.id)
+    await ok(call(picker, `select public.claim_fulfilment_order($1)`, [r.id]))
+    for (const l of ls) await ok(call(picker, `select public.confirm_pick_line($1,$2)`, [l.id,l.expected_quantity]))
+    return { ...r, ls }
+  }
+  it('packs exactly, preserves corrections, seals, prepares and dispatches without moving stock', async () => {
+    const r = await picked()
+    const before = await movements()
+    await ok(call(packer, `select public.start_packing($1)`, [r.id]))
+    const pk = (await ok(call(packer, `select public.create_package($1,'CARTON') id`, [r.id])))[0].id
+    expect((await failure(call(packer, `select public.finish_packing($1)`, [r.id]))).code).toBe('22023')
+    expect((await failure(call(packer, `select public.pack_line($1,$2,99)`, [pk,r.ls[0].id]))).code).toBe('22023')
+    await ok(call(packer, `select public.pack_line($1,$2,1)`, [pk,r.ls[0].id]))
+    await ok(call(packer, `select public.void_package($1,'Wrong carton')`, [pk]))
+    const next = (await ok(call(packer, `select public.create_package($1,'COOL_BOX',true,true) id`, [r.id])))[0].id
+    for (const l of r.ls) await ok(call(packer, `select public.pack_line($1,$2,$3)`, [next,l.id,l.expected_quantity]))
+    await ok(call(packer, `select public.finish_packing($1)`, [r.id]))
+    expect((await order(r.id)).status).toBe('PACKED')
+    expect((await ok(call(owner, `select id from public.packed_dispatch_queue()`))).map(x => x.id)).toContain(r.id)
+    expect((await failure(call(packer, `select public.void_package($1,'Too late')`, [next]))).code).toBe('22023')
+    const dn = (await ok(call(owner, `select public.prepare_packed_delivery($1,'Address','Contact','123','Keep cool') id`, [r.id])))[0].id
+    expect((await q(`select packages from public.delivery_notes where id=$1`, [dn]))[0].packages).toBe(1)
+    await ok(call(owner, `select public.dispatch_delivery_note($1,'Driver','Vehicle')`, [dn]))
+    expect((await ok(call(owner, `select id from public.packed_dispatch_queue()`))).map(x => x.id)).not.toContain(r.id)
+    expect(await movements()).toBe(before)
+    expect((await q(`select count(*)::int n from public.package_lines where package_id=$1`,[pk]))[0].n).toBe(1)
+  })
+  it('blocks legacy dispatch while released goods are not packed', async () => {
+    const r = await released()
+    const dn = (await ok(call(owner, `select public.prepare_delivery_note($1,'Address',null,null,99,null) id`, [r.inv])))[0].id
+    expect((await failure(call(owner, `select public.dispatch_delivery_note($1,'Driver',null)`, [dn]))).message).toMatch(/Finish packing/)
+  })
+  it('requires independent controlled verification and freezes verified contents', async () => {
+    const r = await picked()
+    // Change classification after posting to exercise packing's current classification check.
+    await q(`update public.products set product_class='CONTROLLED',is_controlled=true,requires_prescription=true where id=$1`,[r.near.id])
+    await ok(call(packer, `select public.start_packing($1)`, [r.id]))
+    const pk = (await ok(call(packer, `select public.create_package($1,'CARTON') id`, [r.id])))[0].id
+    for (const l of r.ls) await ok(call(packer, `select public.pack_line($1,$2,$3)`, [pk,l.id,l.expected_quantity]))
+    expect((await failure(call(packer, `select public.finish_packing($1)`, [r.id]))).message).toMatch(/independent verification/)
+    expect((await failure(call(packer, `select public.verify_packed_line($1)`, [r.ls[0].id]))).code).toBe('42501')
+    // Give the picker a verifier role; independence must still be enforced.
+    await q(`insert into public.user_roles(user_id,organization_id,role_id) select $1,$2,id from public.roles where code='WAREHOUSE_MANAGER' and organization_id is null on conflict do nothing`,[picker,a.id])
+    expect((await failure(call(picker, `select public.verify_packed_line($1)`, [r.ls[0].id]))).code).toBe('42501')
+    await q(`delete from public.user_roles where user_id=$1 and role_id in(select id from public.roles where code='WAREHOUSE_MANAGER' and organization_id is null)`,[picker])
+    await ok(call(owner, `select public.verify_packed_line($1)`,[r.ls[0].id]))
+    expect((await failure(call(packer, `select public.void_package($1,'Repack goods')`,[pk]))).message).toMatch(/Verified contents/)
+    await ok(call(packer, `select public.finish_packing($1)`,[r.id]))
+  })
+  it('isolates all packing reads and commands by tenant and branch, with no direct writes', async () => {
+    const r = await picked()
+    await ok(call(packer, `select public.start_packing($1)`,[r.id]))
+    const pk = (await ok(call(packer, `select public.create_package($1,'CARTON') id`,[r.id])))[0].id
+    await ok(call(packer, `select public.pack_line($1,$2,1)`,[pk,r.ls[0].id]))
+    const branchPacker = await addUser(a.id,'WAREHOUSE_PACKER',branch2)
+    for (const u of [ownerB,branchPacker]) {
+      for (const [sql,params] of [
+        [`select public.packing_detail($1)`,[r.id]], [`select public.start_packing($1)`,[r.id]],
+        [`select public.create_package($1,'CARTON')`,[r.id]], [`select public.pack_line($1,$2,1)`,[pk,r.ls[0].id]],
+        [`select public.void_package($1,'Wrong package')`,[pk]], [`select public.verify_packed_line($1)`,[r.ls[0].id]],
+        [`select public.finish_packing($1)`,[r.id]], [`select public.prepare_packed_delivery($1,'Address',null,null,null)`,[r.id]],
+      ] as [string,unknown[]][]) expect((await failure(call(u,sql,params))).code,sql).toBe('P0002')
+      for (const table of ['packages','package_lines','packing_verifications']) {
+        expect(await withUser(u, async c => (await c.q(`select id from public.${table} where fulfilment_order_id=$1`,[r.id])).rows)).toEqual([])
+        expect((await failure(call(u,`update public.${table} set organization_id=$1`,[b.id]))).code).toBe('42501')
+      }
+    }
+    const other = await picked()
+    expect((await failure(call(packer,`select public.pack_line($1,$2,1)`,[pk,other.ls[0].id]))).code).toBe('P0002')
+    expect((await failure(call(picker,`select public.create_package($1,'CARTON')`,[r.id]))).code).toBe('42501')
+    expect((await withUser(null,c => c.attempt(`select public.packing_detail($1)`,[r.id]))).ok).toBe(false)
+    await expect(admin.query(`insert into public.packages(organization_id,fulfilment_order_id,branch_id,package_number,kind,created_by) values($1,$2,$3,'FORGED','CARTON',$4)`,[b.id,r.id,b.hq,ownerB])).rejects.toMatchObject({code:'23503'})
+    await expect(admin.query(`insert into public.packages(organization_id,fulfilment_order_id,branch_id,package_number,kind,created_by) values($1,$2,$3,'WRONG-BRANCH','CARTON',$4)`,[a.id,r.id,branch2,owner])).rejects.toMatchObject({code:'23503'})
+  })
+  it('serializes simultaneous pack confirmations so totals cannot exceed picked goods', async () => {
+    const r = await picked()
+    await ok(call(packer,`select public.start_packing($1)`,[r.id]))
+    const pk = (await ok(call(packer,`select public.create_package($1,'BAG') id`,[r.id])))[0].id
+    const results = await Promise.all([1,2].map(() => call(packer,`select public.pack_line($1,$2,$3)`,[pk,r.ls[0].id,r.ls[0].expected_quantity])))
+    expect(results.filter(x => x.ok)).toHaveLength(1)
+    expect(results.filter(x => !x.ok)).toHaveLength(1)
+  })
+})
+
 describe('picking permissions', () => {
   it('gives the picking rights to the intended roles only', async () => {
     const rows = await q(`select r.code as role, p.code as perm from public.role_permissions rp join public.roles r on r.id = rp.role_id join public.permissions p on p.id = rp.permission_id
