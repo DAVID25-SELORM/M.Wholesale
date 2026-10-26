@@ -1,5 +1,5 @@
-// Navigation is data. Items marked `planned` are future ERP modules: they are shown
-// disabled (clearly labelled) so users see the roadmap, and have NO routes or fake screens.
+// Navigation is data. Each module has a real route so the roadmap remains usable on
+// small screens while deeper workflows are implemented incrementally.
 // `anyOf` only decides visibility - the database enforces access independently.
 
 import {
@@ -26,7 +26,8 @@ export interface NavGroup {
   collapsedByDefault?: boolean
 }
 
-const planned = (id: string, label: string): NavItem => ({ id, label, planned: true })
+const modulePath = (label: string) => `/workspace/${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+const planned = (id: string, label: string): NavItem => ({ id, label, to: modulePath(label) })
 
 export const NAV_TOP: NavItem = { id: 'dashboard', label: 'Dashboard', to: '/', icon: LayoutDashboard }
 

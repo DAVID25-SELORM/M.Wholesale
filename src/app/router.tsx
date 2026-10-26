@@ -71,6 +71,7 @@ import { SuppliersPage } from '@/modules/suppliers/SuppliersPage'
 import { UsersPage } from '@/modules/users/UsersPage'
 import { LocationsPage } from '@/modules/warehouses/LocationsPage'
 import { WarehousesPage } from '@/modules/warehouses/WarehousesPage'
+import { WorkspaceModulePage } from '@/modules/shared/WorkspaceModulePage'
 
 // Route guards are UX. The database is the security boundary (RLS + guarded RPCs).
 export const routes = [
@@ -90,6 +91,7 @@ export const routes = [
         element: <AppShell />,
         children: [
           { index: true, element: <DashboardPage /> },
+          { path: 'workspace/:module', element: <WorkspaceModulePage /> },
           { element: <RequirePermission anyOf={['organizations.view']} />, children: [{ path: 'admin/organization', element: <OrganizationPage /> }] },
           { element: <RequirePermission anyOf={['branches.view']} />, children: [{ path: 'admin/branches', element: <BranchesPage /> }] },
           { element: <RequirePermission anyOf={['fulfilment.view']} />, children: [{ path: 'warehouse/picking', element: <PickingQueuePage /> }, { path: 'warehouse/picking/:id', element: <PickTaskPage /> }] },

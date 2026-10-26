@@ -8,10 +8,10 @@ import { useSession } from '@/modules/session/SessionProvider'
 const linkBase = 'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400'
 
 function Item({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
-  if (item.planned || !item.to) {
+  if (!item.to) {
     return (
       <li>
-        <span aria-disabled="true" className={cn(linkBase, 'cursor-not-allowed text-slate-500')}>
+          <span aria-disabled="true" className={cn(linkBase, 'cursor-not-allowed text-slate-500')}>
           <span className="flex-1 truncate">{item.label}</span>
           <span className="rounded bg-slate-700/60 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">Soon</span>
         </span>

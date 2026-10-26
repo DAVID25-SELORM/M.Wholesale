@@ -25,7 +25,7 @@ describe('permission-aware navigation', () => {
       expect(item?.planned).not.toBe(true)
     }
   })
-  it('shows only the admin pages the user may view, and marks future modules as Soon', () => {
+  it('shows only the admin pages the user may view, and routes future modules to workspaces', () => {
     renderWithApp(<Sidebar onNavigate={() => {}} />, {
       context: makeContext({ org_permissions: ['branches.view', 'audit.view'], branch_permissions: {} }),
     })
@@ -35,9 +35,9 @@ describe('permission-aware navigation', () => {
     expect(within(nav).queryByRole('link', { name: 'Users' })).not.toBeInTheDocument()
     expect(within(nav).queryByRole('link', { name: 'Roles & permissions' })).not.toBeInTheDocument()
     expect(within(nav).queryByRole('link', { name: 'Warehouses' })).not.toBeInTheDocument()
-    // planned modules are never links
+    // roadmap modules are responsive workspace links
     expect(within(nav).queryByRole('link', { name: 'Products' })).not.toBeInTheDocument()
-    expect(within(nav).getAllByText('Soon').length).toBeGreaterThan(0)
+    expect(within(nav).getByRole('link', { name: 'Approvals' })).toHaveAttribute('href', '/workspace/approvals')
   })
 
   it('treats branch-scoped permission as sufficient to show the page', () => {
