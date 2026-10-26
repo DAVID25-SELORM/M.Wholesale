@@ -17,6 +17,12 @@ export type Database = {
               Update: never
               Relationships: []
             }
+            recall_recoveries: {
+              Row: { id: string; organization_id: string; recall_batch_scope_id: string; sales_invoice_id: string; customer_id: string; batch_id: string; quantity: number; status: string; notes: string; created_at: string; created_by: string; updated_at: string; updated_by: string }
+              Insert: never
+              Update: never
+              Relationships: []
+            }
             "accounting_settings": {
                   Row: {
                     "go_live_date": string,"id": string,"locked_through": string | null,"organization_id": string,"started_at": string,"started_by": string | null,"updated_at": string
@@ -2669,6 +2675,7 @@ isOneToOne: false
             close_recall: { Args: { p_recall_id: string }; Returns: undefined }
             cancel_recall: { Args: { p_recall_id: string; p_reason: string }; Returns: undefined }
             release_recall_batch: { Args: { p_scope_id: string; p_reason: string }; Returns: Json }
+            record_recall_recovery: { Args: { p_scope_id: string; p_invoice_id: string; p_quantity: number; p_status: string; p_notes: string }; Returns: string }
             add_recall_batch: { Args: { p_recall_id: string; p_batch_id: string }; Returns: string }
             quarantine_recall_batch: { Args: { p_scope_id: string; p_reason: string }; Returns: Json }
             recall_batch_options: { Args: Record<string, never>; Returns: { id: string; batch_number: string; product_name: string; sku: string; expiry_date: string }[] }
