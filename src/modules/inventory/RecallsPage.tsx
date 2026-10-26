@@ -5,7 +5,7 @@ import { recallCustomerExposure } from '@/services/recalls'
 import { Badge, Button, Card, CardBody, DataTable, Field, InlineError, Input, PageHeader, Select, Textarea, type Column } from '@/components/ui'
 import { toAppError } from '@/lib/errors'
 import { useSession } from '@/modules/session/SessionProvider'
-import { addRecallBatch, cancelRecall, closeRecall, createRecall, listRecallRecoveries, listRecalls, listRecallScope, quarantineRecallBatch, recallBatchOptions, releaseRecallBatch, type RecallRow } from '@/services/recalls'
+import { addRecallBatch, cancelRecall, closeRecall, createRecall, listRecallRecoveries, listRecalls, listRecallScope, quarantineRecallBatch, recallBatchOptions, recordRecallRecovery, releaseRecallBatch, type RecallRow } from '@/services/recalls'
 
 export function RecallsPage() {
   const qc = useQueryClient()
@@ -23,6 +23,10 @@ export function RecallsPage() {
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [recoveryInvoice, setRecoveryInvoice] = useState('')
+  const [recoveryQuantity, setRecoveryQuantity] = useState('')
+  const [recoveryStatus, setRecoveryStatus] = useState('CONTACTED')
+  const [recoveryNotes, setRecoveryNotes] = useState('')
   const scope = useQuery({ queryKey: ['recall-scope', selected], queryFn: () => listRecallScope(selected), enabled: !!selected })
   const options = useQuery({ queryKey: ['recall-batches'], queryFn: recallBatchOptions, enabled: !!selected })
   const exposure = useQuery({ queryKey: ['recall-exposure', selected], queryFn: () => recallCustomerExposure(selected), enabled: !!selected })
@@ -44,6 +48,16 @@ export function RecallsPage() {
     void act(async () => {
       const id = await createRecall(source, recallClass, title.trim(), instructions.trim())
       setSelected(id); setCreating(false); setTitle(''); setInstructions('')
+    })
+  }
+  function submitRecovery(e: FormEvent) {
+    e.preventDefault()
+    const exposureRow = exposure.data?.find(x => x.invoice_id === recoveryInvoice)
+    const scopeRow = scope.data?.find(x => x.batch_id === exposureRow?.batch_id)
+    if (!scopeRow || !exposureRow) return
+    void act(async () => {
+      await recordRecallRecovery(scopeRow.id, exposureRow.invoice_id, Number(recoveryQuantity), recoveryStatus, recoveryNotes.trim())
+      setRecoveryNotes(''); setRecoveryQuantity('')
     })
   }
   const columns: Column<RecallRow>[] = [
@@ -88,6 +102,7 @@ export function RecallsPage() {
         {ability.can('sales.view') && <Link className="text-brand-700 underline" to={`/sales/invoices/${x.invoice_id}`}>Open invoice</Link>}
       </li>)}</ul> : !exposure.isError && <p>No posted customer transactions found for the scoped batches.</p>}
       <h3 className="font-semibold">Recovery records</h3>
+      {canManage && exposure.data?.length && scope.data?.length ? <form onSubmit={submitRecovery} className="grid gap-3 rounded-md border border-slate-200 p-3 sm:grid-cols-2 lg:grid-cols-4"><Field label="Invoice"><Select required value={recoveryInvoice} onChange={e => setRecoveryInvoice(e.target.value)}><option value="">Choose invoice</option>{[...new Map(exposure.data.map(x => [x.invoice_id, x])).values()].map(x => <option key={x.invoice_id} value={x.invoice_id}>{x.invoice_number} / {x.customer_name}</option>)}</Select></Field><Field label="Quantity"><Input required type="number" min="0.001" step="0.001" value={recoveryQuantity} onChange={e => setRecoveryQuantity(e.target.value)} /></Field><Field label="Status"><Select value={recoveryStatus} onChange={e => setRecoveryStatus(e.target.value)}>{['OPEN', 'CONTACTED', 'RECOVERED', 'NOT_RECOVERABLE'].map(s => <option key={s}>{s}</option>)}</Select></Field><Field label="Notes" required><Input required minLength={3} maxLength={1000} value={recoveryNotes} onChange={e => setRecoveryNotes(e.target.value)} /></Field><Button type="submit" loading={busy} className="sm:col-span-2 lg:col-span-4">Save recovery record</Button></form> : null}
       <InlineError message={recoveries.isError ? toAppError(recoveries.error).message : null} />
       {recoveries.isPending ? <p>Loading recovery records...</p> : recoveries.data?.length ? <ul className="space-y-2">{recoveries.data.map((x) => <li key={x.id} className="flex flex-wrap items-start justify-between gap-3 rounded-md border p-3"><div><p className="font-medium">Invoice {x.sales_invoice_id}</p><p className="text-sm text-slate-600">{x.quantity} units · {x.notes}</p></div><Badge tone={x.status === 'RECOVERED' ? 'green' : 'amber'}>{x.status}</Badge></li>)}</ul> : <p className="text-sm">No recovery records have been recorded.</p>}
     </div></CardBody></Card>}
