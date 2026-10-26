@@ -31,7 +31,38 @@ For the people who use the system every day. Menus you cannot see are rights you
 - **Adjust stock** (damage, loss, found stock): always give a reason. **Controlled medicines are different**: the screen sends a *request*; a pharmacist (a second person) approves it under *Warehouse → Controlled adjustments* before the stock changes.
 - **Transfers** between warehouses are sent, travel "in transit", and are confirmed on receipt.
 - **Stock counts**: start a count, enter what you counted, submit. A different person with the right approves it; variances then become adjustments.
-- **Quarantine / status change**: put stock on hold (quality, recall) so it cannot be sold, and release it later.
+- **Quarantine / status change**: put stock on hold so it cannot be sold. Stock scoped to a recall cannot be released back to available stock through the ordinary status-change action.
+
+### Recall register (local follow-up release)
+
+Open **Warehouse → Recalls**, create a recall with instructions, and select its
+number to work on that specific recall. Add affected product batches, enter a
+quarantine reason, then quarantine each batch. The stock document retains the
+original bin location. Use **Quarantine new stock** if more affected stock arrives.
+Closure requires at least one scoped batch, completed quarantine records, and no
+remaining available affected stock. Closing the register does not release stock
+or remove its sale/dispatch restriction.
+
+The customer trace lists posted invoice allocations and approved replacement
+batches separately, with contacts and delivery status. Treat it as an investigation
+list: it is not a count of goods recovered from customers. Customer recovery and
+recall release authorization are not yet completed workflows.
+
+### Picking exceptions (local follow-up release)
+
+Supervisors can hold an order from its picking screen and use **Release hold**
+when it can proceed. The **On hold** queue filter finds held orders. Releasing
+restores the stage appropriate to the recorded picks and open exceptions.
+
+**Ship short and draft credit** creates a draft for finance to review and post;
+it does not automatically credit the customer. Review the physical shortage
+before posting its quarantine return. The screen links directly to the draft.
+
+**Substitute batch** currently supports replacing an entirely unpicked line.
+Partly picked lines are refused because they require separate batch quantities
+for packing and traceability. Controlled replacements go to **Controlled
+adjustments** for a different person's approval. A resolved short pick cannot be
+reset over its stock or credit evidence.
 
 ## Purchasing and suppliers
 

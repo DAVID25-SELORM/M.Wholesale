@@ -151,7 +151,8 @@ describe('who may read and write', () => {
 describe('document numbering', () => {
   it('lists every configurable document with its current format', async () => {
     const rows = await withUser(viewer, async (c) => (await c.q(`select * from public.numbering_overview()`)).rows)
-    expect(rows.length).toBe(16)
+    expect(rows.length).toBe(20)
+    expect(rows.find((r) => r.document_type === 'RECALL')).toMatchObject({ prefix: 'REC' })
     expect(rows.find((r) => r.document_type === 'SALES_INVOICE')).toMatchObject({ prefix: 'INV', padding: 6, reset_period: 'YEARLY', next_number: '1', configured: false, in_use: false })
     expect(await code(call(cashier, `select * from public.numbering_overview()`))).toBe('42501')
   })

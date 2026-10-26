@@ -18,8 +18,14 @@ const ok = async (p: Promise<Out>) => { const r = await p; if (!r.ok) throw new 
 const code = async (p: Promise<Out>) => { const r = await p; return r.ok ? 'ok' : r.code }
 const q = async (sql: string, params: unknown[] = []) => (await admin.query(sql, params)).rows
 
-const addDriver = (user: string, branch: string, c = `D${rand()}`, extra: Record<string, unknown> = {}) =>
-  call(user, `insert into public.drivers (branch_id, code, name, licence_expiry, profile_id) values ($1, $2, $3, $4, $5) returning id`, [branch, c, `Driver ${c}`, extra.licence_expiry ?? null, extra.profile_id ?? null])
+const addDriver = async (user: string, branch: string, c = `D${rand()}`, extra: Record<string, unknown> = {}) => {
+  const created = await call(user, `insert into public.drivers (branch_id, code, name, licence_expiry) values ($1, $2, $3, $4) returning id`, [branch, c, `Driver ${c}`, extra.licence_expiry ?? null])
+  if (created.ok && extra.profile_id) {
+    const linked = await call(user, `select public.link_driver_profile($1,$2)`, [created.rows[0].id, extra.profile_id])
+    if (!linked.ok) return linked
+  }
+  return created
+}
 const addVehicle = (user: string, branch: string, reg: string) =>
   call(user, `insert into public.vehicles (branch_id, registration_number, vehicle_type) values ($1, $2, 'VAN') returning id, registration_number`, [branch, reg])
 
@@ -73,7 +79,7 @@ describe('driver rules', () => {
     await ok(addDriver(owner, a.hq, 'DRV-L1', { profile_id: p }))
     expect(await code(addDriver(owner, a.hq, 'DRV-L2', { profile_id: p }))).toBe('23505')
     const foreign = await addUser(b.id, 'DRIVER')
-    expect(await code(addDriver(owner, a.hq, 'DRV-L3', { profile_id: foreign }))).toBe('23503')
+    expect(await code(addDriver(owner, a.hq, 'DRV-L3', { profile_id: foreign }))).toBe('22023')
   })
 
   it('cannot point at a branch of another organization', async () => {

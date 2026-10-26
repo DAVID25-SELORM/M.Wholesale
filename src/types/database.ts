@@ -5,6 +5,18 @@ export type Database = {
   
   "public": {
           Tables: {
+            recalls: {
+              Row: { id: string; organization_id: string; recall_number: string; source: string; recall_class: string; title: string; instructions: string; status: string; opened_at: string; opened_by: string; closed_at: string | null; closed_by: string | null }
+              Insert: never
+              Update: never
+              Relationships: []
+            }
+            recall_batch_scope: {
+              Row: { id: string; organization_id: string; recall_id: string; batch_id: string; product_id: string; added_at: string; added_by: string; quarantined_at: string | null }
+              Insert: never
+              Update: never
+              Relationships: []
+            }
             "accounting_settings": {
                   Row: {
                     "go_live_date": string,"id": string,"locked_through": string | null,"organization_id": string,"started_at": string,"started_by": string | null,"updated_at": string
@@ -2645,15 +2657,50 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
+            recall_customer_exposure: {
+              Args: { p_recall_id: string }
+              Returns: { invoice_id: string; invoice_number: string; customer_id: string; customer_name: string; contact_name: string | null; phone: string | null; email: string | null; batch_id: string; batch_number: string; product_name: string; quantity: number; source: string; delivery_status: string }[]
+            }
+            submit_batch_substitution: {
+              Args: { p_exception_id: string; p_substitute_batch_id: string; p_reason: string; p_stock_balance_id?: string }
+              Returns: string
+            }
+            create_recall: { Args: { p_source: string; p_class: string; p_title: string; p_instructions: string }; Returns: string }
+            close_recall: { Args: { p_recall_id: string }; Returns: undefined }
+            add_recall_batch: { Args: { p_recall_id: string; p_batch_id: string }; Returns: string }
+            quarantine_recall_batch: { Args: { p_scope_id: string; p_reason: string }; Returns: Json }
+            recall_batch_options: { Args: Record<string, never>; Returns: { id: string; batch_number: string; product_name: string; sku: string; expiry_date: string }[] }
+            create_delivery_run: { Args: { p_branch_id: string; p_driver_id: string; p_vehicle_id: string; p_date: string }; Returns: string },
+            add_run_stop: { Args: { p_run_id: string; p_note_id: string; p_weight_kg: number }; Returns: string },
+            remove_run_stop: { Args: { p_id: string; p_reason: string }; Returns: undefined },
+            reorder_run_stops: { Args: { p_id: string; p_stops: string[] }; Returns: undefined },
+            start_run_loading: { Args: { p_id: string }; Returns: undefined },
+            load_run_stop: { Args: { p_id: string; p_packages: number }; Returns: undefined },
+            dispatch_delivery_run: { Args: { p_id: string }; Returns: undefined },
+            record_run_outcome: { Args: { p_id: string; p_delivered: boolean; p_receiver: string; p_reason: string }; Returns: undefined },
+            return_run_stop: { Args: { p_id: string }; Returns: undefined },
+            cancel_delivery_run: { Args: { p_id: string; p_reason: string }; Returns: undefined },
+            delivery_run_list: { Args: Record<PropertyKey, never>; Returns: Json },
+            delivery_run_detail: { Args: { p_id: string }; Returns: Json },
+            run_planning_options: { Args: { p_branch_id: string }; Returns: Json },
+            link_driver_profile: { Args: { p_driver_id: string; p_profile_id: string | null }; Returns: undefined },
+            driver_profile_options: { Args: { p_driver_id: string }; Returns: { id: string; name: string }[] },
             start_packing: { Args: { p_id: string }; Returns: undefined },
             create_package: { Args: { p_id: string; p_kind: string; p_cold_chain?: boolean; p_fragile?: boolean }; Returns: string },
-            pack_line: { Args: { p_package_id: string; p_line_id: string; p_quantity: number }; Returns: undefined },
+            pack_line: { Args: { p_package_id: string; p_line_id: string; p_quantity: number; p_batch_id?: string }; Returns: undefined },
             void_package: { Args: { p_id: string; p_reason: string }; Returns: undefined },
             verify_packed_line: { Args: { p_id: string }; Returns: undefined },
             finish_packing: { Args: { p_id: string }; Returns: undefined },
             packing_detail: { Args: { p_id: string }; Returns: Json },
             packed_dispatch_queue: { Args: Record<PropertyKey, never>; Returns: { id: string }[] },
             prepare_packed_delivery: { Args: { p_id: string; p_address: string; p_contact_name: string; p_contact_phone: string; p_notes: string }; Returns: string },
+            ship_short_fulfilment_order: { Args: { p_exception_id: string; p_reason: string }; Returns: string },
+            hold_fulfilment_order: { Args: { p_id: string; p_reason: string }; Returns: undefined },
+            release_fulfilment_hold: { Args: { p_id: string }; Returns: undefined },
+            substitution_batch_options: { Args: { p_exception_id: string }; Returns: { id: string; batch_number: string; expiry_date: string; available_quantity: number; is_controlled: boolean; stock_balance_id: string; location_code: string }[] },
+            request_controlled_batch_substitution: { Args: { p_reason: string; p_substitution_id: string }; Returns: string },
+            request_batch_substitution: { Args: { p_exception_id: string; p_substitute_batch_id: string; p_reason: string }; Returns: string },
+            approve_batch_substitution: { Args: { p_id: string }; Returns: Json },
             "account_ledger":
 { Args: { "p_account_id": string,"p_branch_id"?: string,"p_from": string,"p_limit"?: number,"p_to": string }; Returns: {
               "credit": number,"debit": number,"description": string,"journal_date": string,"journal_id": string,"journal_number": string,"line_id": string,"memo": string,"running": number

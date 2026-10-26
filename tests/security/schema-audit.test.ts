@@ -86,7 +86,7 @@ describe('schema audit: functions', () => {
       where n.nspname = 'private' and p.prokind = 'f' and has_function_privilege('authenticated', p.oid, 'execute') order by 2`)
     // private helpers used inside RLS policies must stay executable; nothing else in `private` may be
     // (each only answers questions about the caller's own organization / permissions, or is pure text handling - reviewed in the Phase 12 production review)
-    const allowed = new Set(['has_permission', 'has_permission_anywhere', 'current_organization_id', 'can_access_branch', 'can_access_warehouse', 'warehouse_branch_id', 'current_profile_id', 'actor_covers_role', 'normalize_text', 'permitted_branches'])
+    const allowed = new Set(['has_permission', 'has_permission_anywhere', 'current_organization_id', 'can_access_branch', 'can_access_warehouse', 'warehouse_branch_id', 'current_profile_id', 'actor_covers_role', 'normalize_text', 'permitted_branches', 'can_read_run'])
     expect(rows.filter((r) => !allowed.has(r.proname)).map((r) => `${r.nspname}.${r.proname}`)).toEqual([])
   })
 

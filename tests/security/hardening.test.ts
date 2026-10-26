@@ -87,7 +87,7 @@ describe('catalog hardening', () => {
     expect(rows.filter((r) => r.anon).map((r) => r.fn)).toEqual([])
     const authed = rows.filter((r) => r.authed).map((r) => r.fn).sort()
     expect(authed).toEqual([
-      'private.actor_covers_role', 'private.can_access_branch', 'private.can_access_warehouse',
+      'private.actor_covers_role', 'private.can_access_branch', 'private.can_access_warehouse', 'private.can_read_run',
       'private.current_organization_id', 'private.current_profile_id', 'private.has_permission',
       'private.has_permission_anywhere', 'private.normalize_text', 'private.permitted_branches', 'private.warehouse_branch_id', 'public.approve_purchase_order',
       'public.assign_user_role', 'public.cancel_purchase_order', 'public.close_purchase_order', 'public.expiring_stock',
@@ -137,6 +137,17 @@ describe('catalog hardening', () => {
       // Phase 16
       'public.import_customers', 'public.import_opening_receivables', 'public.import_opening_payables', 'public.remove_opening_balance',
       'public.request_controlled_adjustment', 'public.approve_controlled_adjustment', 'public.reject_controlled_adjustment', 'public.cancel_controlled_adjustment',
+      'public.request_batch_substitution', 'public.approve_batch_substitution', 'public.ship_short_fulfilment_order', 'public.hold_fulfilment_order', 'public.release_fulfilment_hold',
+      'public.substitution_batch_options', 'public.request_controlled_batch_substitution',
+      'public.submit_batch_substitution',
+      'public.recall_customer_exposure',
+      'public.create_recall', 'public.add_recall_batch', 'public.quarantine_recall_batch', 'public.close_recall', 'public.recall_batch_options',
+      // Phase 17b/17c/17d
+      'public.start_packing', 'public.create_package', 'public.pack_line', 'public.void_package', 'public.verify_packed_line', 'public.finish_packing',
+      'public.packing_detail', 'public.prepare_packed_delivery', 'public.packed_dispatch_queue',
+      'public.create_delivery_run', 'public.add_run_stop', 'public.remove_run_stop', 'public.reorder_run_stops', 'public.start_run_loading',
+      'public.load_run_stop', 'public.dispatch_delivery_run', 'public.record_run_outcome', 'public.return_run_stop', 'public.cancel_delivery_run',
+      'public.delivery_run_list', 'public.delivery_run_detail', 'public.run_planning_options', 'public.link_driver_profile', 'public.driver_profile_options',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))

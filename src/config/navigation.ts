@@ -74,12 +74,14 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'stock', label: 'Stock', to: '/inventory/stock', anyOf: ['inventory.view'] },
       { id: 'expiry', label: 'Expiry', to: '/inventory/expiry', anyOf: ['inventory.view'] },
+      { id: 'recalls', label: 'Recalls', to: '/inventory/recalls', anyOf: ['recalls.view', 'recalls.manage'] },
       { id: 'stock-documents', label: 'Stock documents', to: '/inventory/documents', anyOf: ['inventory.view'] },
       { id: 'stock-controlled', label: 'Controlled adjustments', to: '/inventory/controlled-adjustments', anyOf: ['inventory.adjust', 'inventory.controlled_approve'] },
       { id: 'stock-transfers', label: 'Transfers', to: '/inventory/transfers', anyOf: ['inventory.view'] },
       { id: 'stock-counts', label: 'Stock counts', to: '/inventory/counts', anyOf: ['inventory.view'] },
       { id: 'stock-valuation', label: 'Stock valuation', to: '/inventory/valuation', anyOf: ['inventory.valuation'] },
       { id: 'wh-picking', label: 'Picking', to: '/warehouse/picking', anyOf: ['fulfilment.view'] },
+      { id: 'wh-exceptions', label: 'Fulfilment exceptions', to: '/warehouse/exceptions', anyOf: ['fulfilment.view', 'fulfilment.exception'] },
       { id: 'wh-packing', label: 'Packing', to: '/warehouse/packing', anyOf: ['fulfilment.view'] },
       { id: 'wh-dispatch', label: 'Dispatch', to: '/warehouse/dispatch', anyOf: ['fulfilment.view'] },
     ],
@@ -99,7 +101,13 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     id: 'finance', label: 'Finance', icon: Landmark, collapsedByDefault: true,
-    items: ['Payments', 'Receivables', 'Payables', 'Credit control', 'Expenses'].map((l) => planned(`fin-${l}`, l)),
+    items: [
+      { id: 'fin-Payments', label: 'Payments received', to: '/sales/receipts', anyOf: ['receipts.view'] },
+      { id: 'fin-Receivables', label: 'Receivables', to: '/sales/receivables', anyOf: ['receipts.view'] },
+      { id: 'fin-Payables', label: 'Payables', to: '/purchasing/payables', anyOf: ['payables.view'] },
+      planned('fin-Credit control', 'Credit control'),
+      planned('fin-Expenses', 'Expenses'),
+    ],
   },
   {
     id: 'crm', label: 'CRM', icon: Handshake, collapsedByDefault: true,
@@ -108,15 +116,18 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: 'delivery', label: 'Delivery', icon: Truck, collapsedByDefault: true,
     items: [
-      ...['Dispatch', 'Delivery runs'].map((l) => planned(`del-${l}`, l)),
+      { id: 'del-dispatch', label: 'Dispatch', to: '/warehouse/dispatch', anyOf: ['fulfilment.view'] },
+      { id: 'del-runs', label: 'Delivery runs', to: '/delivery/runs', anyOf: ['runs.view', 'runs.drive'] },
       { id: 'del-drivers', label: 'Drivers', to: '/delivery/drivers', anyOf: ['fleet.view'] },
       { id: 'del-vehicles', label: 'Vehicles', to: '/delivery/vehicles', anyOf: ['fleet.view'] },
     ],
   },
   {
     id: 'intelligence', label: 'Intelligence', icon: Gauge, collapsedByDefault: true,
-    items: ['Stock insights', 'Replenishment', 'Customer insights', 'Product performance', 'Procurement insights']
-      .map((l) => planned(`int-${l}`, l)),
+    items: [
+      { id: 'int-Stock insights', label: 'Stock insights', to: '/reports/stock', anyOf: ['reports.stock'] },
+      ...['Replenishment', 'Customer insights', 'Product performance', 'Procurement insights'].map((l) => planned(`int-${l}`, l)),
+    ],
   },
   {
     id: 'accounting', label: 'Accounting', icon: BookOpen,

@@ -80,6 +80,131 @@ async function released() {
   return { id, inv, far, near }
 }
 
+describe('fulfilment hold and substitution corrections', () => {
+  it('preserves both batches when replacing a partial shortage and packing', async () => {
+    const originalPicker = await addUser(a.id, 'OWNER')
+    const independentVerifier = await addUser(a.id, 'OWNER')
+    const p = await stocked()
+    await ok(call(owner, `select public.post_stock_document('OPENING',$1,$2::jsonb)`, [wh, JSON.stringify([{ product_id: p.id, quantity: 50, batch_number: `PART-${rand()}`, expiry_date: day(400), unit_cost: 4 }])]))
+    const inv = await invoice([{ product: p.id, qty: 5 }])
+    const id = (await ok(release(owner, inv)))[0].id
+    await ok(call(originalPicker, 'select public.claim_fulfilment_order($1)', [id]))
+    const line = (await lines(id))[0]
+    await ok(call(originalPicker, `select public.confirm_pick_line($1,2,'NOT_FOUND')`, [line.id]))
+    const exception = (await q(`select id from public.fulfilment_exceptions where pick_line_id=$1 and status='OPEN'`, [line.id]))[0].id
+    const choices = await ok(call(owner, 'select * from public.substitution_batch_options($1)', [exception]))
+    await ok(call(owner, 'select public.submit_batch_substitution($1,$2,$3,$4)', [exception, choices[0].id, 'Replace remaining three units', choices[0].stock_balance_id]))
+    expect((await order(id)).status).toBe('PICKED')
+    expect((await lines(id))[0].picked_by).toBe(originalPicker)
+    const detail = (await ok(call(owner, 'select public.packing_detail($1) d', [id])))[0].d
+    expect(detail.components).toHaveLength(2)
+    expect(Number(detail.components.find((c: any) => c.batch_id === line.batch_id).quantity)).toBe(2)
+    expect(Number(detail.components.find((c: any) => c.batch_id === choices[0].id).quantity)).toBe(3)
+    await ok(call(owner, 'select public.start_packing($1)', [id]))
+    const pk = (await ok(call(owner, "select public.create_package($1,'CARTON') id", [id])))[0].id
+    expect((await failure(call(owner, 'select public.pack_line($1,$2,5)', [pk, line.id]))).code).toBe('22023')
+    expect((await failure(call(owner, 'select public.pack_line($1,$2,3,$3)', [pk, line.id, line.batch_id]))).code).toBe('22023')
+    await ok(call(packer, 'select public.pack_line($1,$2,2,$3)', [pk, line.id, line.batch_id]))
+    await ok(call(packer, 'select public.pack_line($1,$2,3,$3)', [pk, line.id, choices[0].id]))
+    expect((await failure(call(originalPicker, 'select public.verify_packed_line($1)', [line.id]))).code).toBe('42501')
+    expect((await failure(call(owner, 'select public.verify_packed_line($1)', [line.id]))).code).toBe('42501')
+    await ok(call(independentVerifier, 'select public.verify_packed_line($1)', [line.id]))
+    await ok(call(owner, 'select public.finish_packing($1)', [id]))
+    expect((await order(id)).status).toBe('PACKED')
+  })
+  it('hands a controlled substitution to another approver and completes the pick', async () => {
+    const p = await stocked()
+    await ok(call(owner, `select public.post_stock_document('OPENING',$1,$2::jsonb)`, [wh, JSON.stringify([{ product_id: p.id, quantity: 50, batch_number: `CTRL-SUB-${rand()}`, expiry_date: day(400), unit_cost: 4 }])]))
+    const inv = await invoice([{ product: p.id, qty: 5 }])
+    const id = (await ok(release(owner, inv)))[0].id
+    await ok(call(owner, 'select public.claim_fulfilment_order($1)', [id]))
+    const line = (await lines(id))[0]
+    await ok(call(owner, `select public.confirm_pick_line($1,0,'NOT_FOUND')`, [line.id]))
+    await q("update public.products set is_controlled=true,requires_prescription=true,product_class='CONTROLLED' where id=$1", [p.id])
+    const exception = (await q(`select id from public.fulfilment_exceptions where pick_line_id=$1 and status='OPEN'`, [line.id]))[0].id
+    const choices = await ok(call(owner, 'select * from public.substitution_batch_options($1)', [exception]))
+    await ok(call(owner, 'select public.submit_batch_substitution($1,$2,$3)', [exception, choices[0].id, 'Controlled replacement requires review']))
+    const s = (await q('select * from public.fulfilment_substitutions where exception_id=$1', [exception]))[0]
+    expect(s.status).toBe('PENDING')
+    await ok(call(owner, 'select public.cancel_controlled_adjustment($1)', [s.controlled_adjustment_id]))
+    await ok(call(owner, 'select public.submit_batch_substitution($1,$2,$3)', [exception, choices[0].id, 'Reissue after supervisor review']))
+    const attempts = await q('select * from public.fulfilment_substitutions where exception_id=$1 order by requested_at', [exception])
+    expect(attempts).toHaveLength(2)
+    expect(attempts[0].status).toBe('CANCELLED')
+    expect(attempts[1].status).toBe('PENDING')
+    expect(attempts[1].id).not.toBe(s.id)
+    s.controlled_adjustment_id = attempts[1].controlled_adjustment_id
+    expect((await failure(call(owner, 'select public.approve_controlled_adjustment($1)', [s.controlled_adjustment_id]))).code).toBe('42501')
+    const approver = await addUser(a.id, 'PHARMACIST')
+    await ok(call(approver, 'select public.approve_controlled_adjustment($1)', [s.controlled_adjustment_id]))
+    expect((await order(id)).status).toBe('PICKED')
+    expect((await lines(id))[0].actual_batch_id).toBe(choices[0].id)
+  })
+  it('uses an explicitly selected replacement bin while preserving the original allocation', async () => {
+    const p = await stocked()
+    const bin = await addLocation(a.id, wh, `SUB-BIN-${rand()}`)
+    const batchNumber = `OTHER-BIN-${rand()}`
+    await ok(call(owner, `select public.post_stock_document('OPENING',$1,$2::jsonb)`, [wh, JSON.stringify([{ product_id: p.id, quantity: 50, batch_number: batchNumber, expiry_date: day(400), unit_cost: 4, location_id: bin }])]))
+    const inv = await invoice([{ product: p.id, qty: 5 }])
+    const id = (await ok(release(owner, inv)))[0].id
+    await ok(call(owner, 'select public.claim_fulfilment_order($1)', [id]))
+    const line = (await lines(id))[0]
+    expect(line.location_id).not.toBe(bin)
+    await ok(call(owner, `select public.confirm_pick_line($1,0,'NOT_FOUND')`, [line.id]))
+    const exception = (await q(`select id from public.fulfilment_exceptions where pick_line_id=$1 and status='OPEN'`, [line.id]))[0].id
+    const replacement = (await q('select id from public.batches where product_id=$1 and batch_number=$2', [p.id, batchNumber]))[0].id
+    const choices = await ok(call(owner, 'select * from public.substitution_batch_options($1)', [exception]))
+    expect(choices.map(x => x.id)).toContain(replacement)
+    expect((await failure(call(owner, 'select public.request_batch_substitution($1,$2,$3)', [exception, replacement, 'Replace from another bin']))).code).toBe('22023')
+    const choice = choices.find(x => x.id === replacement)
+    await ok(call(owner, 'select public.submit_batch_substitution($1,$2,$3,$4)', [exception, replacement, 'Pick replacement from selected bin', choice.stock_balance_id]))
+    const updated = (await lines(id))[0]
+    expect(updated.location_id).toBe(line.location_id)
+    expect(updated.actual_location_id).toBe(bin)
+    const displayed = await ok(call(owner, 'select * from public.fulfilment_pick_list($1)', [id]))
+    expect(displayed[0].location_code).toBe(choice.location_code)
+  })
+  it.each(['NOT_FOUND', 'DAMAGED', 'EXPIRED'])('posts correct shortage disposition for %s and completes the substitution', async (shortReason) => {
+    const p = await stocked()
+    await ok(call(owner, `select public.post_stock_document('OPENING',$1,$2::jsonb)`, [wh, JSON.stringify([{ product_id: p.id, quantity: 50, batch_number: `SUB-${rand()}`, expiry_date: day(400), unit_cost: 4 }])]))
+    const inv = await invoice([{ product: p.id, qty: 5 }])
+    const id = (await ok(release(owner, inv)))[0].id
+    await ok(call(owner, 'select public.claim_fulfilment_order($1)', [id]))
+    const line = (await lines(id))[0]
+    await ok(call(owner, `select public.confirm_pick_line($1,0,$2)`, [line.id, shortReason]))
+    const exception = (await q(`select id from public.fulfilment_exceptions where pick_line_id=$1 and status='OPEN'`, [line.id]))[0].id
+    const choices = await ok(call(owner, 'select * from public.substitution_batch_options($1)', [exception]))
+    expect(choices.length).toBeGreaterThan(0)
+    await ok(call(owner, 'select public.submit_batch_substitution($1,$2,$3)', [exception, choices[0].id, 'Replace unavailable batch']))
+    expect((await q('select request_reason from public.fulfilment_substitutions where exception_id=$1', [exception]))[0].request_reason).toBe('Replace unavailable batch')
+    expect((await order(id)).status).toBe('PICKED')
+    const updated = (await lines(id))[0]
+    expect(Number(updated.picked_quantity)).toBe(5)
+    expect(updated.actual_batch_id).toBe(choices[0].id)
+    const sub = (await q('select stock_document_id from public.fulfilment_substitutions where exception_id=$1', [exception]))[0]
+    const posted = await q('select batch_id,quantity,stock_status from public.stock_movements where document_id=$1', [sub.stock_document_id])
+    expect(posted).toHaveLength(shortReason === 'NOT_FOUND' ? 1 : 2)
+    const replacementMovement = posted.find(m => m.batch_id === choices[0].id)
+    expect(Number(replacementMovement.quantity)).toBe(-5)
+    if (shortReason !== 'NOT_FOUND') {
+      const originalMovement = posted.find(m => m.batch_id === line.batch_id)
+      expect(originalMovement.stock_status).toBe('QUARANTINE')
+      expect(Number(originalMovement.quantity)).toBe(5)
+    }
+    expect((await failure(call(owner, 'select public.reset_pick_line($1,$2)', [line.id, 'Cannot erase posted substitution']))).code).toBe('22023')
+  })
+
+  it('releases a fully picked held order back to picked', async () => {
+    const r = await released()
+    await ok(call(owner, 'select public.claim_fulfilment_order($1)', [r.id]))
+    for (const l of await lines(r.id)) await ok(call(owner, 'select public.confirm_pick_line($1,$2)', [l.id, l.expected_quantity]))
+    await ok(call(owner, 'select public.hold_fulfilment_order($1,$2)', [r.id, 'Review before packing']))
+    expect((await order(r.id)).status).toBe('HOLD')
+    await ok(call(owner, 'select public.release_fulfilment_hold($1)', [r.id]))
+    expect((await order(r.id)).status).toBe('PICKED')
+  })
+})
+
 describe('packing and dispatch', () => {
   async function picked() {
     const r = await released()
@@ -413,3 +538,4 @@ describe('branch scope and tenants', () => {
     expect((await withUser(null, (c) => c.attempt(`select * from public.fulfilment_orders`)) as Out).ok).toBe(false)
   })
 })
+

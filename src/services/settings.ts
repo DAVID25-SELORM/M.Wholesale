@@ -77,6 +77,7 @@ export const DOCUMENT_LABEL: Record<string, string> = {
   CUSTOMER_REFUND: 'Customer refunds', DELIVERY_NOTE: 'Delivery notes', POS_SESSION: 'Till shifts', PURCHASE_ORDER: 'Purchase orders', GOODS_RECEIPT: 'Goods received',
   PURCHASE_RETURN: 'Purchase returns', SUPPLIER_INVOICE: 'Supplier invoices', STOCK_TRANSFER: 'Stock transfers', STOCK_COUNT: 'Stock counts', JOURNAL: 'Journals',
   CONTROLLED_ADJUSTMENT: 'Controlled adjustments',
+  FULFILMENT_ORDER: 'Fulfilment orders', PACKAGE: 'Packages', DELIVERY_RUN: 'Delivery runs', RECALL: 'Recalls',
 }
 
 /** What a number will look like, for the preview next to the form (the database builds the real ones the same way). */

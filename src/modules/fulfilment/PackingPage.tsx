@@ -59,6 +59,9 @@ function PackingTask({ order }: { order: QueueRow }) {
   const packages = detail.data?.packages ?? []
   const active = packages.filter(p => !p.voided_at)
   const contents = detail.data?.contents ?? []
+  const components = detail.data?.components ?? []
+  const selectedComponent = components.find(c => `${c.pick_line_id}:${c.batch_id ?? ''}` === lineId)
+  const batchTotal = (id: string, batch: string | null) => contents.filter(c => c.pick_line_id === id && c.batch_id === batch && active.some(p => p.id === c.package_id)).reduce((sum, c) => sum + Number(c.quantity), 0)
   const totals = (id: string) => contents.filter(c => c.pick_line_id === id && active.some(p => p.id === c.package_id)).reduce((sum, c) => sum + Number(c.quantity), 0)
   const run = useMutation({
     mutationFn: async (action: () => Promise<unknown>) => action(),
@@ -98,16 +101,16 @@ function PackingTask({ order }: { order: QueueRow }) {
       </CardBody></Card>
       <Card><CardBody><h2 className="mb-3 font-semibold">Pack goods</h2>
         <Field label="Package"><Select value={packageId} onChange={e => setPackageId(e.target.value)}><option value="">Choose a package</option>{active.map(p => <option key={p.id} value={p.id}>{p.package_number}</option>)}</Select></Field>
-        <Field label="Picked line"><Select value={lineId} onChange={e => setLineId(e.target.value)}><option value="">Choose product and batch</option>{(lines.data ?? []).map(l => <option key={l.line_id} value={l.line_id}>{l.product_name} · {l.batch_number ?? 'No batch'} · {Number(((l.picked_quantity ?? 0) - totals(l.line_id)).toFixed(3))} remaining</option>)}</Select></Field>
+        <Field label="Picked line"><Select value={lineId} onChange={e => setLineId(e.target.value)}><option value="">Choose product and batch</option>{components.map(c => { const l = lines.data?.find(x => x.line_id === c.pick_line_id); const key = `${c.pick_line_id}:${c.batch_id ?? ''}`; return <option key={key} value={key}>{l?.product_name} / {c.batch_number ?? 'No batch'} / {Number((Number(c.quantity) - batchTotal(c.pick_line_id, c.batch_id)).toFixed(3))} remaining</option> })}</Select></Field>
         <Field label="Quantity (base units)"><Input type="number" min="0.001" step="0.001" value={quantity} onChange={e => setQuantity(e.target.value)} /></Field>
-        <Button disabled={run.isPending || !packageId || !lineId || !Number.isFinite(Number(quantity)) || Number(quantity) <= 0} onClick={() => run.mutate(() => packLine(packageId, lineId, Number(quantity)))}>Confirm packed quantity</Button>
+        <Button disabled={run.isPending || !packageId || !selectedComponent || !Number.isFinite(Number(quantity)) || Number(quantity) <= 0} onClick={() => run.mutate(() => packLine(packageId, selectedComponent!.pick_line_id, Number(quantity), selectedComponent!.batch_id))}>Confirm packed quantity</Button>
       </CardBody></Card>
     </div>}
     <div className="my-4 grid gap-4 md:grid-cols-2">{packages.map(p => <Card key={p.id}><CardBody>
       <h2 className="font-mono text-lg font-bold">{p.package_number}</h2><p>{order.customer_name} · {order.order_number}</p>
       <p>{p.kind} {p.cold_chain && '· COLD CHAIN'} {p.fragile && '· FRAGILE'} {p.voided_at && '· VOID'}</p>
       {p.voided_at && <p>{p.void_reason}</p>}
-      <ul className="my-3 space-y-1">{contents.filter(c => c.package_id === p.id).map(c => { const l = lines.data?.find(x => x.line_id === c.pick_line_id); return <li key={c.id}>{l?.product_name} · Batch {l?.batch_number ?? '—'} · {c.quantity} {l?.base_unit} · Expiry {l?.expiry_date ?? '—'}</li> })}</ul>
+      <ul className="my-3 space-y-1">{contents.filter(c => c.package_id === p.id).map(c => { const l = lines.data?.find(x => x.line_id === c.pick_line_id); const component = components.find(x => x.pick_line_id === c.pick_line_id && x.batch_id === c.batch_id); return <li key={c.id}>{l?.product_name} · Batch {component?.batch_number ?? '—'} · {c.quantity} {l?.base_unit} · Expiry {component?.expiry_date ?? '—'}</li> })}</ul>
       {packing && canPack && !p.voided_at && <Button className="print:hidden" variant="ghost" disabled={run.isPending} onClick={() => setVoidId(p.id)}>Void package and repack</Button>}
     </CardBody></Card>)}</div>
     {['PACKED', 'READY'].includes(order.status) && canDeliver && <Card><CardBody>

@@ -4,7 +4,7 @@ import { emptyToNull, unwrap } from './common'
 
 export type FulfilmentOrder = Tables<'fulfilment_orders'>
 export const FULFILMENT_STATUS_LABEL: Record<string, string> = {
-  RELEASED: 'Waiting to pick', PICKING: 'Being picked', PICKED: 'Picked', PACKING: 'Packing', PACKED: 'Packed', READY: 'Ready to ship', CANCELLED: 'Cancelled',
+  RELEASED: 'Waiting to pick', PICKING: 'Being picked', PICKED: 'Picked', HOLD: 'On hold', PACKING: 'Packing', PACKED: 'Packed', READY: 'Ready to ship', CANCELLED: 'Cancelled',
 }
 export const PRIORITY_LABEL: Record<number, string> = { 1: 'Urgent', 2: 'Normal', 3: 'Low' }
 export const SHORT_REASONS = [

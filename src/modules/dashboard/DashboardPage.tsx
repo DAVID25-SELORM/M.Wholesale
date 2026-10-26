@@ -33,6 +33,7 @@ const TODO = [
   { key: 'cnt', label: 'stock counts to approve', table: 'stock_counts', column: 'status', values: ['SUBMITTED'], perm: 'inventory.count_approve', to: '/inventory/counts' },
   { key: 'trf', label: 'transfers on the way', table: 'stock_transfers', column: 'status', values: ['IN_TRANSIT', 'PARTIALLY_RECEIVED'], perm: 'inventory.transfer', to: '/inventory/transfers' },
   { key: 'dsp', label: 'deliveries waiting to be dispatched', table: 'delivery_notes', column: 'status', values: ['PREPARED'], perm: 'deliveries.dispatch', to: '/sales/deliveries' },
+  { key: 'fx', label: 'fulfilment exceptions awaiting a decision', table: 'fulfilment_exceptions', column: 'status', values: ['OPEN'], perm: 'fulfilment.exception', to: '/warehouse/exceptions' },
   { key: 'rd', label: 'deliveries on the road', table: 'delivery_notes', column: 'status', values: ['DISPATCHED'], perm: 'deliveries.dispatch', to: '/sales/deliveries' },
   { key: 'ord', label: 'sales orders waiting to be confirmed', table: 'sales_orders', column: 'status', values: ['DRAFT'], perm: 'orders.confirm', to: '/sales/orders' },
   { key: 'dlv', label: 'confirmed orders still to deliver', table: 'sales_orders', column: 'status', values: ['CONFIRMED'], perm: 'sales.post', to: '/sales/orders' },

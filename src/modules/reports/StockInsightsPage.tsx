@@ -114,7 +114,7 @@ function Slow() {
   const cells = (r: (typeof rows)[number]) => [`${r.product_name} (${r.sku})`, r.base_unit, fmtQty(r.on_hand), ...(showValue ? [moneyFmt(r.stock_value)] : []), r.last_sale_date ?? 'never', r.days_since_sale === null ? '' : String(r.days_since_sale), r.earliest_expiry ?? '']
   return (
     <Shell
-      loading={query.isPending && ok} error={query.isError ? toAppError(query.error).message : null} onRetry={() => void query.refetch()} empty={rows.length === 0} emptyTitle="Everything sells" emptyText="No sellable stock has gone unsold for this long."
+      loading={query.isPending && ok} error={query.isError ? toAppError(query.error).message : null} onRetry={() => void query.refetch()} empty={rows.length === 0} emptyTitle="No matching slow-moving stock" emptyText="No stock matches these filters. This can also occur when no stock has been recorded."
       exports={{
         disabled: rows.length === 0, csv: () => downloadCsv('slow-moving-stock', [header, ...rows.map(cells)]),
         pdf: () => void downloadTablePdf({ title: 'Slow-moving stock', subtitle: `Not sold for ${days} days or more${showValue ? ` · ${moneyFmt(total)} tied up` : ''}`, organization: context.organization?.name ?? '', filename: 'slow-moving-stock',
@@ -158,7 +158,7 @@ function ExpiryRisk() {
   const cells = (r: (typeof rows)[number]) => [`${r.product_name} (${r.sku})`, r.batch_number, r.expiry_date, String(r.days_left), fmtQty(r.quantity), String(r.avg_daily), fmtQty(r.expected_sales), fmtQty(r.at_risk_qty), ...(showValue ? [moneyFmt(r.value_at_risk)] : [])]
   return (
     <Shell
-      loading={query.isPending && ok} error={query.isError ? toAppError(query.error).message : null} onRetry={() => void query.refetch()} empty={rows.length === 0} emptyTitle="Nothing at risk" emptyText="Every batch expiring in this period should sell in time at the recent pace."
+      loading={query.isPending && ok} error={query.isError ? toAppError(query.error).message : null} onRetry={() => void query.refetch()} empty={rows.length === 0} emptyTitle="No matching expiry-risk records" emptyText="No batches match this estimate. Check that stock and sales history are available before using it for planning."
       exports={{
         disabled: rows.length === 0, csv: () => downloadCsv('expiry-risk', [header, ...rows.map(cells)]),
         pdf: () => void downloadTablePdf({ title: 'Stock likely to expire unsold', subtitle: `Batches expiring within ${horizon} days, at the sales pace of the last ${history} days, earliest expiry sold first${showValue ? ` · ${moneyFmt(total)} at risk` : ''}`,

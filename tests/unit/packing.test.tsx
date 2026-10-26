@@ -43,4 +43,22 @@ describe('packing and dispatch screens', () => {
     expect(screen.getByRole('button', { name: 'Add package' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Confirm packed quantity' })).toBeDisabled()
   })
+  it('prints each packed batch rather than the mixed pick summary', async () => {
+    svc.getPickLines.mockResolvedValue([{ line_id: 'line-a', product_name: 'Medicine', batch_number: 'Multiple batches (see packing)', picked_quantity: 5, base_unit: 'units' }])
+    svc.getPackingDetail.mockResolvedValue({
+      packages: [{ id: 'pk-a', package_number: 'PK-1', kind: 'CARTON', voided_at: null }],
+      lines: [],
+      components: [
+        { pick_line_id: 'line-a', batch_id: 'batch-a', quantity: 2, batch_number: 'ORIGINAL', expiry_date: '2028-01-01' },
+        { pick_line_id: 'line-a', batch_id: 'batch-b', quantity: 3, batch_number: 'REPLACEMENT', expiry_date: '2029-01-01' },
+      ],
+      contents: [
+        { id: 'c-a', package_id: 'pk-a', pick_line_id: 'line-a', batch_id: 'batch-a', quantity: 2 },
+        { id: 'c-b', package_id: 'pk-a', pick_line_id: 'line-a', batch_id: 'batch-b', quantity: 3 },
+      ],
+    })
+    renderWithApp(<Routes><Route path="/packing/:id" element={<PackingPage />} /></Routes>, { route: '/packing/order-a', context: makeContext({ org_permissions: ['fulfilment.view'] }) })
+    expect(await screen.findByText(/Batch ORIGINAL.*Expiry 2028-01-01/)).toBeInTheDocument()
+    expect(screen.getByText(/Batch REPLACEMENT.*Expiry 2029-01-01/)).toBeInTheDocument()
+  })
 })

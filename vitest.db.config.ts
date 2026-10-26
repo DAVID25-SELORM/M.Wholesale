@@ -6,6 +6,8 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/database/**/*.test.ts', 'tests/security/**/*.test.ts'],
     fileParallelism: false,
+    pool: 'threads',
+    maxWorkers: 1,
     testTimeout: 30_000,
     hookTimeout: 60_000,
   },

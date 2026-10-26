@@ -8,8 +8,23 @@ vi.mock('@/modules/auth/AuthProvider', () => ({ useAuth: () => ({ auth: { status
 import { Sidebar } from '@/layouts/Sidebar'
 import { BranchSelector } from '@/layouts/Topbar'
 import { B2, HQ, makeContext, renderWithApp } from './helpers'
+import { NAV_GROUPS } from '@/config/navigation'
 
 describe('permission-aware navigation', () => {
+  it('links implemented Finance and Intelligence workflows with permission guards', () => {
+    const items = NAV_GROUPS.flatMap(group => group.items)
+    for (const [id, to, permission] of [
+      ['fin-Payments', '/sales/receipts', 'receipts.view'],
+      ['fin-Receivables', '/sales/receivables', 'receipts.view'],
+      ['fin-Payables', '/purchasing/payables', 'payables.view'],
+      ['int-Stock insights', '/reports/stock', 'reports.stock'],
+    ]) {
+      const item = items.find(entry => entry.id === id)
+      expect(item?.to).toBe(to)
+      expect(item?.anyOf).toEqual([permission])
+      expect(item?.planned).not.toBe(true)
+    }
+  })
   it('shows only the admin pages the user may view, and marks future modules as Soon', () => {
     renderWithApp(<Sidebar onNavigate={() => {}} />, {
       context: makeContext({ org_permissions: ['branches.view', 'audit.view'], branch_permissions: {} }),

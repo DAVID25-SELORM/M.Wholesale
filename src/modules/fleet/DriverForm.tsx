@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { z } from 'zod'
 import { Button, Checkbox, DateInput, Field, InlineError, Input, Modal, Select, Textarea, useToast } from '@/components/ui'
@@ -6,6 +6,7 @@ import { toAppError } from '@/lib/errors'
 import { entityCode, optionalText, requiredText, validate } from '@/lib/validation'
 import { useSession } from '@/modules/session/SessionProvider'
 import { createDriver, updateDriver, type Driver } from '@/services/fleet'
+import { driverProfileOptions, linkDriverProfile } from '@/services/runs'
 
 export const driverSchema = z.object({
   branch_id: z.string().min(1, 'Choose a branch'),
@@ -97,7 +98,18 @@ function DriverFormInner({ driver, canEdit, onClose }: { driver: Driver | null; 
         </Field>
         <Field label="Notes" error={errors.notes}><Textarea value={values.notes} onChange={set('notes')} rows={3} maxLength={1000} readOnly={ro} /></Field>
         <Checkbox label="Active" checked={values.is_active} disabled={ro} onChange={(e) => setValues({ ...values, is_active: e.target.checked })} />
+        {driver && canEdit && ability.can('roles.assign') && <DriverSignIn driver={driver} />}
       </form>
     </Modal>
   )
+}
+
+function DriverSignIn({ driver }: { driver: Driver }) {
+  const [profile, setProfile] = useState(driver.profile_id ?? '')
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+  const qc = useQueryClient()
+  const options = useQuery({ queryKey: ['driver-profile-options', driver.id], queryFn: () => driverProfileOptions(driver.id) })
+  const save = useMutation({ mutationFn: () => linkDriverProfile(driver.id, profile || null), onSuccess: async () => { setError(null); setSaved(true); await qc.invalidateQueries({ queryKey: ['drivers'] }) }, onError: e => setError(toAppError(e).message) })
+  return <div className="space-y-2 border-t pt-4"><Field label="Driver sign-in" hint="The user also needs the Driver role for this branch. Linking grants access to this driver's assigned runs."><Select value={profile} onChange={e => { setProfile(e.target.value); setSaved(false) }}><option value="">No sign-in linked</option>{options.data?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</Select></Field><InlineError message={error ?? (options.isError ? toAppError(options.error).message : null)} /><Button type="button" variant="secondary" loading={save.isPending} onClick={() => save.mutate()}>Save sign-in link</Button>{saved && <p className="text-sm text-green-700">Sign-in link saved.</p>}</div>
 }

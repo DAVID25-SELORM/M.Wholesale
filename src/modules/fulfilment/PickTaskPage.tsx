@@ -8,6 +8,7 @@ import { useAuth } from '@/modules/auth/AuthProvider'
 import { ReasonDialog } from '@/modules/purchasing/shared'
 import { useSession } from '@/modules/session/SessionProvider'
 import { fmtQty } from '@/services/inventory'
+import { holdOrder, releaseHold } from '@/services/exceptions'
 import {
   PRIORITY_LABEL, SHORT_REASONS, assignPicker, cancelOrder, claimOrder, confirmLine, getFulfilmentOrder, getPickLines, giveBackOrder, pickerOptions, resetLine, resolveShort,
   type PickListLine, type QueueRow, type ShortReason,
@@ -23,7 +24,7 @@ export function PickTaskPage() {
   return <TaskView order={order.data} />
 }
 
-type Reasoned = { kind: 'reset' | 'resolve' | 'cancel'; lineId?: string; exceptionId?: string } | null
+type Reasoned = { kind: 'reset' | 'resolve' | 'cancel' | 'hold'; lineId?: string; exceptionId?: string } | null
 
 function TaskView({ order }: { order: QueueRow }) {
   const { ability } = useSession()
@@ -37,6 +38,7 @@ function TaskView({ order }: { order: QueueRow }) {
   const canWork = ability.can('picking.work', order.branch_id)
   const canAssign = ability.can('picking.assign', order.branch_id)
   const canRelease = ability.can('fulfilment.release', order.branch_id)
+  const canHandleExceptions = ability.can('fulfilment.exception', order.branch_id)
   const live = order.status === 'RELEASED' || order.status === 'PICKING'
   const mine = order.picker_id !== null && order.picker_id === me
   const canConfirm = order.status === 'PICKING' && canWork && (mine || canAssign)
@@ -47,6 +49,8 @@ function TaskView({ order }: { order: QueueRow }) {
   const run = useMutation({
     mutationFn: async (v: { kind: string; reason?: string; user?: string | null }) => {
       if (v.kind === 'claim') return claimOrder(order.id)
+      if (v.kind === 'hold') return holdOrder(order.id, v.reason!)
+      if (v.kind === 'releaseHold') return releaseHold(order.id)
       if (v.kind === 'giveBack') return giveBackOrder(order.id)
       if (v.kind === 'assign') return assignPicker(order.id, v.user ?? null)
       if (v.kind === 'cancel') return cancelOrder(order.id, v.reason!)
@@ -72,6 +76,8 @@ function TaskView({ order }: { order: QueueRow }) {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <FulfilmentStatusBadge status={order.status} />
+            {order.status === 'HOLD' && canHandleExceptions && <Button onClick={() => run.mutate({ kind: 'releaseHold' })} loading={run.isPending}>Release hold</Button>}
+            {['RELEASED', 'PICKING', 'PICKED'].includes(order.status) && canHandleExceptions && <Button variant="secondary" disabled={run.isPending} onClick={() => { setError(null); setReasoning({ kind: 'hold' }) }}>Hold order</Button>}
             {['PICKED', 'PACKING', 'PACKED', 'READY'].includes(order.status) && <Link to={`/warehouse/packing/${order.id}`} className="text-sm font-semibold text-brand-700 hover:underline">Open packing and dispatch →</Link>}
             <Badge tone={order.priority === 1 ? 'red' : 'slate'}>{PRIORITY_LABEL[order.priority]}</Badge>
             {order.required_by && <Badge tone="amber">Needed by {order.required_by}</Badge>}
@@ -113,11 +119,11 @@ function TaskView({ order }: { order: QueueRow }) {
       )}
       <ReasonDialog
         open={reasoning !== null}
-        title={reasoning?.kind === 'cancel' ? 'Cancel this order?' : reasoning?.kind === 'reset' ? 'Reset this line?' : 'Accept the short pick?'}
-        description={reasoning?.kind === 'cancel'
+        title={reasoning?.kind === 'hold' ? 'Hold this order?' : reasoning?.kind === 'cancel' ? 'Cancel this order?' : reasoning?.kind === 'reset' ? 'Reset this line?' : 'Accept the short pick?'}
+        description={reasoning?.kind === 'hold' ? 'Picking and packing pause until a supervisor releases the hold.' : reasoning?.kind === 'cancel'
           ? 'The invoice and the stock are not affected. The invoice can be released to the warehouse again.'
           : reasoning?.kind === 'reset' ? 'The line goes back to pending so it can be picked again.' : 'The line stays short. The invoice is not changed: raise a credit note in the usual way if the customer is owed one.'}
-        confirmLabel={reasoning?.kind === 'cancel' ? 'Cancel order' : reasoning?.kind === 'reset' ? 'Reset line' : 'Accept short pick'}
+        confirmLabel={reasoning?.kind === 'hold' ? 'Hold order' : reasoning?.kind === 'cancel' ? 'Cancel order' : reasoning?.kind === 'reset' ? 'Reset line' : 'Accept short pick'}
         tone={reasoning?.kind === 'cancel' ? 'danger' : 'primary'}
         busy={run.isPending}
         error={error}

@@ -11,8 +11,11 @@ import { BranchesPage } from '@/modules/branches/BranchesPage'
 import { PickTaskPage } from '@/modules/fulfilment/PickTaskPage'
 import { PickingQueuePage } from '@/modules/fulfilment/PickingQueuePage'
 import { PackingPage, PackingQueuePage } from '@/modules/fulfilment/PackingPage'
+import { ExceptionsPage } from '@/modules/fulfilment/ExceptionsPage'
+import { RecallsPage } from '@/modules/inventory/RecallsPage'
 import { DriversPage } from '@/modules/fleet/DriversPage'
 import { VehiclesPage } from '@/modules/fleet/VehiclesPage'
+import { DeliveryRunPage, DeliveryRunsPage } from '@/modules/fleet/DeliveryRunsPage'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { CatalogSetupPage } from '@/modules/catalog/CatalogSetupPage'
 import { ProductDetailPage } from '@/modules/catalog/ProductDetailPage'
@@ -90,8 +93,11 @@ export const routes = [
           { element: <RequirePermission anyOf={['organizations.view']} />, children: [{ path: 'admin/organization', element: <OrganizationPage /> }] },
           { element: <RequirePermission anyOf={['branches.view']} />, children: [{ path: 'admin/branches', element: <BranchesPage /> }] },
           { element: <RequirePermission anyOf={['fulfilment.view']} />, children: [{ path: 'warehouse/picking', element: <PickingQueuePage /> }, { path: 'warehouse/picking/:id', element: <PickTaskPage /> }] },
+          { element: <RequirePermission anyOf={['recalls.view', 'recalls.manage']} />, children: [{ path: 'inventory/recalls', element: <RecallsPage /> }] },
+          { element: <RequirePermission anyOf={['fulfilment.view', 'fulfilment.exception']} />, children: [{ path: 'warehouse/exceptions', element: <ExceptionsPage /> }] },
           { element: <RequirePermission anyOf={['fulfilment.view']} />, children: [{ path: 'warehouse/packing', element: <PackingQueuePage /> }, { path: 'warehouse/packing/:id', element: <PackingPage /> }, { path: 'warehouse/dispatch', element: <PackingQueuePage dispatch /> }] },
           { element: <RequirePermission anyOf={['fleet.view']} />, children: [{ path: 'delivery/drivers', element: <DriversPage /> }, { path: 'delivery/vehicles', element: <VehiclesPage /> }] },
+          { element: <RequirePermission anyOf={['runs.view', 'runs.drive']} />, children: [{ path: 'delivery/runs', element: <DeliveryRunsPage /> }, { path: 'delivery/runs/:id', element: <DeliveryRunPage /> }] },
           { element: <RequirePermission anyOf={['warehouses.view']} />, children: [{ path: 'admin/warehouses', element: <WarehousesPage /> }] },
           { element: <RequirePermission anyOf={['warehouse_locations.view']} />, children: [{ path: 'admin/locations', element: <LocationsPage /> }] },
           { element: <RequirePermission anyOf={['users.view']} />, children: [{ path: 'admin/users', element: <UsersPage /> }] },

@@ -12,8 +12,9 @@ export interface Package {
   id: string; package_number: string; kind: string; cold_chain: boolean; fragile: boolean; voided_at: string | null; void_reason: string | null
 }
 export interface PackingDetail {
+  components: { pick_line_id: string; batch_id: string | null; quantity: number; batch_number: string | null; expiry_date: string | null }[]
   packages: Package[]
-  contents: { id: string; package_id: string; pick_line_id: string; quantity: number; packed_by: string }[]
+  contents: { id: string; package_id: string; pick_line_id: string; quantity: number; packed_by: string; batch_id: string | null }[]
   lines: { id: string; product_name: string; controlled: boolean; verified: boolean }[]
 }
 export async function getPackingDetail(id: string): Promise<PackingDetail> {
@@ -23,8 +24,8 @@ export async function startPacking(id: string) { unwrap(await supabase.rpc('star
 export async function createPackage(id: string, kind: string, cold: boolean, fragile: boolean) {
   return unwrap(await supabase.rpc('create_package', { p_id: id, p_kind: kind, p_cold_chain: cold, p_fragile: fragile }), 'packing.package')
 }
-export async function packLine(packageId: string, lineId: string, quantity: number) {
-  unwrap(await supabase.rpc('pack_line', { p_package_id: packageId, p_line_id: lineId, p_quantity: quantity }), 'packing.line')
+export async function packLine(packageId: string, lineId: string, quantity: number, batchId?: string | null) {
+  unwrap(await supabase.rpc('pack_line', { p_package_id: packageId, p_line_id: lineId, p_quantity: quantity, p_batch_id: batchId ?? undefined }), 'packing.line')
 }
 export async function voidPackage(id: string, reason: string) { unwrap(await supabase.rpc('void_package', { p_id: id, p_reason: reason }), 'packing.void') }
 export async function verifyPackedLine(id: string) { unwrap(await supabase.rpc('verify_packed_line', { p_id: id }), 'packing.verify') }

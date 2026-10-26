@@ -45,6 +45,7 @@ export function PickingQueuePage() {
             <Select id="pick-status" value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="OPEN">To pick (open)</option>
               <option value="PICKED">Picked</option>
+              <option value="HOLD">On hold</option>
               <option value="CANCELLED">Cancelled</option>
               <option value="">All</option>
             </Select>
