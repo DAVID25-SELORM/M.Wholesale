@@ -5,7 +5,7 @@ import { recallCustomerExposure } from '@/services/recalls'
 import { Badge, Button, Card, CardBody, DataTable, Field, InlineError, Input, PageHeader, Select, Textarea, type Column } from '@/components/ui'
 import { toAppError } from '@/lib/errors'
 import { useSession } from '@/modules/session/SessionProvider'
-import { addRecallBatch, cancelRecall, closeRecall, createRecall, listRecalls, listRecallScope, quarantineRecallBatch, recallBatchOptions, releaseRecallBatch, type RecallRow } from '@/services/recalls'
+import { addRecallBatch, cancelRecall, closeRecall, createRecall, listRecallRecoveries, listRecalls, listRecallScope, quarantineRecallBatch, recallBatchOptions, releaseRecallBatch, type RecallRow } from '@/services/recalls'
 
 export function RecallsPage() {
   const qc = useQueryClient()
@@ -26,6 +26,7 @@ export function RecallsPage() {
   const scope = useQuery({ queryKey: ['recall-scope', selected], queryFn: () => listRecallScope(selected), enabled: !!selected })
   const options = useQuery({ queryKey: ['recall-batches'], queryFn: recallBatchOptions, enabled: !!selected })
   const exposure = useQuery({ queryKey: ['recall-exposure', selected], queryFn: () => recallCustomerExposure(selected), enabled: !!selected })
+  const recoveries = useQuery({ queryKey: ['recall-recoveries', selected], queryFn: () => listRecallRecoveries(selected), enabled: !!selected })
   const recall = query.data?.find(r => r.id === selected)
   const active = recall && ['OPEN', 'QUARANTINED'].includes(recall.status)
   async function act(action: () => Promise<unknown>) {
@@ -34,6 +35,7 @@ export function RecallsPage() {
     try {
       await action()
       await qc.invalidateQueries({ queryKey: ['recall-exposure'] })
+      await qc.invalidateQueries({ queryKey: ['recall-recoveries'] })
       await Promise.all([qc.invalidateQueries({ queryKey: ['recalls'] }), qc.invalidateQueries({ queryKey: ['recall-scope'] }), qc.invalidateQueries({ queryKey: ['stock'] })])
     } catch (e) { setError(toAppError(e).message) } finally { setBusy(false) }
   }
@@ -85,6 +87,9 @@ export function RecallsPage() {
         <p className="text-sm">{x.source === 'APPROVED_SUBSTITUTION' ? 'Approved replacement batch' : 'Original invoice allocation'} · {[x.contact_name, x.phone, x.email].filter(Boolean).join(' / ') || 'No contact details recorded'}</p>
         {ability.can('sales.view') && <Link className="text-brand-700 underline" to={`/sales/invoices/${x.invoice_id}`}>Open invoice</Link>}
       </li>)}</ul> : !exposure.isError && <p>No posted customer transactions found for the scoped batches.</p>}
+      <h3 className="font-semibold">Recovery records</h3>
+      <InlineError message={recoveries.isError ? toAppError(recoveries.error).message : null} />
+      {recoveries.isPending ? <p>Loading recovery records...</p> : recoveries.data?.length ? <ul className="space-y-2">{recoveries.data.map((x) => <li key={x.id} className="flex flex-wrap items-start justify-between gap-3 rounded-md border p-3"><div><p className="font-medium">Invoice {x.sales_invoice_id}</p><p className="text-sm text-slate-600">{x.quantity} units · {x.notes}</p></div><Badge tone={x.status === 'RECOVERED' ? 'green' : 'amber'}>{x.status}</Badge></li>)}</ul> : <p className="text-sm">No recovery records have been recorded.</p>}
     </div></CardBody></Card>}
   </>
 }
