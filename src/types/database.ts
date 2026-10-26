@@ -12,7 +12,7 @@ export type Database = {
               Relationships: []
             }
             recall_batch_scope: {
-              Row: { id: string; organization_id: string; recall_id: string; batch_id: string; product_id: string; added_at: string; added_by: string; quarantined_at: string | null }
+              Row: { id: string; organization_id: string; recall_id: string; batch_id: string; product_id: string; added_at: string; added_by: string; quarantined_at: string | null; released_at: string | null; release_reason: string | null }
               Insert: never
               Update: never
               Relationships: []
@@ -2667,6 +2667,8 @@ isOneToOne: false
             }
             create_recall: { Args: { p_source: string; p_class: string; p_title: string; p_instructions: string }; Returns: string }
             close_recall: { Args: { p_recall_id: string }; Returns: undefined }
+            cancel_recall: { Args: { p_recall_id: string; p_reason: string }; Returns: undefined }
+            release_recall_batch: { Args: { p_scope_id: string; p_reason: string }; Returns: Json }
             add_recall_batch: { Args: { p_recall_id: string; p_batch_id: string }; Returns: string }
             quarantine_recall_batch: { Args: { p_scope_id: string; p_reason: string }; Returns: Json }
             recall_batch_options: { Args: Record<string, never>; Returns: { id: string; batch_number: string; product_name: string; sku: string; expiry_date: string }[] }

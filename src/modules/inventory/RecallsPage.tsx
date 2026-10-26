@@ -5,7 +5,7 @@ import { recallCustomerExposure } from '@/services/recalls'
 import { Badge, Button, Card, CardBody, DataTable, Field, InlineError, Input, PageHeader, Select, Textarea, type Column } from '@/components/ui'
 import { toAppError } from '@/lib/errors'
 import { useSession } from '@/modules/session/SessionProvider'
-import { addRecallBatch, closeRecall, createRecall, listRecalls, listRecallScope, quarantineRecallBatch, recallBatchOptions, type RecallRow } from '@/services/recalls'
+import { addRecallBatch, cancelRecall, closeRecall, createRecall, listRecalls, listRecallScope, quarantineRecallBatch, recallBatchOptions, releaseRecallBatch, type RecallRow } from '@/services/recalls'
 
 export function RecallsPage() {
   const qc = useQueryClient()
@@ -73,9 +73,9 @@ export function RecallsPage() {
       </>}
       {scope.isPending ? <p>Loading affected batches...</p> : <ul className="space-y-3">{scope.data?.map(s => {
         const b = options.data?.find(x => x.id === s.batch_id)
-        return <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-2"><span>{b ? b.product_name + ' / ' + b.batch_number : s.batch_id} — {s.quarantined_at ? 'Quarantine recorded' : 'Awaiting quarantine'}</span>{canManage && active && <Button disabled={busy || reason.trim().length < 5} onClick={() => void act(() => quarantineRecallBatch(s.id, reason.trim()))}>{s.quarantined_at ? 'Quarantine new stock' : 'Quarantine batch'}</Button>}</li>
+        return <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-2"><span>{b ? b.product_name + ' / ' + b.batch_number : s.batch_id} — {s.released_at ? 'Release recorded' : s.quarantined_at ? 'Quarantine recorded' : 'Awaiting quarantine'}</span>{canManage && active && <Button disabled={busy || reason.trim().length < 5} onClick={() => void act(() => quarantineRecallBatch(s.id, reason.trim()))}>{s.quarantined_at ? 'Quarantine new stock' : 'Quarantine batch'}</Button>}{canManage && recall.status === 'CANCELLED' && !s.released_at && <Button variant="secondary" disabled={busy || reason.trim().length < 5} onClick={() => void act(() => releaseRecallBatch(s.id, reason.trim()))}>Release stock</Button>}</li>
       })}</ul>}
-      {canManage && active && <Button variant="secondary" disabled={busy || !scope.data?.length || scope.data.some(s => !s.quarantined_at)} onClick={() => void act(() => closeRecall(selected))}>Close recall</Button>}
+      {canManage && active && <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={busy || !scope.data?.length || scope.data.some(s => !s.quarantined_at)} onClick={() => void act(() => closeRecall(selected))}>Close recall</Button><Button variant="secondary" disabled={busy || reason.trim().length < 5} onClick={() => void act(() => cancelRecall(selected, reason.trim()))}>Cancel recall</Button></div>}
       <h3 className="font-semibold">Affected customer transactions</h3>
       <p className="text-sm">Original allocations and approved substitutions are shown separately for investigation. These are base-unit quantities, not confirmed customer recovery totals.</p>
       <InlineError message={exposure.isError ? toAppError(exposure.error).message : null} />
