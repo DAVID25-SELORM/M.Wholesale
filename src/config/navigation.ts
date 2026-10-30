@@ -35,6 +35,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: 'administration', label: 'Administration', icon: Settings,
     items: [
+      { id: 'support', label: 'Support', to: '/support' },
+      { id: 'announcements', label: 'Announcements', to: '/announcements' },
       { id: 'organization', label: 'Organization', to: '/admin/organization', anyOf: ['organizations.view'] },
       { id: 'branches', label: 'Branches', to: '/admin/branches', anyOf: ['branches.view'] },
       { id: 'warehouses', label: 'Warehouses', to: '/admin/warehouses', anyOf: ['warehouses.view'] },

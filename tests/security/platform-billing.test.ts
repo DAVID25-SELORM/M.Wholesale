@@ -25,6 +25,11 @@ it('preserves agreed subscription pricing, prevents duplicate invoices and does 
     expect(invoices.find((r: { id: string }) => r.id === first).status).toBe('OPEN')
     expect((await c.attempt("update private.platform_invoices set status='PAID' where id=$1", [first])).ok).toBe(false)
     expect((await c.q("select public.platform_billing('payments') data")).rows[0].data.total).toBe(0)
+    await c.q("select public.platform_void_invoice($1,'Incorrect billing period')",[first])
+    await c.q("select public.platform_void_invoice($1,'Safe retry')",[first])
+    const voided=(await c.q("select public.platform_billing('invoices') data")).rows[0].data.rows.find((r:{id:string})=>r.id===first)
+    expect(voided.status).toBe('VOID')
+    expect(voided.void_reason).toBe('Incorrect billing period')
   })
 })
 it('enforces active branch capacity and rejects a downgrade below usage', async () => {

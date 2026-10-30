@@ -2672,6 +2672,19 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
+            platform_user_roles: { Args: { p_user: string }; Returns: Json }
+            platform_change_user_role: { Args: { p_user: string; p_role: string; p_branch: string | null; p_grant: boolean; p_reason: string }; Returns: undefined }
+            platform_void_invoice: { Args: { p_id: string; p_reason: string }; Returns: undefined }
+            platform_publish_announcement: { Args: { p_id: string; p_publish: boolean; p_reason: string }; Returns: undefined }
+            tenant_announcements: { Args: { p_page?: number }; Returns: Json }
+            tenant_read_announcement: { Args: { p_id: string }; Returns: undefined }
+            tenant_support_read: { Args: { p_id?: string; p_page?: number }; Returns: Json }
+            tenant_support_write: { Args: { p_action: string; p_id: string; p_subject?: string; p_body?: string; p_priority?: string }; Returns: string }
+            platform_reply_to_tenant: { Args: { p_id: string; p_body: string }; Returns: string }
+            platform_support_assignees: { Args: Record<PropertyKey, never>; Returns: Json }
+            platform_submit_onboarding: { Args: { p_id: string; p_details: Json }; Returns: string }
+            platform_onboarding_requests: { Args: { p_page?: number; p_status?: string }; Returns: Json }
+            platform_decide_onboarding: { Args: { p_id: string; p_approve: boolean; p_reason: string }; Returns: Json }
             platform_billing: { Args: { p_section: string; p_page?: number }; Returns: Json }
             platform_issue_invoice: { Args: { p_organization: string; p_reason: string }; Returns: string }
             platform_read: { Args: { p_section: string; p_search?: string; p_page?: number; p_from?: string; p_to?: string; p_id?: string; p_filter?: string }; Returns: Json }

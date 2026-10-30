@@ -29,7 +29,7 @@ export function PlatformShell() {
     <div className="mx-auto grid max-w-[1600px] gap-6 p-4 sm:p-8 lg:grid-cols-[14rem_minmax(0,1fr)]">
       <nav aria-label="Platform navigation" className={`${menu ? 'block' : 'hidden'} space-y-1 rounded-xl bg-slate-900 p-3 text-slate-200 lg:block`}>
         {[
-          ['overview', 'Dashboard', 'overview'], ['organizations', 'Organizations', 'organizations'], ['create', 'Create organization', 'organizations'],
+          ['overview', 'Dashboard', 'overview'], ['organizations', 'Organizations', 'organizations'], ['create', 'Create organization', 'organizations'], ['onboarding', 'Onboarding approvals', 'organizations'],
           ['users', 'Users', 'users'], ['operators', 'Administrators', 'operators'], ['plans', 'Subscription plans', 'billing'], ['subscriptions', 'Subscriptions', 'billing'], ['invoices', 'Invoices', 'billing'], ['payments', 'Payments', 'billing'],
           ['audit', 'Activity & audit', 'audit'], ['notifications', 'Notifications', 'audit'], ['tickets', 'Support tickets', 'support'], ['announcements', 'Announcements', 'support'], ['settings', 'General settings', 'settings'],
         ].filter(([, , permission]) => (permissions.data?.permissions as string[] | undefined)?.includes(permission!)).map(([path, label]) => <NavLink key={path} onClick={() => setMenu(false)} to={`/platform/${path}`} className={({ isActive }) => `block rounded-lg px-3 py-2.5 text-sm ${isActive ? 'bg-emerald-700 text-white' : 'hover:bg-slate-800'}`}>{label}</NavLink>)}

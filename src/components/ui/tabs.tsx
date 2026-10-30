@@ -14,6 +14,18 @@ export function Tabs({ items, value, onChange, label }: { items: TabItem[]; valu
             role="tab"
             type="button"
             aria-selected={selected}
+            tabIndex={selected ? 0 : -1}
+            onKeyDown={event => {
+              const index = items.findIndex(item => item.id === t.id)
+              const next = event.key === 'ArrowRight' ? (index + 1) % items.length
+                : event.key === 'ArrowLeft' ? (index + items.length - 1) % items.length
+                  : event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : -1
+              if (next < 0) return
+              event.preventDefault()
+              onChange(items[next]!.id)
+              const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
+              buttons?.[next]?.focus()
+            }}
             onClick={() => onChange(t.id)}
             className={cn(
               'whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',

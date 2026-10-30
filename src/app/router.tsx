@@ -7,6 +7,8 @@ import { ProcurementInsightsPage } from '@/modules/reports/ProcurementInsightsPa
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { PlatformShell } from '@/layouts/PlatformShell'
 import { PlatformPage } from '@/modules/platform/PlatformPage'
+import { TenantSupportPage } from '@/modules/platform/TenantSupportPage'
+import { TenantAnnouncementsPage } from '@/modules/platform/TenantAnnouncementsPage'
 import { AppShell } from '@/layouts/AppShell'
 import { AuditLogPage } from '@/modules/audit/AuditLogPage'
 import { ClientErrorsPage } from '@/modules/audit/ClientErrorsPage'
@@ -97,7 +99,7 @@ export const routes = [
     { index: true, element: <Navigate to="overview" replace /> },
     { path: 'tenants', element: <Navigate to="/platform/organizations" replace /> },
     { path: 'create', element: <TenantsPage /> },
-    ...['overview', 'organizations', 'users', 'operators', 'plans', 'subscriptions', 'invoices', 'payments', 'audit', 'notifications', 'tickets', 'announcements', 'settings'].map(section => ({ path: section, element: <PlatformPage key={section} section={section} /> })),
+    ...['overview', 'onboarding', 'organizations', 'users', 'operators', 'plans', 'subscriptions', 'invoices', 'payments', 'audit', 'notifications', 'tickets', 'announcements', 'settings'].map(section => ({ path: section, element: <PlatformPage key={section} section={section} /> })),
     { path: 'organizations/:id', element: <PlatformPage section="organization" /> },
     { path: 'tickets/:id', element: <PlatformPage section="ticket" /> },
   ] },
@@ -111,6 +113,8 @@ export const routes = [
         element: <AppShell />,
         children: [
           { index: true, element: <DashboardPage /> },
+          { path: 'support', element: <TenantSupportPage /> },
+          { path: 'announcements', element: <TenantAnnouncementsPage /> },
           { path: 'workspace/:module', element: <WorkspaceModulePage /> },
           { path: 'workspace/approvals', element: <ApprovalsPage /> },
           { element: <RequirePermission anyOf={['accounting.view']} />, children: [{ path: 'workspace/expenses', element: <ExpensesPage /> }] },

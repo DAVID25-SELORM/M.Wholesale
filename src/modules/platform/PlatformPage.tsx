@@ -3,9 +3,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { Button, Field, Input, InlineError, Modal, PageHeader, useToast } from '@/components/ui'
 import { exportRecords, readPlatform, textValue, writePlatform, type RecordData } from './api'
+import { UserRoleEditor } from './UserRoleEditor'
+import { OrganizationDetail } from './OrganizationDetail'
 
 type FormField = { key: string; label: string; type?: string; options?: string[] }
 const formFields: Record<string, FormField[]> = {
+  'ticket.tenant_reply': [{ key: 'body', label: 'Reply visible to the organization' }],
   'operator.save': [{ key: 'email', label: 'Verified administrator email', type: 'email' }],
   'organization.update': [{ key: 'name', label: 'Organization name' }, { key: 'email', label: 'Business email', type: 'email' }, { key: 'phone', label: 'Phone' }, { key: 'address', label: 'Address' }],
   'plan.save': ['name', 'currency', 'monthly_price', 'annual_price', 'user_limit', 'branch_limit', 'warehouse_limit', 'trial_days'].map(key => ({ key, label: key.replaceAll('_', ' '), type: /price|limit|days/.test(key) ? 'number' : 'text' })),
@@ -17,6 +20,7 @@ const formFields: Record<string, FormField[]> = {
   'settings.save': ['name', 'support_email', 'support_phone', 'country', 'currency', 'timezone'].map(key => ({ key, label: key.replaceAll('_', ' ') })),
 }
 const sections: Record<string, { title: string; columns: string[]; create?: string }> = {
+  onboarding: { title: 'Onboarding approvals', columns: ['name', 'owner_email', 'details', 'status', 'attempts', 'failure_code', 'decision_note', 'created_at'] },
   invoices: { title: 'Platform invoices', columns: ['id', 'organization', 'period_start', 'period_end', 'currency', 'amount', 'status'] },
   payments: { title: 'Verified payments', columns: ['invoice_id', 'provider', 'provider_reference', 'currency', 'amount', 'verified_at'] },
   organizations: { title: 'Organizations', columns: ['name', 'owner_email', 'country', 'currency_code', 'plan', 'is_active', 'archived_at', 'created_at'] },
@@ -24,8 +28,8 @@ const sections: Record<string, { title: string; columns: string[]; create?: stri
   operators: { title: 'Platform administrators', columns: ['email', 'permissions', 'is_active'], create: 'operator.save' },
   plans: { title: 'Subscription plans', columns: ['id', 'name', 'currency', 'monthly_price', 'annual_price', 'user_limit', 'branch_limit', 'warehouse_limit', 'is_active'], create: 'plan.save' },
   subscriptions: { title: 'Organization subscriptions', columns: ['organization', 'plan', 'cycle', 'status', 'starts_on', 'ends_on'], create: 'subscription.save' },
-  tickets: { title: 'Support tickets', columns: ['subject', 'priority', 'status', 'created_at'], create: 'ticket.create' },
-  announcements: { title: 'Announcements', columns: ['title', 'body', 'published_at', 'expires_at'], create: 'announcement.create' },
+  tickets: { title: 'Support tickets', columns: ['subject', 'priority', 'status', 'assigned_to', 'created_at'], create: 'ticket.create' },
+  announcements: { title: 'Announcements', columns: ['title', 'body', 'tenant_visible', 'published_at', 'expires_at'], create: 'announcement.create' },
   audit: { title: 'Audit log', columns: ['created_at', 'actor_id', 'action', 'organization_id', 'result', 'metadata'] },
   notifications: { title: 'Notifications', columns: ['created_at', 'action', 'organization_id', 'is_read'] },
 }
@@ -35,12 +39,14 @@ export function PlatformPage({ section }: { section: string }) {
   const qc = useQueryClient(); const toast = useToast()
   const [search, setSearch] = useState(''); const [page, setPage] = useState(0)
   const [filter, setFilter] = useState('ALL')
+  const [roleUser, setRoleUser] = useState<string | null>(null)
   const [from, setFrom] = useState(() => new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10))
   const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10))
   const [edit, setEdit] = useState<{ action: string; data: RecordData } | null>(null)
   const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [reason, setReason] = useState('')
   const query = useQuery({ queryKey: ['platform', section, search, page, from, to, id, filter], queryFn: () => readPlatform(section, search, page, from, to, id, filter) })
   const options = useQuery({ queryKey: ['platform', 'options'], enabled: edit?.action === 'subscription.save', queryFn: () => readPlatform('options') })
+  const assignees = useQuery({ queryKey: ['platform', 'assignees'], enabled: section === 'tickets' || section === 'ticket', queryFn: () => readPlatform('assignees') })
   useEffect(() => {
     if (!edit) return
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault() }
@@ -52,12 +58,14 @@ export function PlatformPage({ section }: { section: string }) {
   const title = sections[section]?.title ?? ({ overview: 'Platform overview', organization: 'Organization details', settings: 'General settings', ticket: 'Ticket details' }[section] ?? section)
   const rows = query.data?.rows ?? []
   return <div className="space-y-6">
+    {roleUser && <UserRoleEditor user={roleUser} onClose={() => setRoleUser(null)} />}
     <PageHeader title={title} description="Platform management • Live database records" />
     {['subscriptions', 'plans'].includes(section) && <p className="rounded-lg border border-slate-200 p-3 text-sm">Assigned plans limit active users, branches and warehouses. Organizations without an assigned plan retain their existing access. Payment collection remains unconfigured.</p>}
     {['invoices', 'payments'].includes(section) && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Payment collection is unconfigured. Invoices are internal records; no payment is marked successful by this console.</p>}
     <div className="flex flex-wrap items-end gap-3">
       {['organizations', 'users', 'tickets', 'audit'].includes(section) && <Field label="Search"><Input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }} placeholder="Search records" /></Field>}
       {section === 'organizations' && <Field label="Status"><select className="rounded border p-2" value={filter} onChange={e => { setFilter(e.target.value); setPage(0) }}>{['ALL', 'ACTIVE', 'SUSPENDED', 'ARCHIVED'].map(v => <option key={v}>{v}</option>)}</select></Field>}
+      {section === 'onboarding' && <Field label="Status"><select className="rounded border p-2" value={filter} onChange={e => { setFilter(e.target.value); setPage(0) }}>{['ALL', 'PENDING', 'FAILED', 'COMPLETED', 'REJECTED'].map(v => <option key={v}>{v}</option>)}</select></Field>}
       {['overview', 'audit', 'notifications'].includes(section) && <><Field label="From"><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></Field><Field label="To"><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></Field></>}
       <Button variant="secondary" disabled={query.isFetching} onClick={() => void query.refetch()}>Refresh</Button>
       {rows.length > 0 && <Button variant="secondary" onClick={() => exportRecords(rows, section)}>Export current page</Button>}
@@ -71,16 +79,16 @@ export function PlatformPage({ section }: { section: string }) {
       <div className="grid gap-5 lg:grid-cols-2">{[['growth', 'New organizations by month', 'organizations'], ['user_growth', 'New users by month', 'users'], ['countries', 'Organizations by country', 'organizations']].map(([key, label, measure]) => <section key={key} className="rounded-xl border bg-white p-5"><h2 className="mb-5 font-semibold">{label}</h2><Growth rows={(query.data![key!] ?? []) as RecordData[]} measure={measure!} /></section>)}</div>
     </>}
     {query.data && section === 'settings' && <section className="rounded-xl border bg-white p-5"><Details data={query.data} /><Button onClick={() => open('settings.save', query.data!)}>Edit settings</Button></section>}
-    {query.data && section === 'organization' && <>
-      <section className="rounded-xl border bg-white p-5"><h2 className="mb-4 font-semibold">Organization profile</h2><Details data={query.data.profile as RecordData ?? {}} /><Button onClick={() => open('organization.update', query.data!.profile as RecordData)}>Edit profile</Button></section>
-      {['users', 'branches', 'warehouses'].map(key => <section key={key} className="rounded-xl border bg-white p-5"><h2 className="mb-4 font-semibold capitalize">{key}</h2>{((query.data![key] ?? []) as RecordData[]).map(row => <p key={textValue(row.id)} className="border-b py-2">{textValue(row.name)} {textValue(row.email)} — {row.active ? 'Active' : 'Inactive'}</p>)}</section>)}
-      <section className="rounded-xl border bg-white p-5"><h2 className="mb-4 font-semibold">Subscription</h2><Details data={query.data.subscription as RecordData ?? {}} /></section>
-    </>}
-    {query.data && section === 'ticket' && <section className="space-y-4 rounded-xl border bg-white p-5"><Details data={query.data.ticket as RecordData ?? {}} /><Button onClick={() => open('ticket.reply', { id })}>Add reply</Button>{((query.data.replies ?? []) as RecordData[]).map(r => <article key={textValue(r.id)} className="border-t py-4"><p>{textValue(r.body)}</p><small>{textValue(r.created_at)}</small></article>)}</section>}
-    {sections[section] && <div className="overflow-x-auto rounded-xl border bg-white"><table className="w-full text-left text-sm"><thead className="bg-slate-50"><tr>{sections[section]!.columns.map(c => <th key={c} className="whitespace-nowrap p-3 font-medium capitalize">{c.replaceAll('_', ' ')}</th>)}<th className="p-3">Actions</th></tr></thead><tbody>{rows.map((row, i) => <tr key={textValue(row.id ?? row.organization_id) || i} className="border-t">{sections[section]!.columns.map(c => <td key={c} className="max-w-xs break-words p-3">{typeof row[c] === 'boolean' ? row[c] ? 'Yes' : 'No' : textValue(row[c]) || '—'}</td>)}<td className="p-3"><div className="flex flex-wrap gap-2">
+    {query.data && section === 'organization' && <OrganizationDetail key={id} data={query.data} onEdit={profile => open('organization.update', profile)} />}
+    {query.data && section === 'ticket' && <section className="space-y-4 rounded-xl border bg-white p-5"><Details data={query.data.ticket as RecordData ?? {}} /><Button onClick={() => open('ticket.reply', { id })}>Add internal note</Button>{(query.data.ticket as RecordData)?.tenant_visible === true && <Button onClick={() => open('ticket.tenant_reply', { id })}>Reply to organization</Button>}{((query.data.replies ?? []) as RecordData[]).map(r => <article key={textValue(r.id)} className="border-t py-4"><p>{textValue(r.body)}</p><small>{textValue(r.created_at)}</small></article>)}</section>}
+    {sections[section] && <div className="overflow-x-auto rounded-xl border bg-white"><table className="w-full text-left text-sm"><thead className="bg-slate-50"><tr>{sections[section]!.columns.map(c => <th key={c} className="whitespace-nowrap p-3 font-medium capitalize">{c.replaceAll('_', ' ')}</th>)}<th className="p-3">Actions</th></tr></thead><tbody>{rows.map((row, i) => <tr key={textValue(row.id ?? row.organization_id) || i} className="border-t">{sections[section]!.columns.map(c => <td key={c} className="max-w-xs break-words p-3">{typeof row[c] === 'boolean' ? row[c] ? 'Yes' : 'No' : (c === 'assigned_to' ? textValue(assignees.data?.rows.find(a => a.id === row[c])?.email ?? row[c]) : textValue(row[c])) || '—'}</td>)}<td className="p-3"><div className="flex flex-wrap gap-2">
       {section === 'organizations' && <><Link className="text-emerald-700 underline" to={`/platform/organizations/${textValue(row.id)}`}>View</Link>{!row.archived_at && <><Button variant="secondary" onClick={() => open(row.is_active ? 'organization.suspend' : 'organization.reactivate', row)}>{row.is_active ? 'Suspend' : 'Reactivate'}</Button><Button variant="secondary" onClick={() => open('organization.archive', row)}>Archive</Button></>}</>}
       {section === 'users' && <Button variant="secondary" onClick={() => open(row.is_active ? 'user.deactivate' : 'user.activate', row)}>{row.is_active ? 'Deactivate' : 'Activate'}</Button>}
       {section === 'plans' && <Button variant="secondary" onClick={() => open('plan.save', row)}>Edit</Button>}
+      {section === 'users' && <Button variant="secondary" onClick={() => setRoleUser(textValue(row.id))}>Roles</Button>}
+      {section === 'invoices' && row.status === 'OPEN' && <Button variant="secondary" onClick={() => open('invoice.void', row)}>Void invoice</Button>}
+      {section === 'announcements' && <Button variant="secondary" onClick={() => open(row.tenant_visible ? 'announcement.withdraw' : 'announcement.publish', row)}>{row.tenant_visible ? 'Withdraw from tenants' : 'Publish to all tenants'}</Button>}
+      {section === 'onboarding' && <>{['PENDING', 'FAILED'].includes(textValue(row.status)) && <><Button onClick={() => open('onboarding.approve', row)}>{row.status === 'FAILED' ? 'Retry approval' : 'Approve'}</Button><Button variant="secondary" onClick={() => open('onboarding.reject', row)}>Reject</Button></>}{row.organization_id && <Link to={`/platform/organizations/${textValue(row.organization_id)}`}>View organization</Link>}</>}
       {section === 'operators' && <Button variant="secondary" onClick={() => open('operator.save', row)}>Edit access</Button>}
       {section === 'subscriptions' && <><Button variant="secondary" onClick={() => open('subscription.save', row)}>Change</Button><Button variant="secondary" onClick={() => open('invoice.create', row)}>Issue invoice</Button></>}
       {section === 'tickets' && <><Link to={`/platform/tickets/${textValue(row.id)}`} className="text-emerald-700 underline">View</Link><Button variant="secondary" onClick={() => open('ticket.update', row)}>Update</Button></>}
@@ -90,10 +98,11 @@ export function PlatformPage({ section }: { section: string }) {
     <Modal open={!!edit} title={edit?.action.replaceAll('.', ' · ') ?? ''} onClose={close}><form className="space-y-4" onSubmit={async e => {
       e.preventDefault(); if (!edit || busy) return; setBusy(true); setError('')
       try { await writePlatform(edit.action, edit.data, reason); setEdit(null); toast.success('Saved successfully'); await qc.invalidateQueries({ queryKey: ['platform'] }) }
-      catch (err) { setError(err instanceof Error ? err.message : 'Could not save changes') } finally { setBusy(false) }
+      catch (err) { setError(err instanceof Error ? err.message : 'Could not save changes'); await qc.invalidateQueries({ queryKey: ['platform'] }) } finally { setBusy(false) }
     }}><InlineError message={error || null} />
       {edit && (formFields[edit.action] ?? []).map(field => <Field key={field.key} label={field.label}><>{['organization_id', 'plan_id'].includes(field.key) ? <select required className="w-full rounded border p-2" value={textValue(edit.data[field.key])} onChange={e => setEdit({ ...edit, data: { ...edit.data, [field.key]: e.target.value } })}><option value="">Select…</option>{((options.data?.[field.key === 'plan_id' ? 'plans' : 'organizations'] ?? []) as RecordData[]).map(o => <option key={textValue(o.id)} value={textValue(o.id)}>{textValue(o.name)}</option>)}</select> : field.options ? <select required className="w-full rounded border p-2" value={textValue(edit.data[field.key])} onChange={e => setEdit({ ...edit, data: { ...edit.data, [field.key]: e.target.value } })}><option value="">Select…</option>{field.options.map(o => <option key={o}>{o}</option>)}</select> : <Input required={!['email', 'phone', 'address', 'support_email', 'support_phone'].includes(field.key)} type={field.type ?? 'text'} step={field.type === 'number' ? '0.01' : undefined} value={textValue(edit.data[field.key])} onChange={e => setEdit({ ...edit, data: { ...edit.data, [field.key]: e.target.value } })} />}</></Field>)}
       {options.isError && edit?.action === 'subscription.save' && <InlineError message={options.error.message} />}
+      {edit?.action === 'ticket.update' && <><Field label="Assigned administrator"><select className="w-full rounded border p-2" value={textValue(edit.data.assigned_to)} onChange={e => setEdit({ ...edit, data: { ...edit.data, assigned_to: e.target.value || null } })}><option value="">Unassigned</option>{edit.data.assigned_to && !assignees.data?.rows.some(a => a.id === edit.data.assigned_to) && <option value={textValue(edit.data.assigned_to)}>Current assignee (unavailable)</option>}{assignees.data?.rows.map(a => <option key={textValue(a.id)} value={textValue(a.id)}>{textValue(a.email)}</option>)}</select></Field><InlineError message={assignees.isError ? assignees.error.message : null} /></>}
       {edit && !formFields[edit.action] && <p>Confirm {edit.action} for {textValue(edit.data.name ?? edit.data.id)}. This changes access immediately.</p>}
       {edit?.action === 'operator.save' && <fieldset className="space-y-2"><legend>Platform permissions</legend>{['overview', 'organizations', 'users', 'billing', 'support', 'settings', 'audit', 'operators'].map(permission => <label key={permission} className="flex items-center gap-2"><input type="checkbox" checked={(edit.data.permissions as string[] ?? []).includes(permission)} onChange={e => setEdit({ ...edit, data: { ...edit.data, permissions: e.target.checked ? [...(edit.data.permissions as string[] ?? []), permission] : (edit.data.permissions as string[] ?? []).filter(p => p !== permission) } })} />{permission}</label>)}</fieldset>}
       {edit && ['operator.save', 'plan.save'].includes(edit.action) && <label className="flex gap-2"><input type="checkbox" checked={edit.data.is_active !== false} onChange={e => setEdit({ ...edit, data: { ...edit.data, is_active: e.target.checked } })} />Active</label>}

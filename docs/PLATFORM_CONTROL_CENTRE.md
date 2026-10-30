@@ -28,7 +28,7 @@ Platform administration remains separate from tenant operations. Platform member
 
 ## Not yet complete
 
-The original requested scope remains open. Pending items include onboarding approval queues and durable failure tracking; owner/staff invitations; tenant role assignment and ownership transfer; full organization detail tabs; storage/features/trials enforcement; invoice voiding and renewal scheduling; support assignment and tenant-facing support/announcements; richer analytics; security/authentication policies; operational health and backup verification; branding assets; full export/sort/filter coverage; authenticated desktop/mobile visual verification.
+The original requested scope remains open. Pending items include owner/staff invitations; ownership transfer; full organization detail tabs; storage/features/trials enforcement; renewal scheduling; richer analytics; security/authentication policies; operational health and backup verification; branding assets; full export/sort/filter coverage; authenticated desktop/mobile visual verification.
 
 Payment collection and email/SMS delivery are intentionally unconfigured by user choice. No provider secrets were added. Audit retention, session revocation, MFA and Auth configuration are not represented as enforced settings.
 
@@ -49,3 +49,35 @@ Payment collection and email/SMS delivery are intentionally unconfigured by user
 4. Publish the frontend only after these migrations succeed.
 
 Existing platform operators retain all platform permissions by default; newly managed operators receive the explicit permissions selected in the console. The existing tenant database is not reset by deployment. Docker tests use the disposable local `wps_test` database only.
+
+## Onboarding queue stage
+
+Migration `20261030000400_platform_onboarding_queue.sql` adds persisted review requests, status filtering, approval/rejection, sanitized failure tracking and retries. The create wizard now submits a request; approving it creates the organization. The existing operator-only direct onboarding RPC remains available for automation. Two-person approval is not mandated; an operator with organization-management permission can submit and approve.
+
+Provisioning executes inside a subtransaction: failures roll back organization changes while the outer request records FAILED and the SQLSTATE. No raw exception text or tokens are stored. Completed approvals return the existing organization on retry. Rejected requests cannot be approved; a new request reference is required.
+
+Apply migration 004 after migrations 001–003 before deploying this frontend. External delivery remains unconfigured. Authenticated visual verification remains outstanding.
+## Support assignment stage
+
+Migration `20261030000500_platform_support_assignment.sql` adds permission-checked assignee discovery, assignment validation and immutable assignment-history events. The support update dialog offers active verified support operators and unassignment. Existing assignments to deactivated operators remain visible for review; those operators cannot receive new assignments. The ticket list resolves active assignees to email labels.
+
+Fresh Docker migration and five focused database suites: 15 tests passed, including invalid/inactive assignee rejection and assignment-history preservation. Apply migration 005 after 004 before deploying this frontend. Tenant-facing support intake is implemented in migration 006.
+## Tenant support stage
+
+Migration `20261030000600_tenant_support.sql` adds tenant support intake and conversations. Staff see their own requests; users with organization-management permission can see their organization’s requests. Organization identity is derived server-side. Suspended organizations have no access. Existing platform tickets and internal notes remain private; platform staff must explicitly select Reply to organization to publish a response. Tickets support closing/reopening and idempotent creation by request reference. No email or SMS is sent.
+
+Apply 006 after 005. Authenticated browser/mobile verification is still outstanding; changes are not yet published.
+Tenant support verification: 16 focused database tests passed across six suites; two component tests passed for onboarding and support retry handling. Support submissions reuse their request reference after errors and never send an organization ID from the browser. Switching conversations warns before discarding an unsent reply.
+
+## Tenant announcements
+
+Migration `20261030000700_tenant_announcements.sql` adds explicit publication/withdrawal and per-user read receipts. Existing announcements stay internal until published. Published announcements are global to active organizations, expire automatically from the feed, and expose no author identity or other users' read status. The ERP Announcements page supports refresh, pagination and mark-as-read. No external messages are sent.
+
+Fresh Docker migrations and 17 focused database tests passed, including publication authorization, read-receipt isolation, withdrawal and suspended/anonymous denial. Apply 007 after 006 before frontend deployment. Browser visual verification remains outstanding.
+## Invoice controls, role management and organization workspace
+
+Migration 008 adds audited, retry-safe voiding of unpaid open invoices. Migration 009 adds organization/branch-scoped user role grants and revocations, restricted to platform users administrators. Self-editing and OWNER/SUPER_ADMIN role changes are blocked. Cross-organization role and branch assignments are rejected.
+
+Organization details now separate profile, users, branches, warehouses, subscription and actual active usage. Tabs support arrow, Home and End keyboard navigation. Additional detail areas in the original specification remain pending.
+
+Fresh Docker migrations through 009 and 18 focused database tests passed. The production build passed with the existing bundle-size warning. These changes are local; migrations 004–009 must precede frontend publication. This is a progress record, not a completed ERP handover.
