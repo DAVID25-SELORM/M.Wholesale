@@ -66,7 +66,11 @@ insert into private.platform_operators(user_id) values ('VERIFIED-OPERATOR-USER-
 
 This grants cross-organization listing and tenant creation. Do not appoint ordinary
 customer administrators. No platform operators are created automatically. Remove the
-row to revoke access. Open **Administration → Tenant administration**. The console
+row to revoke access. Use the **Workspace** selector to choose **Platform Administration**,
+or open `/platform/tenants`. Choose your organization's ERP in the same selector to
+return to its operational workspace. The old `/admin/tenants` URL redirects to the
+platform workspace. Platform pages have their own navigation and no branch selector.
+The console
 requires an existing ERP profile for sign-in, shows 25 tenants per page and uses the
 same onboarding RPC as the CLI. It records the signed-in creator on the onboarding
 request. Keep the displayed request ID if retrying after a lost response or reload.

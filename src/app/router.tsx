@@ -4,7 +4,8 @@ import { PriceAgreementsPage } from '@/modules/sales/PriceAgreementsPage'
 import { ExpensesPage } from '@/modules/accounting/ExpensesPage'
 import { CrmPage } from '@/modules/crm/CrmPage'
 import { ProcurementInsightsPage } from '@/modules/reports/ProcurementInsightsPage'
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { PlatformShell } from '@/layouts/PlatformShell'
 import { AppShell } from '@/layouts/AppShell'
 import { AuditLogPage } from '@/modules/audit/AuditLogPage'
 import { ClientErrorsPage } from '@/modules/audit/ClientErrorsPage'
@@ -96,11 +97,15 @@ export const routes = [
     errorElement: <RouteError />,
     children: [
       { path: '/unauthorized', element: <UnauthorizedPage /> },
+      { path: '/admin/tenants', element: <Navigate to="/platform/tenants" replace /> },
+      { path: '/platform', element: <PlatformShell />, children: [
+        { index: true, element: <Navigate to="tenants" replace /> },
+        { path: 'tenants', element: <TenantsPage /> },
+      ] },
       {
         element: <AppShell />,
         children: [
           { index: true, element: <DashboardPage /> },
-          { path: 'admin/tenants', element: <TenantsPage /> },
           { path: 'workspace/:module', element: <WorkspaceModulePage /> },
           { path: 'workspace/approvals', element: <ApprovalsPage /> },
           { element: <RequirePermission anyOf={['accounting.view']} />, children: [{ path: 'workspace/expenses', element: <ExpensesPage /> }] },

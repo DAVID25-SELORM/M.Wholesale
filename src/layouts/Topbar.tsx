@@ -2,6 +2,7 @@ import { Bell, Building2, LogOut, Menu, Search, UserCircle2 } from 'lucide-react
 import { Dropdown } from '@/components/ui'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { ALL_BRANCHES, useSession } from '@/modules/session/SessionProvider'
+import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 
 export function BranchSelector() {
   const { branches, selectedBranch, selectBranch, ability } = useSession()
@@ -34,7 +35,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const roleNames = (context.roles ?? []).map((r) => r.role_name)
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-3 sm:gap-3 sm:px-4">
+    <header className="sticky top-0 z-30 flex min-h-14 flex-wrap shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-3 py-2 sm:gap-3 sm:px-4">
       <button
         type="button"
         onClick={onOpenMenu}
@@ -45,6 +46,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
       </button>
 
       <BranchSelector />
+      <WorkspaceSwitcher />
 
       {/* Global search is a placeholder until product/customer modules exist. */}
       <div className="relative ml-auto hidden max-w-sm flex-1 md:block">
