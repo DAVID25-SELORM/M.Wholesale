@@ -2672,6 +2672,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
+            platform_billing: { Args: { p_section: string; p_page?: number }; Returns: Json }
+            platform_issue_invoice: { Args: { p_organization: string; p_reason: string }; Returns: string }
+            platform_read: { Args: { p_section: string; p_search?: string; p_page?: number; p_from?: string; p_to?: string; p_id?: string; p_filter?: string }; Returns: Json }
+            platform_write: { Args: { p_action: string; p_data: Json; p_reason: string }; Returns: string }
             platform_operator_access: { Args: Record<string, never>; Returns: boolean }
             platform_tenants: { Args: { p_page?: number }; Returns: { id: string; name: string; is_active: boolean; currency_code: string; country: string; created_at: string }[] }
             onboard_tenant: { Args: { p_request_id: string; p_owner_user_id: string; p_first_name: string; p_last_name: string; p_name: string; p_currency?: string; p_timezone?: string; p_country?: string }; Returns: string }

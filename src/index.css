@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Platform-only palette: tenant ERP styling remains independent. */
+[data-platform-theme='dark'] { color-scheme: dark; background: #020617; color: #e2e8f0; }
+[data-platform-theme='dark'] .bg-white,
+[data-platform-theme='dark'] .bg-slate-50 { background-color: #0f172a; }
+[data-platform-theme='dark'] .bg-slate-100,
+[data-platform-theme='dark'] .bg-slate-200 { background-color: #1e293b; }
+[data-platform-theme='dark'] .text-slate-900,
+[data-platform-theme='dark'] .text-slate-800,
+[data-platform-theme='dark'] .text-slate-700 { color: #e2e8f0; }
+[data-platform-theme='dark'] .text-slate-500,
+[data-platform-theme='dark'] .text-slate-600 { color: #94a3b8; }
+[data-platform-theme='dark'] .text-emerald-700 { color: #6ee7b7; }
+[data-platform-theme='dark'] input,
+[data-platform-theme='dark'] select,
+[data-platform-theme='dark'] textarea { background-color: #0f172a; color: #e2e8f0; }
+[data-platform-theme='dark'] .border,
+[data-platform-theme='dark'] .border-t,
+[data-platform-theme='dark'] .border-b { border-color: #334155; }
+
 @layer base {
   html { -webkit-text-size-adjust: 100%; }
   body { @apply min-h-screen; overflow-x: hidden; }

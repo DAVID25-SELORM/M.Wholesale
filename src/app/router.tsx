@@ -6,6 +6,7 @@ import { CrmPage } from '@/modules/crm/CrmPage'
 import { ProcurementInsightsPage } from '@/modules/reports/ProcurementInsightsPage'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { PlatformShell } from '@/layouts/PlatformShell'
+import { PlatformPage } from '@/modules/platform/PlatformPage'
 import { AppShell } from '@/layouts/AppShell'
 import { AuditLogPage } from '@/modules/audit/AuditLogPage'
 import { ClientErrorsPage } from '@/modules/audit/ClientErrorsPage'
@@ -92,16 +93,20 @@ export const routes = [
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/access-disabled', element: <AccessDisabledPage /> },
   { path: '/no-access', element: <NoAccessPage /> },
+  { path: '/platform', element: <PlatformShell />, errorElement: <RouteError />, children: [
+    { index: true, element: <Navigate to="overview" replace /> },
+    { path: 'tenants', element: <Navigate to="/platform/organizations" replace /> },
+    { path: 'create', element: <TenantsPage /> },
+    ...['overview', 'organizations', 'users', 'operators', 'plans', 'subscriptions', 'invoices', 'payments', 'audit', 'notifications', 'tickets', 'announcements', 'settings'].map(section => ({ path: section, element: <PlatformPage key={section} section={section} /> })),
+    { path: 'organizations/:id', element: <PlatformPage section="organization" /> },
+    { path: 'tickets/:id', element: <PlatformPage section="ticket" /> },
+  ] },
   {
     element: <RequireAuth />,
     errorElement: <RouteError />,
     children: [
       { path: '/unauthorized', element: <UnauthorizedPage /> },
       { path: '/admin/tenants', element: <Navigate to="/platform/tenants" replace /> },
-      { path: '/platform', element: <PlatformShell />, children: [
-        { index: true, element: <Navigate to="tenants" replace /> },
-        { path: 'tenants', element: <TenantsPage /> },
-      ] },
       {
         element: <AppShell />,
         children: [
