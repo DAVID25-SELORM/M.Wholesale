@@ -36,6 +36,7 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'administration', label: 'Administration', icon: Settings,
     items: [
       { id: 'organization', label: 'Organization', to: '/admin/organization', anyOf: ['organizations.view'] },
+      { id: 'tenants', label: 'Tenant administration', to: '/admin/tenants', anyOf: ['organizations.view'] },
       { id: 'branches', label: 'Branches', to: '/admin/branches', anyOf: ['branches.view'] },
       { id: 'warehouses', label: 'Warehouses', to: '/admin/warehouses', anyOf: ['warehouses.view'] },
       { id: 'locations', label: 'Warehouse locations', to: '/admin/locations', anyOf: ['warehouse_locations.view'] },
@@ -67,7 +68,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'sales-receipts', label: 'Payments received', to: '/sales/receipts', anyOf: ['receipts.view'] },
       { id: 'sales-receivables', label: 'Receivables', to: '/sales/receivables', anyOf: ['receipts.view'] },
       { id: 'sales-pricing', label: 'Pricing & tax', to: '/sales/pricing', anyOf: ['pricing.view'] },
-      ...['Price agreements'].map((l) => planned(`sales-${l}`, l)),
+      { id: 'sales-Price agreements', label: 'Price agreements', to: '/workspace/price-agreements', anyOf: ['pricing.view'] },
     ],
   },
   {
@@ -96,8 +97,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'purchase-returns', label: 'Purchase returns', to: '/purchasing/returns', anyOf: ['purchasing.view'] },
       { id: 'supplier-invoices', label: 'Supplier invoices', to: '/purchasing/invoices', anyOf: ['payables.view'] },
       { id: 'payables', label: 'Payables', to: '/purchasing/payables', anyOf: ['payables.view'] },
-      ...['Purchase requests', 'Supplier quotations']
-        .map((l) => planned(`pur-${l}`, l)),
+      { id: 'pur-Purchase requests', label: 'Purchase requests', to: '/workspace/purchase-requests', anyOf: ['purchasing.request', 'purchasing.request_approve'] },
+      { id: 'pur-Supplier quotations', label: 'Supplier quotations', to: '/workspace/supplier-quotations', anyOf: ['purchasing.view'] },
     ],
   },
   {
@@ -106,13 +107,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'fin-Payments', label: 'Payments received', to: '/sales/receipts', anyOf: ['receipts.view'] },
       { id: 'fin-Receivables', label: 'Receivables', to: '/sales/receivables', anyOf: ['receipts.view'] },
       { id: 'fin-Payables', label: 'Payables', to: '/purchasing/payables', anyOf: ['payables.view'] },
-      planned('fin-Credit control', 'Credit control'),
-      planned('fin-Expenses', 'Expenses'),
+      { id: 'fin-Credit control', label: 'Credit control', to: '/workspace/credit-control', anyOf: ['customers.view'] },
+      { id: 'fin-Expenses', label: 'Expenses', to: '/workspace/expenses', anyOf: ['accounting.view'] },
     ],
   },
   {
     id: 'crm', label: 'CRM', icon: Handshake, collapsedByDefault: true,
-    items: ['Sales reps', 'Territories', 'Visits', 'Targets'].map((l) => planned(`crm-${l}`, l)),
+    items: ['Sales reps', 'Territories', 'Visits', 'Targets'].map((l) => ({ id: `crm-${l}`, label: l, to: modulePath(l), anyOf: ['crm.view', 'crm.manage'] })),
   },
   {
     id: 'delivery', label: 'Delivery', icon: Truck, collapsedByDefault: true,
@@ -127,7 +128,10 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'intelligence', label: 'Intelligence', icon: Gauge, collapsedByDefault: true,
     items: [
       { id: 'int-Stock insights', label: 'Stock insights', to: '/reports/stock', anyOf: ['reports.stock'] },
-      ...['Replenishment', 'Customer insights', 'Product performance', 'Procurement insights'].map((l) => planned(`int-${l}`, l)),
+      { id: 'int-Replenishment', label: 'Replenishment', to: '/workspace/replenishment', anyOf: ['reports.stock'] },
+      { id: 'int-Procurement insights', label: 'Procurement insights', to: '/workspace/procurement-insights', anyOf: ['purchasing.view'] },
+      { id: 'int-Customer insights', label: 'Customer insights', to: '/workspace/customer-insights', anyOf: ['reports.sales'] },
+      { id: 'int-Product performance', label: 'Product performance', to: '/workspace/product-performance', anyOf: ['reports.sales'] },
     ],
   },
   {
@@ -148,7 +152,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'reports-stock', label: 'Stock insights', to: '/reports/stock', anyOf: ['reports.stock'] },
       { id: 'reports-vat', label: 'VAT summary', to: '/reports/vat', anyOf: ['reports.tax'] },
       { id: 'reports-controlled', label: 'Controlled drugs register', to: '/registers/controlled', anyOf: ['registers.controlled'] },
-      ...['Customer insights'].map((l) => planned(`rep-${l}`, l)),
+      { id: 'rep-Customer insights', label: 'Customer insights', to: '/workspace/customer-insights', anyOf: ['reports.sales'] },
     ],
   },
 ]

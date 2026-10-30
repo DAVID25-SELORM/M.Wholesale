@@ -5,6 +5,15 @@ export type Database = {
   
   "public": {
           Tables: {
+            expenses: { Row: { id: string; organization_id: string; branch_id: string; expense_date: string; payee: string; description: string; reference: string; expense_account_id: string; credit_account_id: string; amount: number; status: string; journal_id: string | null; requested_by: string; decided_by: string | null; decision_note: string | null; created_at: string }; Insert: never; Update: never; Relationships: [] }
+            price_agreements: { Row: { id: string; organization_id: string; customer_id: string; product_unit_id: string; unit_price: number; valid_from: string; valid_until: string; reason: string; is_active: boolean; created_at: string; created_by: string }; Insert: never; Update: never; Relationships: [] }
+            supplier_quotations: { Row: { id: string; organization_id: string; supplier_id: string; warehouse_id: string; branch_id: string; supplier_reference: string; valid_until: string; notes: string | null; lines: Json; status: string; purchase_order_id: string | null; created_at: string; created_by: string }; Insert: never; Update: never; Relationships: [] }
+            purchase_requests: {
+              Row: { id: string; organization_id: string; request_number: string; purchase_order_id: string | null; branch_id: string; warehouse_id: string | null; requested_by: string; needed_by: string | null; notes: string | null; lines: Json; status: string; decision_note: string | null; decided_by: string | null; decided_at: string | null; created_at: string; updated_at: string }
+              Insert: never
+              Update: never
+              Relationships: []
+            }
             recalls: {
               Row: { id: string; organization_id: string; recall_number: string; source: string; recall_class: string; title: string; instructions: string; status: string; opened_at: string; opened_by: string; closed_at: string | null; closed_by: string | null }
               Insert: never
@@ -2663,6 +2672,24 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
+            platform_operator_access: { Args: Record<string, never>; Returns: boolean }
+            platform_tenants: { Args: { p_page?: number }; Returns: { id: string; name: string; is_active: boolean; currency_code: string; country: string; created_at: string }[] }
+            onboard_tenant: { Args: { p_request_id: string; p_owner_user_id: string; p_first_name: string; p_last_name: string; p_name: string; p_currency?: string; p_timezone?: string; p_country?: string }; Returns: string }
+            submit_expense: { Args: { p_branch: string; p_date: string; p_payee: string; p_description: string; p_reference: string; p_expense_account: string; p_credit_account: string; p_amount: number }; Returns: string }
+            decide_expense: { Args: { p_id: string; p_action: string; p_note: string }; Returns: string | null }
+            create_price_agreement: { Args: { p_customer: string; p_unit: string; p_price: number; p_from: string; p_until: string; p_reason: string }; Returns: string }
+            cancel_price_agreement: { Args: { p_id: string; p_reason: string }; Returns: undefined }
+            record_supplier_quotation: { Args: { p_supplier: string; p_warehouse: string; p_reference: string; p_valid_until: string; p_notes: string; p_lines: Json }; Returns: string }
+            convert_supplier_quotation: { Args: { p_id: string }; Returns: string }
+            cancel_supplier_quotation: { Args: { p_id: string }; Returns: undefined }
+            procurement_insights: { Args: { p_from: string; p_to: string; p_branch: string | null }; Returns: { supplier_id: string; supplier_name: string; currency_code: string; orders: number; ordered_value: number; open_orders: number; overdue_orders: number }[] }
+            crm_workspace: { Args: { p_kind: string; p_page: number }; Returns: Json }
+            save_crm_record: { Args: { p_kind: string; p_id: string | null; p_data: Json }; Returns: string }
+            create_purchase_request: { Args: { p_branch_id: string; p_warehouse_id: string | null; p_needed_by: string | null; p_notes: string; p_lines: Json }; Returns: string }
+            submit_purchase_request: { Args: { p_id: string }; Returns: undefined }
+            decide_purchase_request: { Args: { p_id: string; p_approve: boolean; p_note: string }; Returns: undefined }
+            convert_purchase_request: { Args: { p_id: string; p_supplier: string; p_warehouse: string; p_costs: Json }; Returns: string }
+            cancel_purchase_request: { Args: { p_id: string; p_note: string }; Returns: undefined }
             recall_customer_exposure: {
               Args: { p_recall_id: string }
               Returns: { invoice_id: string; invoice_number: string; customer_id: string; customer_name: string; contact_name: string | null; phone: string | null; email: string | null; batch_id: string; batch_number: string; product_name: string; quantity: number; source: string; delivery_status: string }[]

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Download, FileDown } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { Button, Card, EmptyState, ErrorState, Field, Input, LoadingState, PageHeader, Select, Tabs, useToast } from '@/components/ui'
 import { downloadCsv } from '@/lib/download'
 import { toAppError } from '@/lib/errors'
@@ -20,6 +21,15 @@ export function StockInsightsPage() {
       <div className="mt-4">{tab === 'reorder' ? <Reorder /> : tab === 'slow' ? <Slow /> : <ExpiryRisk />}</div>
     </>
   )
+}
+
+export function ReplenishmentPage() {
+  const { ability } = useSession()
+  return <div className="space-y-4">
+    <PageHeader title="Replenishment" description="Review purchase quantities based on sales velocity, stock, reservations, open orders and supplier lead times." />
+    {ability.canAnywhere('purchasing.request') && <Link className="text-brand-700 underline" to="/workspace/purchase-requests">Create a purchase request from reviewed requirements</Link>}
+    <Reorder />
+  </div>
 }
 
 function Shell({ toolbar, exports, children, loading, error, onRetry, empty, emptyTitle, emptyText }: {

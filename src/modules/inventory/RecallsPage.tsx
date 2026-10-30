@@ -52,7 +52,7 @@ export function RecallsPage() {
   }
   function submitRecovery(e: FormEvent) {
     e.preventDefault()
-    const exposureRow = exposure.data?.find(x => x.invoice_id === recoveryInvoice)
+    const exposureRow = exposure.data?.find(x => `${x.invoice_id}/${x.batch_id}` === recoveryInvoice)
     const scopeRow = scope.data?.find(x => x.batch_id === exposureRow?.batch_id)
     if (!scopeRow || !exposureRow) return
     void act(async () => {
@@ -61,7 +61,7 @@ export function RecallsPage() {
     })
   }
   const columns: Column<RecallRow>[] = [
-    { key: 'number', header: 'Recall', render: r => <Button variant="ghost" onClick={() => { setSelected(r.id); setBatch(''); setError(null) }}>{r.recall_number}</Button> },
+    { key: 'number', header: 'Recall', render: r => <Button variant="ghost" onClick={() => { setSelected(r.id); setBatch(''); setRecoveryInvoice(''); setRecoveryQuantity(''); setRecoveryNotes(''); setReason(''); setError(null) }}>{r.recall_number}</Button> },
     { key: 'title', header: 'Title', render: r => r.title },
     { key: 'source', header: 'Source', render: r => r.source + ' / Class ' + r.recall_class },
     { key: 'status', header: 'Status', render: r => <Badge tone={r.status === 'CLOSED' ? 'green' : 'amber'}>{r.status}</Badge> },
@@ -92,6 +92,7 @@ export function RecallsPage() {
         return <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-2"><span>{b ? b.product_name + ' / ' + b.batch_number : s.batch_id} — {s.released_at ? 'Release recorded' : s.quarantined_at ? 'Quarantine recorded' : 'Awaiting quarantine'}</span>{canManage && active && <Button disabled={busy || reason.trim().length < 5} onClick={() => void act(() => quarantineRecallBatch(s.id, reason.trim()))}>{s.quarantined_at ? 'Quarantine new stock' : 'Quarantine batch'}</Button>}{canManage && recall.status === 'CANCELLED' && !s.released_at && <Button variant="secondary" disabled={busy || reason.trim().length < 5} onClick={() => void act(() => releaseRecallBatch(s.id, reason.trim()))}>Release stock</Button>}</li>
       })}</ul>}
       {canManage && active && <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={busy || !scope.data?.length || scope.data.some(s => !s.quarantined_at)} onClick={() => void act(() => closeRecall(selected))}>Close recall</Button><Button variant="secondary" disabled={busy || reason.trim().length < 5} onClick={() => void act(() => cancelRecall(selected, reason.trim()))}>Cancel recall</Button></div>}
+      {canManage && recall.status === 'CANCELLED' && <Field label="Release reason"><Textarea minLength={5} maxLength={500} value={reason} onChange={e => setReason(e.target.value)} /></Field>}
       <h3 className="font-semibold">Affected customer transactions</h3>
       <p className="text-sm">Original allocations and approved substitutions are shown separately for investigation. These are base-unit quantities, not confirmed customer recovery totals.</p>
       <InlineError message={exposure.isError ? toAppError(exposure.error).message : null} />
@@ -102,7 +103,7 @@ export function RecallsPage() {
         {ability.can('sales.view') && <Link className="text-brand-700 underline" to={`/sales/invoices/${x.invoice_id}`}>Open invoice</Link>}
       </li>)}</ul> : !exposure.isError && <p>No posted customer transactions found for the scoped batches.</p>}
       <h3 className="font-semibold">Recovery records</h3>
-      {canManage && exposure.data?.length && scope.data?.length ? <form onSubmit={submitRecovery} className="grid gap-3 rounded-md border border-slate-200 p-3 sm:grid-cols-2 lg:grid-cols-4"><Field label="Invoice"><Select required value={recoveryInvoice} onChange={e => setRecoveryInvoice(e.target.value)}><option value="">Choose invoice</option>{[...new Map(exposure.data.map(x => [x.invoice_id, x])).values()].map(x => <option key={x.invoice_id} value={x.invoice_id}>{x.invoice_number} / {x.customer_name}</option>)}</Select></Field><Field label="Quantity"><Input required type="number" min="0.001" step="0.001" value={recoveryQuantity} onChange={e => setRecoveryQuantity(e.target.value)} /></Field><Field label="Status"><Select value={recoveryStatus} onChange={e => setRecoveryStatus(e.target.value)}>{['OPEN', 'CONTACTED', 'RECOVERED', 'NOT_RECOVERABLE'].map(s => <option key={s}>{s}</option>)}</Select></Field><Field label="Notes" required><Input required minLength={3} maxLength={1000} value={recoveryNotes} onChange={e => setRecoveryNotes(e.target.value)} /></Field><Button type="submit" loading={busy} className="sm:col-span-2 lg:col-span-4">Save recovery record</Button></form> : null}
+      {canManage && exposure.data?.length && scope.data?.length ? <form onSubmit={submitRecovery} className="grid gap-3 rounded-md border border-slate-200 p-3 sm:grid-cols-2 lg:grid-cols-4"><Field label="Invoice and batch"><Select required value={recoveryInvoice} onChange={e => setRecoveryInvoice(e.target.value)}><option value="">Choose invoice</option>{[...new Map(exposure.data.map(x => [`${x.invoice_id}/${x.batch_id}`, x])).values()].map(x => <option key={`${x.invoice_id}/${x.batch_id}`} value={`${x.invoice_id}/${x.batch_id}`}>{x.invoice_number} / {x.customer_name} / {x.batch_number}</option>)}</Select></Field><Field label="Quantity"><Input required type="number" min="0.001" step="0.001" value={recoveryQuantity} onChange={e => setRecoveryQuantity(e.target.value)} /></Field><Field label="Status"><Select value={recoveryStatus} onChange={e => setRecoveryStatus(e.target.value)}>{['OPEN', 'CONTACTED', 'RECOVERED', 'NOT_RECOVERABLE'].map(s => <option key={s}>{s}</option>)}</Select></Field><Field label="Notes" required><Input required minLength={3} maxLength={1000} value={recoveryNotes} onChange={e => setRecoveryNotes(e.target.value)} /></Field><Button type="submit" loading={busy} className="sm:col-span-2 lg:col-span-4">Save recovery record</Button></form> : null}
       <InlineError message={recoveries.isError ? toAppError(recoveries.error).message : null} />
       {recoveries.isPending ? <p>Loading recovery records...</p> : recoveries.data?.length ? <ul className="space-y-2">{recoveries.data.map((x) => <li key={x.id} className="flex flex-wrap items-start justify-between gap-3 rounded-md border p-3"><div><p className="font-medium">Invoice {x.sales_invoice_id}</p><p className="text-sm text-slate-600">{x.quantity} units · {x.notes}</p></div><Badge tone={x.status === 'RECOVERED' ? 'green' : 'amber'}>{x.status}</Badge></li>)}</ul> : <p className="text-sm">No recovery records have been recorded.</p>}
     </div></CardBody></Card>}

@@ -16,6 +16,9 @@
   .grid-cols-2,
   .grid-cols-3 { grid-template-columns: minmax(0, 1fr) !important; }
   .grid-cols-12 { grid-template-columns: minmax(0, 1fr) !important; }
+  .grid-cols-2 > *,
+  .grid-cols-3 > *,
+  .grid-cols-12 > * { grid-column: 1 / -1 !important; min-width: 0; }
   main#main { padding: 0.75rem; }
 }
 

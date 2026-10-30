@@ -44,6 +44,15 @@ remain open until their behavior, authorization, audit trail and tests are compl
 
 ## Current focused evidence
 
+### 2026-10-27 continuation
+
+- User confirms hosted migrations through 038 applied. Hosted acceptance is separate from that confirmation.
+- Requests, supplier quotations, price agreements, expenses, CRM records and procurement insights now have persisted implementations; the older roadmap table above describes acceptance gaps, not an absence of all code.
+- Local migration 039 connects approved requests to one draft purchase order with immutable requested quantities and retry protection. All four purchase-request database tests passed after a fresh Docker migration install.
+- Local migration 040 limits cancelled-recall release to its ledger provenance, preserves other quality holds, blocks ambiguous outbound movements and prevents repeated releases. Both recall database tests passed, including the unrelated-hold regression.
+- TypeScript, lint and whitespace checks passed for this continuation. Full database/unit regression and production build are pending; no final acceptance claim is made.
+- Provider credentials and live contract verification remain unavailable. The Integrations route still reports that it is under development.
+
 Migration 024: fresh local migration install, 23 picking/packing tests and typecheck
 passed. It restricts replacement choices to the original location; it does not
 implement cross-bin or partial-line replacement. Hosted application of 024 has not

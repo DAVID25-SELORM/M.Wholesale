@@ -20,6 +20,24 @@ beforeAll(async () => {
 afterAll(closePool)
 
 describe('recall workflow', () => {
+  it('releases only recall-held quantities and makes retries harmless', async () => {
+    const product = await addProduct(org.id, { cls: 'GSL' })
+    const batchNumber = `RELEASE-${rand()}`
+    await ok(org.ownerId, "select public.post_stock_document('OPENING',$1,$2::jsonb)", [warehouse, JSON.stringify([{ product_id: product.id, quantity: 15, batch_number: batchNumber, expiry_date: '2030-12-31', unit_cost: 2 }])])
+    const batch = (await admin.query('select id from public.batches where organization_id=$1 and batch_number=$2', [org.id, batchNumber])).rows[0].id
+    await ok(org.ownerId, "select public.post_stock_document('STATUS_CHANGE',$1,$2::jsonb,null,'QUALITY_HOLD','Unrelated quality hold')", [warehouse, JSON.stringify([{ product_id: product.id, quantity: 5, batch_id: batch, status: 'AVAILABLE', to_status: 'QUARANTINE' }])])
+    const recall = (await ok(org.ownerId, "select public.create_recall('INTERNAL','II','Release test','Hold affected stock') id"))[0].id
+    const scope = (await ok(org.ownerId, 'select public.add_recall_batch($1,$2) id', [recall, batch]))[0].id
+    await ok(org.ownerId, "select public.quarantine_recall_batch($1,'Recall quarantine')", [scope])
+    await ok(org.ownerId, "select public.cancel_recall($1,'Recall cancelled after investigation')", [recall])
+    expect((await call(other.ownerId, "select public.release_recall_batch($1,'Foreign attempt')", [scope])).ok).toBe(false)
+    const released = (await ok(org.ownerId, "select public.release_recall_batch($1,'Cleared recall hold') result", [scope]))[0].result
+    expect(released.released).toBe(10)
+    const retry = (await ok(org.ownerId, "select public.release_recall_batch($1,'Repeated release') result", [scope]))[0].result
+    expect(retry.released).toBe(0)
+    const held = (await admin.query("select sum(quantity)::float8 qty from public.stock_balances where batch_id=$1 and stock_status='QUARANTINE'", [batch])).rows[0].qty
+    expect(held).toBe(5)
+  })
   it('quarantines the exact location, keeps evidence, and closes only scoped quarantined stock', async () => {
     const product = await addProduct(org.id, { cls: 'GSL' })
     const location = await addLocation(org.id, warehouse, `R-${rand()}`)

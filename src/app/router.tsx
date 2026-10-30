@@ -1,3 +1,9 @@
+import { TenantsPage } from '@/modules/organization/TenantsPage'
+import { SupplierQuotationsPage } from '@/modules/purchasing/SupplierQuotationsPage'
+import { PriceAgreementsPage } from '@/modules/sales/PriceAgreementsPage'
+import { ExpensesPage } from '@/modules/accounting/ExpensesPage'
+import { CrmPage } from '@/modules/crm/CrmPage'
+import { ProcurementInsightsPage } from '@/modules/reports/ProcurementInsightsPage'
 import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '@/layouts/AppShell'
 import { AuditLogPage } from '@/modules/audit/AuditLogPage'
@@ -44,7 +50,7 @@ import { StatementsPage } from '@/modules/accounting/StatementsPage'
 import { ControlledRegisterPage } from '@/modules/reports/ControlledRegisterPage'
 import { SalesReportPage } from '@/modules/reports/SalesReportPage'
 import { RemindersPage } from '@/modules/sales/RemindersPage'
-import { StockInsightsPage } from '@/modules/reports/StockInsightsPage'
+import { StockInsightsPage, ReplenishmentPage } from '@/modules/reports/StockInsightsPage'
 import { VatReportPage } from '@/modules/reports/VatReportPage'
 import { DeliveriesPage } from '@/modules/sales/DeliveriesPage'
 import { DeliveryNotePage } from '@/modules/sales/DeliveryNotePage'
@@ -72,6 +78,9 @@ import { UsersPage } from '@/modules/users/UsersPage'
 import { LocationsPage } from '@/modules/warehouses/LocationsPage'
 import { WarehousesPage } from '@/modules/warehouses/WarehousesPage'
 import { WorkspaceModulePage } from '@/modules/shared/WorkspaceModulePage'
+import { ApprovalsPage } from '@/modules/shared/ApprovalsPage'
+import { CreditControlPage } from '@/modules/sales/CreditControlPage'
+import { PurchaseRequestsPage } from '@/modules/purchasing/PurchaseRequestsPage'
 
 // Route guards are UX. The database is the security boundary (RLS + guarded RPCs).
 export const routes = [
@@ -91,7 +100,16 @@ export const routes = [
         element: <AppShell />,
         children: [
           { index: true, element: <DashboardPage /> },
+          { path: 'admin/tenants', element: <TenantsPage /> },
           { path: 'workspace/:module', element: <WorkspaceModulePage /> },
+          { path: 'workspace/approvals', element: <ApprovalsPage /> },
+          { element: <RequirePermission anyOf={['accounting.view']} />, children: [{ path: 'workspace/expenses', element: <ExpensesPage /> }] },
+          { element: <RequirePermission anyOf={['pricing.view']} />, children: [{ path: 'workspace/price-agreements', element: <PriceAgreementsPage /> }] },
+          { element: <RequirePermission anyOf={['purchasing.view']} />, children: [{ path: 'workspace/supplier-quotations', element: <SupplierQuotationsPage /> }] },
+          { element: <RequirePermission anyOf={['purchasing.view']} />, children: [{ path: 'workspace/procurement-insights', element: <ProcurementInsightsPage /> }] },
+          { element: <RequirePermission anyOf={['crm.view', 'crm.manage']} />, children: [{ path: 'workspace/sales-reps', element: <CrmPage kind='representatives' /> }, { path: 'workspace/territories', element: <CrmPage kind='territories' /> }, { path: 'workspace/visits', element: <CrmPage kind='visits' /> }, { path: 'workspace/targets', element: <CrmPage kind='targets' /> }] },
+          { element: <RequirePermission anyOf={['customers.view']} />, children: [{ path: 'workspace/credit-control', element: <CreditControlPage /> }] },
+          { element: <RequirePermission anyOf={['purchasing.request', 'purchasing.request_approve']} />, children: [{ path: 'workspace/purchase-requests', element: <PurchaseRequestsPage /> }] },
           { element: <RequirePermission anyOf={['organizations.view']} />, children: [{ path: 'admin/organization', element: <OrganizationPage /> }] },
           { element: <RequirePermission anyOf={['branches.view']} />, children: [{ path: 'admin/branches', element: <BranchesPage /> }] },
           { element: <RequirePermission anyOf={['fulfilment.view']} />, children: [{ path: 'warehouse/picking', element: <PickingQueuePage /> }, { path: 'warehouse/picking/:id', element: <PickTaskPage /> }] },
@@ -156,9 +174,13 @@ export const routes = [
             ],
           },
           { element: <RequirePermission anyOf={['reports.sales']} />, children: [{ path: 'reports/sales', element: <SalesReportPage /> }] },
+          { element: <RequirePermission anyOf={['reports.sales']} />, children: [
+            { path: 'workspace/customer-insights', element: <SalesReportPage key="customer-insights" initialGroup="CUSTOMER" title="Customer insights" /> },
+            { path: 'workspace/product-performance', element: <SalesReportPage key="product-performance" initialGroup="PRODUCT" title="Product performance" /> },
+          ] },
           { element: <RequirePermission anyOf={['registers.controlled']} />, children: [{ path: 'registers/controlled', element: <ControlledRegisterPage /> }] },
           { element: <RequirePermission anyOf={['reminders.view']} />, children: [{ path: 'sales/reminders', element: <RemindersPage /> }] },
-          { element: <RequirePermission anyOf={['reports.stock']} />, children: [{ path: 'reports/stock', element: <StockInsightsPage /> }] },
+          { element: <RequirePermission anyOf={['reports.stock']} />, children: [{ path: 'reports/stock', element: <StockInsightsPage /> }, { path: 'workspace/replenishment', element: <ReplenishmentPage /> }] },
           { element: <RequirePermission anyOf={['reports.tax']} />, children: [{ path: 'reports/vat', element: <VatReportPage /> }] },
           {
             element: <RequirePermission anyOf={['accounting.view']} />,

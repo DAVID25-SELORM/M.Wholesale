@@ -12,12 +12,12 @@ import { moneyFmt, round2 } from '@/services/sales'
 const iso = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10)
 const monthStart = () => { const d = new Date(); d.setDate(1); return iso(d) }
 
-export function SalesReportPage() {
+export function SalesReportPage({ initialGroup = 'DAY', title = 'Sales and margins' }: { initialGroup?: ReportGroup; title?: string }) {
   const { branches, context } = useSession()
   const toast = useToast()
   const [from, setFrom] = useState(monthStart())
   const [to, setTo] = useState(iso(new Date()))
-  const [group, setGroup] = useState<ReportGroup>('DAY')
+  const [group, setGroup] = useState<ReportGroup>(initialGroup)
   const [branchId, setBranchId] = useState('')
   const valid = from !== '' && to !== '' && from <= to
   const query = useQuery({ queryKey: ['sales-report', from, to, group, branchId], queryFn: () => getSalesReport(from, to, group, branchId || null), enabled: valid })
@@ -54,7 +54,7 @@ export function SalesReportPage() {
 
   return (
     <>
-      <PageHeader title="Sales and margins" description="Revenue from posted invoices, net of credit notes. Reversed invoices are excluded. Cost is what the goods were actually picked from." />
+      <PageHeader title={title} description="Revenue from posted invoices, net of credit notes. Reversed invoices are excluded. Cost is what the goods were actually picked from." />
       <Card>
         <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:flex-wrap sm:items-end">
           <Field label="From"><Input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} /></Field>
