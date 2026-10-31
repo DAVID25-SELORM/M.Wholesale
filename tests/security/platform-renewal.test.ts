@@ -10,6 +10,16 @@ beforeAll(async () => {
  await admin.query("insert into private.platform_subscriptions(organization_id,plan_id,cycle,status,starts_on,ends_on) values($1,$2,'MONTHLY','ACTIVE','2020-01-01','2020-01-31')",[org.id,plan])
 })
 afterAll(closePool)
+it('filters ended subscriptions and derives renewal eligibility server-side',async()=>{
+ await withUser(operator,async c=>{
+  const ended=(await c.q("select public.platform_subscriptions('RENEW',0,'ENDED') data")).rows[0].data
+  expect(ended.rows.some((r:{organization_id:string;can_renew:boolean})=>r.organization_id===org.id&&r.can_renew)).toBe(true)
+  const soon=(await c.q("select public.platform_subscriptions('RENEW',0,'ENDING_SOON') data")).rows[0].data
+  expect(soon.total).toBe(0)
+  expect((await c.attempt("select public.platform_subscriptions('',0,'INVALID')")).ok).toBe(false)
+ })
+ expect((await withUser(org.ownerId,c=>c.attempt('select public.platform_subscriptions()'))).ok).toBe(false)
+})
 it('renews one period at agreed price, issues an unpaid invoice and rejects stale retries',async()=>{
  const sql="select public.platform_renew_subscription($1,'2020-01-31','Renew agreed contract') id"
  expect((await withUser(org.ownerId,c=>c.attempt(sql,[org.id]))).ok).toBe(false)

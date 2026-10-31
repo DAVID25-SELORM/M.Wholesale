@@ -160,6 +160,7 @@ describe('catalog hardening', () => {
       'public.record_recall_recovery', 'public.record_supplier_quotation', 'public.release_recall_batch', 'public.save_crm_record',
       'public.submit_expense', 'public.submit_purchase_request', 'public.tenant_announcements', 'public.tenant_read_announcement',
       'public.tenant_support_read', 'public.tenant_support_write',
+      'public.platform_subscriptions',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))

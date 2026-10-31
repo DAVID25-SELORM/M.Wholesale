@@ -118,3 +118,7 @@ Migration 20261031000300 corrects nine recent RLS policies to use the existing o
 Final local regression results for this continuation (2026-10-31): all 48 database suites / 468 tests passed after migration 20261031000300; all 36 frontend suites / 212 tests passed. Production build passed with the existing large-chunk warning. Full lint and subsequent scoped lint passed.
 
 Browser verification attempt: native computer-use pipe unavailable; browser extension inventory found the ERP tab, but attaching timed out waiting for Emulation.setFocusEmulationEnabled. No authenticated visual acceptance is claimed. New renewal and RLS migrations remain unapplied to hosted database by this session. Automatic renewal scheduling, remaining configuration/operational controls, and production acceptance remain open.
+
+## Subscription review queue
+
+Migration 20261031000400 provides billing-permission-protected subscription search, status filters, ended periods and periods ending within 30 days. Results have deterministic ordering and pagination. The renewal button uses server-derived eligibility (active organization, active plan, ACTIVE subscription and ended period). Filtered exports use the same endpoint. This provides operator review; it does not schedule automatic renewals.

@@ -5,6 +5,7 @@ import type { Json } from '@/types/database'
 export type RecordData = Record<string, Json | undefined>
 export type PlatformResult = { rows: RecordData[]; total: number } & RecordData
 export async function readPlatform(section: string, search = '', page = 0, from?: string, to?: string, id?: string, filter = 'ALL') {
+  if (section === 'subscriptions') return unwrap(await supabase.rpc('platform_subscriptions', { p_search: search, p_page: page, p_filter: filter }), 'platform.subscriptions') as PlatformResult
   if (section === 'assignees') {
     const rows = unwrap(await supabase.rpc('platform_support_assignees'), 'platform.support') as RecordData[]
     return { rows, total: rows.length } as PlatformResult
