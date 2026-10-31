@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { Button, Tabs } from '@/components/ui'
 import { textValue, type RecordData } from './api'
+import { OwnershipTransfer } from './OwnershipTransfer'
+import { OrganizationActivity } from './OrganizationActivity'
 
 const tabs = [
   { id: 'profile', label: 'Profile' }, { id: 'users', label: 'Users' },
   { id: 'branches', label: 'Branches' }, { id: 'warehouses', label: 'Warehouses' },
   { id: 'subscription', label: 'Subscription' }, { id: 'usage', label: 'Usage' },
+  { id: 'ownership', label: 'Ownership' },
+  { id: 'activity', label: 'Activity' },
 ]
 
 export function OrganizationDetail({ data, onEdit }: { data: RecordData; onEdit: (profile: RecordData) => void }) {
@@ -17,6 +21,8 @@ export function OrganizationDetail({ data, onEdit }: { data: RecordData; onEdit:
     <h2 className="break-words text-lg font-semibold">{textValue(profile.name)}</h2>
     <Tabs items={tabs} value={tab} onChange={setTab} label="Organization details" />
     <div role="tabpanel" aria-label={tabs.find(item => item.id === tab)?.label}>
+      {tab === 'activity' && <OrganizationActivity key={textValue(profile.id)} organization={textValue(profile.id)} />}
+      {tab === 'ownership' && <OwnershipTransfer organization={textValue(profile.id)} />}
       {tab === 'profile' && <><Properties data={profile} /><Button onClick={() => onEdit(profile)}>Edit profile</Button></>}
       {['users', 'branches', 'warehouses'].includes(tab) && <div className="space-y-3">
         {records(tab).length === 0 && <p className="text-sm text-slate-500">No {tab} recorded.</p>}

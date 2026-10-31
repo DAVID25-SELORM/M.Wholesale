@@ -14,6 +14,7 @@ export async function readPlatform(section: string, search = '', page = 0, from?
   return unwrap(await supabase.rpc('platform_read', { p_section: section, p_search: search, p_page: page, p_from: from, p_to: to, p_id: id, p_filter: filter }), 'platform.read') as unknown as PlatformResult
 }
 export async function writePlatform(action: string, data: RecordData, reason: string) {
+  if (action === 'subscription.renew') return unwrap(await supabase.rpc('platform_renew_subscription', { p_organization: textValue(data.organization_id), p_expected_end: textValue(data.ends_on), p_reason: reason }), 'platform.subscription.renew')
   if (action === 'invoice.void') return unwrap(await supabase.rpc('platform_void_invoice', { p_id: textValue(data.id), p_reason: reason }), 'platform.invoice.void')
   if (action === 'announcement.publish' || action === 'announcement.withdraw') return unwrap(await supabase.rpc('platform_publish_announcement', { p_id: textValue(data.id), p_publish: action === 'announcement.publish', p_reason: reason }), 'platform.announcement')
   if (action === 'ticket.tenant_reply') return unwrap(await supabase.rpc('platform_reply_to_tenant', { p_id: textValue(data.id), p_body: textValue(data.body) }), 'platform.support.reply')
@@ -26,6 +27,29 @@ export async function writePlatform(action: string, data: RecordData, reason: st
   return unwrap(await supabase.rpc('platform_write', { p_action: action, p_data: data as Json, p_reason: reason }), 'platform.write')
 }
 export const textValue = (value: Json | undefined): string => value == null ? '' : typeof value === 'object' ? JSON.stringify(value) : String(value)
+export async function collectPlatformExport(section: string, search: string, from: string, to: string, id: string | undefined, filter: string, signal: AbortSignal, progress: (count: number) => void) {
+  const rows: RecordData[] = []
+  const seen = new Set<string>()
+  let expected: number | undefined
+  for (let page = 0; ; page++) {
+    signal.throwIfAborted()
+    const result = await readPlatform(section, search, page, from, to, id, filter)
+    signal.throwIfAborted()
+    if (expected !== undefined && result.total !== expected) throw new Error('Records changed during export. Refresh and retry.')
+    expected = result.total
+    if (!Number.isSafeInteger(expected) || expected < 0 || expected > 100000) throw new Error('Export supports up to 100,000 records. Narrow the filters and retry.')
+    for (const row of result.rows) {
+      const key = textValue(row.id ?? row.organization_id)
+      if (key && seen.has(key)) throw new Error('Records moved between pages during export. Refresh and retry.')
+      if (key) seen.add(key)
+      rows.push(row)
+    }
+    progress(rows.length)
+    if (rows.length > expected) throw new Error('Export count changed. Refresh and retry.')
+    if (rows.length === expected) return rows
+    if (!result.rows.length) throw new Error('Export returned an incomplete page. Refresh and retry.')
+  }
+}
 export function exportRecords(rows: RecordData[], name: string) {
   if (!rows.length) return
   const columns = Object.keys(rows[0]!)

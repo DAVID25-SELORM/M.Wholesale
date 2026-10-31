@@ -92,10 +92,23 @@ describe('tenant sweep: report-style functions (those callable with no arguments
 })
 
 describe('tenant sweep: functions and the platform boundary', () => {
-  it('no function a signed-in user may call takes an organization id, so none can be pointed at another organization', async () => {
+  it('only explicitly guarded platform functions accept organization ids, and tenant users cannot invoke them', async () => {
+    const guarded: Record<string, string> = {
+      platform_issue_invoice: 'select public.platform_issue_invoice($1,null)',
+      platform_transfer_ownership: 'select public.platform_transfer_ownership($1,null,null,null)',
+      platform_ownership_options: 'select public.platform_ownership_options($1)',
+      platform_organization_activity: 'select public.platform_organization_activity($1)',
+      platform_renew_subscription: 'select public.platform_renew_subscription($1,null,null)',
+    }
     const rows = await q(`select p.proname from pg_proc p where p.pronamespace = 'public'::regnamespace and has_function_privilege('authenticated', p.oid, 'execute')
       and pg_get_function_arguments(p.oid) ~* '(^|[ ,])(p_)?org(anization)?(_id)?[ ,]'`)
-    expect(rows).toEqual([])
+    expect(rows.map(r => r.proname).sort()).toEqual(Object.keys(guarded).sort())
+    for (const sql of Object.values(guarded)) {
+      const result = await withUser(aReader, c => c.attempt(sql, [b.id]))
+      expect(result.ok, sql).toBe(false)
+      if (!result.ok) expect(result.code, sql).toBe('42501')
+      expect((await withUser(null, c => c.attempt(sql, [b.id]))).ok, sql).toBe(false)
+    }
   })
 
   it('platform-level operations (creating organizations and their first users) are not callable by any signed-in user, anonymous or not', async () => {

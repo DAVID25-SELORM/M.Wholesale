@@ -96,7 +96,7 @@ describe('schema audit: functions', () => {
       where n.nspname = 'public' and p.prosecdef and p.prokind = 'f'
         and p.prosrc not ilike '%has_permission%' and p.prosrc not ilike '%current_organization_id%' and p.prosrc not ilike '%private.%' and p.prosrc not ilike '%auth.uid%' order by 1`)
     // the only exceptions are the provisioning functions, which no signed-in user can call (the service role does, from a server)
-    expect(rows.map((r) => r.proname)).toEqual(['complete_invitation', 'provision_organization', 'provision_user'])
+    expect(rows.map((r) => r.proname)).toEqual(['complete_invitation', 'provision_user'])
     expect(rows.filter((r) => r.signed_in)).toEqual([])
   })
   it('no policy checks permission once per row (that made counting 30,000 invoices take 10 seconds; see tests/perf)', async () => {

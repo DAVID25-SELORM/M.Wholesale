@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { Button, Field, Input, InlineError, Modal, PageHeader, useToast } from '@/components/ui'
-import { exportRecords, readPlatform, textValue, writePlatform, type RecordData } from './api'
+import { collectPlatformExport, exportRecords, readPlatform, textValue, writePlatform, type RecordData } from './api'
 import { UserRoleEditor } from './UserRoleEditor'
 import { OrganizationDetail } from './OrganizationDetail'
+import { RevenueSummary } from './RevenueSummary'
 
 type FormField = { key: string; label: string; type?: string; options?: string[] }
 const formFields: Record<string, FormField[]> = {
@@ -40,6 +41,10 @@ export function PlatformPage({ section }: { section: string }) {
   const [search, setSearch] = useState(''); const [page, setPage] = useState(0)
   const [filter, setFilter] = useState('ALL')
   const [roleUser, setRoleUser] = useState<string | null>(null)
+  const exportController = useRef<AbortController | null>(null)
+  const [exportCount, setExportCount] = useState<number | null>(null)
+  const [exportError, setExportError] = useState('')
+  useEffect(() => () => exportController.current?.abort(), [])
   const [from, setFrom] = useState(() => new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10))
   const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10))
   const [edit, setEdit] = useState<{ action: string; data: RecordData } | null>(null)
@@ -55,11 +60,12 @@ export function PlatformPage({ section }: { section: string }) {
   }, [edit])
   const open = (action: string, data: RecordData = {}) => { setError(''); setReason(''); setEdit({ action, data: { ...data } }) }
   const close = () => { if (!busy && window.confirm('Discard these unsaved changes?')) setEdit(null) }
-  const title = sections[section]?.title ?? ({ overview: 'Platform overview', organization: 'Organization details', settings: 'General settings', ticket: 'Ticket details' }[section] ?? section)
+  const title = sections[section]?.title ?? ({ revenue: 'Revenue', overview: 'Platform overview', organization: 'Organization details', settings: 'General settings', ticket: 'Ticket details' }[section] ?? section)
   const rows = query.data?.rows ?? []
   return <div className="space-y-6">
     {roleUser && <UserRoleEditor user={roleUser} onClose={() => setRoleUser(null)} />}
     <PageHeader title={title} description="Platform management • Live database records" />
+    {query.data && section === 'revenue' && <RevenueSummary data={query.data} />}
     {['subscriptions', 'plans'].includes(section) && <p className="rounded-lg border border-slate-200 p-3 text-sm">Assigned plans limit active users, branches and warehouses. Organizations without an assigned plan retain their existing access. Payment collection remains unconfigured.</p>}
     {['invoices', 'payments'].includes(section) && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Payment collection is unconfigured. Invoices are internal records; no payment is marked successful by this console.</p>}
     <div className="flex flex-wrap items-end gap-3">
@@ -69,10 +75,20 @@ export function PlatformPage({ section }: { section: string }) {
       {['overview', 'audit', 'notifications'].includes(section) && <><Field label="From"><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></Field><Field label="To"><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></Field></>}
       <Button variant="secondary" disabled={query.isFetching} onClick={() => void query.refetch()}>Refresh</Button>
       {rows.length > 0 && <Button variant="secondary" onClick={() => exportRecords(rows, section)}>Export current page</Button>}
+      {sections[section] && rows.length > 0 && <Button variant="secondary" disabled={exportCount !== null} onClick={async () => {
+        const controller = new AbortController(); exportController.current = controller; setExportCount(0); setExportError('')
+        try {
+          const records = await collectPlatformExport(section, search, from, to, id, filter, controller.signal, setExportCount)
+          exportRecords(records, `${section}-all`)
+        } catch (err) { if (!controller.signal.aborted) setExportError(err instanceof Error ? err.message : 'Export failed') }
+        finally { if (exportController.current === controller) { exportController.current = null; setExportCount(null) } }
+      }}>Export all matching records</Button>}
+      {exportCount !== null && <><span role="status">Preparing {exportCount} records…</span><Button variant="secondary" onClick={() => exportController.current?.abort()}>Cancel export</Button></>}
       {sections[section]?.create && <Button onClick={() => open(sections[section]!.create!)}>Create</Button>}
       {section === 'organizations' && <Link className="rounded-lg bg-emerald-700 px-4 py-2 text-white" to="/platform/create">Create organization</Link>}
     </div>
     {query.isPending && <p role="status">Loading records…</p>}
+    <InlineError message={exportError || null} />
     <InlineError message={query.isError ? String(query.error.message) : null} />
     {query.data && section === 'overview' && <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">{[['organizations', 'Total organizations', 'organizations'], ['active', 'Active organizations', 'organizations'], ['suspended', 'Suspended organizations', 'organizations'], ['users', 'Total users', 'users'], ['subscriptions', 'Active subscriptions', 'subscriptions']].map(([key, label, link]) => <Link key={key} to={`/platform/${link}`} className="rounded-xl border bg-white p-5 shadow-sm"><p className="text-sm text-slate-500">{label}</p><p className="mt-3 text-3xl font-semibold">{textValue(query.data![key!])}</p></Link>)}</div>
@@ -90,7 +106,7 @@ export function PlatformPage({ section }: { section: string }) {
       {section === 'announcements' && <Button variant="secondary" onClick={() => open(row.tenant_visible ? 'announcement.withdraw' : 'announcement.publish', row)}>{row.tenant_visible ? 'Withdraw from tenants' : 'Publish to all tenants'}</Button>}
       {section === 'onboarding' && <>{['PENDING', 'FAILED'].includes(textValue(row.status)) && <><Button onClick={() => open('onboarding.approve', row)}>{row.status === 'FAILED' ? 'Retry approval' : 'Approve'}</Button><Button variant="secondary" onClick={() => open('onboarding.reject', row)}>Reject</Button></>}{row.organization_id && <Link to={`/platform/organizations/${textValue(row.organization_id)}`}>View organization</Link>}</>}
       {section === 'operators' && <Button variant="secondary" onClick={() => open('operator.save', row)}>Edit access</Button>}
-      {section === 'subscriptions' && <><Button variant="secondary" onClick={() => open('subscription.save', row)}>Change</Button><Button variant="secondary" onClick={() => open('invoice.create', row)}>Issue invoice</Button></>}
+      {section === 'subscriptions' && <><Button variant="secondary" onClick={() => open('subscription.save', row)}>Change</Button><Button variant="secondary" onClick={() => open('invoice.create', row)}>Issue invoice</Button>{row.status === 'ACTIVE' && <Button variant="secondary" onClick={() => open('subscription.renew', row)}>Renew next period</Button>}</>}
       {section === 'tickets' && <><Link to={`/platform/tickets/${textValue(row.id)}`} className="text-emerald-700 underline">View</Link><Button variant="secondary" onClick={() => open('ticket.update', row)}>Update</Button></>}
       {section === 'notifications' && !row.is_read && <Button variant="secondary" onClick={() => open('notification.read', row)}>Mark read</Button>}
     </div></td></tr>)}</tbody></table>{!query.isPending && !rows.length && <p className="p-6 text-slate-500">No records found.</p>}</div>}
@@ -103,7 +119,7 @@ export function PlatformPage({ section }: { section: string }) {
       {edit && (formFields[edit.action] ?? []).map(field => <Field key={field.key} label={field.label}><>{['organization_id', 'plan_id'].includes(field.key) ? <select required className="w-full rounded border p-2" value={textValue(edit.data[field.key])} onChange={e => setEdit({ ...edit, data: { ...edit.data, [field.key]: e.target.value } })}><option value="">Select…</option>{((options.data?.[field.key === 'plan_id' ? 'plans' : 'organizations'] ?? []) as RecordData[]).map(o => <option key={textValue(o.id)} value={textValue(o.id)}>{textValue(o.name)}</option>)}</select> : field.options ? <select required className="w-full rounded border p-2" value={textValue(edit.data[field.key])} onChange={e => setEdit({ ...edit, data: { ...edit.data, [field.key]: e.target.value } })}><option value="">Select…</option>{field.options.map(o => <option key={o}>{o}</option>)}</select> : <Input required={!['email', 'phone', 'address', 'support_email', 'support_phone'].includes(field.key)} type={field.type ?? 'text'} step={field.type === 'number' ? '0.01' : undefined} value={textValue(edit.data[field.key])} onChange={e => setEdit({ ...edit, data: { ...edit.data, [field.key]: e.target.value } })} />}</></Field>)}
       {options.isError && edit?.action === 'subscription.save' && <InlineError message={options.error.message} />}
       {edit?.action === 'ticket.update' && <><Field label="Assigned administrator"><select className="w-full rounded border p-2" value={textValue(edit.data.assigned_to)} onChange={e => setEdit({ ...edit, data: { ...edit.data, assigned_to: e.target.value || null } })}><option value="">Unassigned</option>{edit.data.assigned_to && !assignees.data?.rows.some(a => a.id === edit.data.assigned_to) && <option value={textValue(edit.data.assigned_to)}>Current assignee (unavailable)</option>}{assignees.data?.rows.map(a => <option key={textValue(a.id)} value={textValue(a.id)}>{textValue(a.email)}</option>)}</select></Field><InlineError message={assignees.isError ? assignees.error.message : null} /></>}
-      {edit && !formFields[edit.action] && <p>Confirm {edit.action} for {textValue(edit.data.name ?? edit.data.id)}. This changes access immediately.</p>}
+      {edit?.action === 'subscription.renew' && <p>Advance the subscription after {textValue(edit.data.ends_on)} by one billing cycle and issue an unpaid invoice at the agreed price. No payment will be collected.</p>}{edit && !formFields[edit.action] && edit.action !== 'subscription.renew' && <p>Confirm {edit.action} for {textValue(edit.data.name ?? edit.data.id)}. This changes access immediately.</p>}
       {edit?.action === 'operator.save' && <fieldset className="space-y-2"><legend>Platform permissions</legend>{['overview', 'organizations', 'users', 'billing', 'support', 'settings', 'audit', 'operators'].map(permission => <label key={permission} className="flex items-center gap-2"><input type="checkbox" checked={(edit.data.permissions as string[] ?? []).includes(permission)} onChange={e => setEdit({ ...edit, data: { ...edit.data, permissions: e.target.checked ? [...(edit.data.permissions as string[] ?? []), permission] : (edit.data.permissions as string[] ?? []).filter(p => p !== permission) } })} />{permission}</label>)}</fieldset>}
       {edit && ['operator.save', 'plan.save'].includes(edit.action) && <label className="flex gap-2"><input type="checkbox" checked={edit.data.is_active !== false} onChange={e => setEdit({ ...edit, data: { ...edit.data, is_active: e.target.checked } })} />Active</label>}
       <Field label="Reason for this action"><Input required minLength={3} maxLength={500} value={reason} onChange={e => setReason(e.target.value)} /></Field><div className="flex gap-3"><Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Confirm and save'}</Button><Button variant="secondary" disabled={busy} onClick={close}>Cancel</Button></div>

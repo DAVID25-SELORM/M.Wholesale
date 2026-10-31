@@ -81,3 +81,40 @@ Migration 008 adds audited, retry-safe voiding of unpaid open invoices. Migratio
 Organization details now separate profile, users, branches, warehouses, subscription and actual active usage. Tabs support arrow, Home and End keyboard navigation. Additional detail areas in the original specification remain pending.
 
 Fresh Docker migrations through 009 and 18 focused database tests passed. The production build passed with the existing bundle-size warning. These changes are local; migrations 004–009 must precede frontend publication. This is a progress record, not a completed ERP handover.
+## Ownership transfer
+
+Migration 010 adds explicit ownership replacement within an active organization. Both organization and user administration permissions are required. The actor must be independent of both affected members. The replacement must be an active, email-verified member; the previous owner is checked under locks. Ownership changes and the reason are audited atomically. Other roles are retained. The organization Ownership tab provides the workflow.
+
+Fresh Docker migrations through 010 and the ownership/role security suites passed (2 tests); production build and scoped lint passed. Migration 010 has not been applied to the hosted database by this session. Broader completion items above remain open.
+
+Ownership follow-up (2026-10-31): the transfer form now loads current owners and eligible verified replacements through a permission-checked RPC, rather than asking an operator to identify owners from all members. Added tests for unverified replacements and missing user-management permission. The first database test attempt was blocked because Docker Desktop was stopped; the application was started for a retry. Scoped lint passed. Migration 010 remains unpublished.
+
+## Filtered exports (2026-10-31)
+
+Platform tables now support exporting all matching records across pages, with progress and cancellation. Existing permission-checked read RPCs remain the data source. Exports stop on changed totals, duplicate identities, incomplete pages or more than 100,000 records. CSV formula escaping is retained. Pagination is not a transactional snapshot: concurrent edits that preserve totals may still be reflected across pages.
+
+The ownership follow-up passed all three database tests across ownership and role suites after Docker started. The organization component test and production build also passed. Three initial export unit tests passed; external delivery remains unconfigured.
+
+## Organization activity (2026-10-31)
+
+Migration 20261031000100 adds organization-scoped platform audit history. Both organization-management and audit permissions are required. The organization Activity tab includes pagination, refresh and current-page CSV export. Operational ERP audit data is not exposed by this endpoint.
+
+Fresh Docker migration and the new security test passed, covering pagination, organization isolation, invalid pages and denied access for tenant users, anonymous callers and operators lacking audit permission. Apply this migration after 010 before publishing the Activity tab. User confirmed migration 010 applied.
+
+## Revenue and renewal (2026-10-31)
+
+The Revenue navigation entry exposes existing live billing aggregates, separating monthly recurring commitments from verified collections and keeping each currency separate. Both datasets support CSV download. No collection provider is configured.
+
+Migration 20261031000200 adds explicit renewal of ended active subscription periods. It retains agreed pricing, advances one calendar billing cycle, and creates an unpaid invoice in the same transaction. Stale expected-end dates, premature renewals, inactive organizations/plans and overlapping invoice periods are rejected. This is operator-initiated renewal; automatic scheduling is still pending.
+
+User confirmed the organization activity migration applied. Production build and six frontend tests passed for revenue, export and organization details. The existing large-bundle warning remains. Broader ERP completion and hosted verification remain open.
+
+## Full regression follow-up
+
+Full frontend suite: 36 files, 212 tests passed. First full database run: 463 passed, five failed. Updated explicit function-grant expectations for the implemented APIs, document numbering for purchase requests, and the organization-parameter boundary test to reject ordinary tenant/anonymous access to each allowed platform endpoint. The API catalog remains an explicit allowlist.
+
+Migration 20261031000300 corrects nine recent RLS policies to use the existing once-per-query permission/branch-set pattern. It preserves tenant equality and branch restrictions. This fixes the schema audit performance invariant instead of weakening its assertion. Full database regression is being rerun after these changes.
+
+Final local regression results for this continuation (2026-10-31): all 48 database suites / 468 tests passed after migration 20261031000300; all 36 frontend suites / 212 tests passed. Production build passed with the existing large-chunk warning. Full lint and subsequent scoped lint passed.
+
+Browser verification attempt: native computer-use pipe unavailable; browser extension inventory found the ERP tab, but attaching timed out waiting for Emulation.setFocusEmulationEnabled. No authenticated visual acceptance is claimed. New renewal and RLS migrations remain unapplied to hosted database by this session. Automatic renewal scheduling, remaining configuration/operational controls, and production acceptance remain open.

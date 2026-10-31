@@ -2673,6 +2673,10 @@ isOneToOne: false
           }
           Functions: {
             platform_user_roles: { Args: { p_user: string }; Returns: Json }
+            platform_renew_subscription: { Args: { p_organization: string; p_expected_end: string; p_reason: string }; Returns: string }
+            platform_organization_activity: { Args: { p_organization: string; p_page?: number }; Returns: Json }
+            platform_ownership_options: { Args: { p_organization: string }; Returns: Json }
+            platform_transfer_ownership: { Args: { p_organization: string; p_previous: string; p_next: string; p_reason: string }; Returns: undefined }
             platform_change_user_role: { Args: { p_user: string; p_role: string; p_branch: string | null; p_grant: boolean; p_reason: string }; Returns: undefined }
             platform_void_invoice: { Args: { p_id: string; p_reason: string }; Returns: undefined }
             platform_publish_announcement: { Args: { p_id: string; p_publish: boolean; p_reason: string }; Returns: undefined }

@@ -148,6 +148,18 @@ describe('catalog hardening', () => {
       'public.create_delivery_run', 'public.add_run_stop', 'public.remove_run_stop', 'public.reorder_run_stops', 'public.start_run_loading',
       'public.load_run_stop', 'public.dispatch_delivery_run', 'public.record_run_outcome', 'public.return_run_stop', 'public.cancel_delivery_run',
       'public.delivery_run_list', 'public.delivery_run_detail', 'public.run_planning_options', 'public.link_driver_profile', 'public.driver_profile_options',
+      // Reviewed procurement, CRM, recall, expense and platform API surface.
+      'public.cancel_price_agreement', 'public.cancel_purchase_request', 'public.cancel_recall', 'public.cancel_supplier_quotation',
+      'public.convert_purchase_request', 'public.convert_supplier_quotation', 'public.create_price_agreement', 'public.create_purchase_request',
+      'public.crm_workspace', 'public.decide_expense', 'public.decide_purchase_request', 'public.onboard_tenant',
+      'public.platform_billing', 'public.platform_change_user_role', 'public.platform_decide_onboarding', 'public.platform_issue_invoice',
+      'public.platform_onboarding_requests', 'public.platform_operator_access', 'public.platform_organization_activity', 'public.platform_ownership_options',
+      'public.platform_publish_announcement', 'public.platform_read', 'public.platform_renew_subscription', 'public.platform_reply_to_tenant',
+      'public.platform_submit_onboarding', 'public.platform_support_assignees', 'public.platform_tenants', 'public.platform_transfer_ownership',
+      'public.platform_user_roles', 'public.platform_void_invoice', 'public.platform_write', 'public.procurement_insights',
+      'public.record_recall_recovery', 'public.record_supplier_quotation', 'public.release_recall_batch', 'public.save_crm_record',
+      'public.submit_expense', 'public.submit_purchase_request', 'public.tenant_announcements', 'public.tenant_read_announcement',
+      'public.tenant_support_read', 'public.tenant_support_write',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))

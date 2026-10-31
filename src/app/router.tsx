@@ -99,7 +99,7 @@ export const routes = [
     { index: true, element: <Navigate to="overview" replace /> },
     { path: 'tenants', element: <Navigate to="/platform/organizations" replace /> },
     { path: 'create', element: <TenantsPage /> },
-    ...['overview', 'onboarding', 'organizations', 'users', 'operators', 'plans', 'subscriptions', 'invoices', 'payments', 'audit', 'notifications', 'tickets', 'announcements', 'settings'].map(section => ({ path: section, element: <PlatformPage key={section} section={section} /> })),
+    ...['overview', 'onboarding', 'organizations', 'users', 'operators', 'plans', 'subscriptions', 'invoices', 'payments', 'revenue', 'audit', 'notifications', 'tickets', 'announcements', 'settings'].map(section => ({ path: section, element: <PlatformPage key={section} section={section} /> })),
     { path: 'organizations/:id', element: <PlatformPage section="organization" /> },
     { path: 'tickets/:id', element: <PlatformPage section="ticket" /> },
   ] },
