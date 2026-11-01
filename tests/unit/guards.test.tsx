@@ -43,6 +43,12 @@ const signedIn = { status: 'signedIn', session: { user: { id: 'u1' } } }
 
 describe('route protection', () => {
   beforeEach(() => { rpc.mockReset(); authState.value = { status: 'signedOut', session: null } })
+  it('blocks tenant screens when the server reports unavailable trial access', async () => {
+    authState.value = signedIn
+    mount('/open', makeContext({ status: 'trial_unavailable' }))
+    expect(await screen.findByText('ACCESS DISABLED PAGE')).toBeInTheDocument()
+    expect(screen.queryByText('OPEN CONTENT')).not.toBeInTheDocument()
+  })
 
   it('sends unauthenticated visitors to the login page and never asks the server for data', async () => {
     mount()

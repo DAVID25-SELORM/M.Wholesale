@@ -97,6 +97,7 @@ describe('tenant sweep: functions and the platform boundary', () => {
       platform_issue_invoice: 'select public.platform_issue_invoice($1,null)',
       platform_transfer_ownership: 'select public.platform_transfer_ownership($1,null,null,null)',
       platform_ownership_options: 'select public.platform_ownership_options($1)',
+      platform_organization_records: "select public.platform_organization_records($1,'security')",
       platform_organization_activity: 'select public.platform_organization_activity($1)',
       platform_renew_subscription: 'select public.platform_renew_subscription($1,null,null)',
     }

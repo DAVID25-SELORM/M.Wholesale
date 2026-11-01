@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button, Tabs } from '@/components/ui'
 import { textValue, type RecordData } from './api'
 import { OwnershipTransfer } from './OwnershipTransfer'
+import { OrganizationRecords } from './OrganizationRecords'
 import { OrganizationActivity } from './OrganizationActivity'
 
 const tabs = [
@@ -10,6 +11,8 @@ const tabs = [
   { id: 'subscription', label: 'Subscription' }, { id: 'usage', label: 'Usage' },
   { id: 'ownership', label: 'Ownership' },
   { id: 'activity', label: 'Activity' },
+  { id: 'invoices', label: 'Invoices' }, { id: 'payments', label: 'Payments' },
+  { id: 'security', label: 'Security' }, { id: 'settings', label: 'Settings' },
 ]
 
 export function OrganizationDetail({ data, onEdit }: { data: RecordData; onEdit: (profile: RecordData) => void }) {
@@ -21,6 +24,7 @@ export function OrganizationDetail({ data, onEdit }: { data: RecordData; onEdit:
     <h2 className="break-words text-lg font-semibold">{textValue(profile.name)}</h2>
     <Tabs items={tabs} value={tab} onChange={setTab} label="Organization details" />
     <div role="tabpanel" aria-label={tabs.find(item => item.id === tab)?.label}>
+      {['invoices', 'payments', 'security', 'settings'].includes(tab) && <OrganizationRecords key={`${profile.id}-${tab}`} organization={textValue(profile.id)} section={tab} />}
       {tab === 'activity' && <OrganizationActivity key={textValue(profile.id)} organization={textValue(profile.id)} />}
       {tab === 'ownership' && <OwnershipTransfer organization={textValue(profile.id)} />}
       {tab === 'profile' && <><Properties data={profile} /><Button onClick={() => onEdit(profile)}>Edit profile</Button></>}

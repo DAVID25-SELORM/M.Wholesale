@@ -28,7 +28,7 @@ Platform administration remains separate from tenant operations. Platform member
 
 ## Not yet complete
 
-The original requested scope remains open. Pending items include owner/staff invitations; ownership transfer; full organization detail tabs; storage/features/trials enforcement; renewal scheduling; richer analytics; security/authentication policies; operational health and backup verification; branding assets; full export/sort/filter coverage; authenticated desktop/mobile visual verification.
+The original requested scope remains open. Ownership transfer, organization activity, paginated exports, manual renewal and subscription filtering are implemented. Local November changes add trial-date enforcement, organization billing/security/configuration records, a SQL restore rehearsal and a pilot acceptance checklist. Remaining work includes platform invitation workflows, automatic renewal scheduling, storage/feature entitlements, authentication/session policy controls, branding assets and broader analytics. Hosted deployment and workflow verification of the November changes, production recovery evidence and named business acceptance are still required. The read-only desktop/mobile observations below cover specific pages only.
 
 Payment collection and email/SMS delivery are intentionally unconfigured by user choice. No provider secrets were added. Audit retention, session revocation, MFA and Auth configuration are not represented as enforced settings.
 
@@ -122,3 +122,27 @@ Browser verification attempt: native computer-use pipe unavailable; browser exte
 ## Subscription review queue
 
 Migration 20261031000400 provides billing-permission-protected subscription search, status filters, ended periods and periods ending within 30 days. Results have deterministic ordering and pagination. The renewal button uses server-derived eligibility (active organization, active plan, ACTIVE subscription and ended period). Filtered exports use the same endpoint. This provides operator review; it does not schedule automatic renewals.
+
+## Trial enforcement and acceptance preparation (2026-11-01)
+
+Migration 20261101000100 enforces TRIAL subscription dates through current_organization_id/current_profile_id and permission-dependent RLS, including direct API access. The session context returns trial_unavailable and the frontend explains the restriction. New or edited trial periods cannot exceed the plan's trial_days; a zero-day plan cannot be assigned a trial. Existing non-trial access behavior is preserved. Platform management remains independent of tenant trial access.
+
+23 focused database tests, TypeScript and scoped lint passed. The local restore drill passed: 110 tables, 981 rows, 1,711,628-byte backup; restored content digests matched the source. This confirms the local SQL database rehearsal only, not hosted backups or file/authentication recovery.
+
+See PILOT_ACCEPTANCE.md for the pending named business-owner acceptance scenarios and evidence requirements. Business approvals are not filled in by the assistant. Storage/feature limits, automatic renewal scheduling, remaining administration/security controls and hosted visual verification remain open.
+
+## Organization records and hosted inspection (2026-11-01)
+
+Migration 20261101000200 adds paginated organization invoices, verified payments, account status/latest sign-in, and configuration inventory. Every section requires organization-management permission, plus billing, users or settings permission as appropriate. Configuration values, authentication secrets and payment provider references are omitted. The frontend provides four separate tabs with refresh, errors, empty states and pagination.
+
+Focused local database verification passed 22 tests across organization records, trials, API grants and tenant-boundary checks. Production build and full lint passed. Full regression is still running; do not treat the focused result as full release acceptance.
+
+Hosted read-only inspection succeeded for organization listing, organization profile and activity, switching to the tenant ERP and back, and the subscription filter page. At 390px width the organization page fits and its wide table scrolls inside its container; the mobile menu opens. No production business records were created by this inspection. The live tenant has no warehouse configured, so operational onboarding still requires warehouse/master-data setup.
+
+The two November migrations and their frontend are not yet verified as deployed. The user's reply to the migration request was "proceed", not confirmation of successful application. Latest sign-in is not a complete login history. Hosted backup restoration, provider setup, and named business acceptance remain unverified.
+
+Frontend regression for the November changes: all 37 suites / 215 tests passed. Full lint, subsequent scoped lint for new tests, production build and diff whitespace checks passed. The database regression encountered a refund-test timeout while Docker was recovering; final database verification is pending.
+
+Deployment update: the user confirmed both November migrations applied successfully to the hosted database. All DrugXOne containers were restarted after the temporary stop attempt. Database, Auth, storage, Studio, metadata, Realtime, mailbox, Kong and analytics returned healthy. Vector remains in a restart loop because its configured host.docker.internal:2375 endpoint refuses connections; Docker daemon security configuration was not changed.
+
+Final fresh local database regression: all 50 suites / 473 tests passed (296 seconds), including the previously timed-out refund test, with unchanged test timeouts. Frontend: 37 suites / 215 tests passed. Both November migrations are confirmed applied by the user. This verifies this release increment; outstanding scope and business acceptance remain open.
