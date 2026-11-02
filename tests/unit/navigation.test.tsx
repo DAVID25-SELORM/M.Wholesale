@@ -18,6 +18,7 @@ describe('permission-aware navigation', () => {
       ['fin-Receivables', '/sales/receivables', 'receipts.view'],
       ['fin-Payables', '/purchasing/payables', 'payables.view'],
       ['int-Stock insights', '/reports/stock', 'reports.stock'],
+      ['integrations', '/workspace/integrations', 'settings.view'],
     ]) {
       const item = items.find(entry => entry.id === id)
       expect(item?.to).toBe(to)
@@ -25,7 +26,7 @@ describe('permission-aware navigation', () => {
       expect(item?.planned).not.toBe(true)
     }
   })
-  it('shows only the admin pages the user may view, and routes future modules to workspaces', () => {
+  it('shows only the admin pages the user may view, and links the approvals workspace', () => {
     renderWithApp(<Sidebar onNavigate={() => {}} />, {
       context: makeContext({ org_permissions: ['branches.view', 'audit.view'], branch_permissions: {} }),
     })
@@ -35,7 +36,7 @@ describe('permission-aware navigation', () => {
     expect(within(nav).queryByRole('link', { name: 'Users' })).not.toBeInTheDocument()
     expect(within(nav).queryByRole('link', { name: 'Roles & permissions' })).not.toBeInTheDocument()
     expect(within(nav).queryByRole('link', { name: 'Warehouses' })).not.toBeInTheDocument()
-    // roadmap modules are responsive workspace links
+    // Approvals exposes only permitted work inside the page
     expect(within(nav).queryByRole('link', { name: 'Products' })).not.toBeInTheDocument()
     expect(within(nav).getByRole('link', { name: 'Approvals' })).toHaveAttribute('href', '/workspace/approvals')
   })

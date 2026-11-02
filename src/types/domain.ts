@@ -22,7 +22,7 @@ export interface SessionRole {
   branch_id: string | null
 }
 
-export type SessionStatus = 'ok' | 'no_profile' | 'inactive_user' | 'inactive_organization' | 'trial_unavailable'
+export type SessionStatus = 'ok' | 'no_profile' | 'inactive_user' | 'inactive_organization' | 'trial_unavailable' | 'session_revoked'
 
 export interface SessionContext {
   status: SessionStatus

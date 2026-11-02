@@ -12,12 +12,12 @@ export function PlatformShell() {
   const { auth, signOut } = useAuth()
   const [menu, setMenu] = useState(false)
   const [dark, setDark] = useState(() => { try { return localStorage.getItem('platform.theme') === 'dark' } catch { return false } })
-  const access = useQuery({ queryKey: ['platform-access', auth.session?.user.id], enabled: auth.status === 'signedIn', queryFn: async () => unwrap(await supabase.rpc('platform_operator_access'), 'platform.access') })
+  const access = useQuery({ queryKey: ['platform-access', auth.session?.user.id], refetchInterval: 60_000, enabled: auth.status === 'signedIn', queryFn: async () => unwrap(await supabase.rpc('platform_operator_access'), 'platform.access') })
   const permissions = useQuery({ queryKey: ['platform', 'access', auth.session?.user.id], enabled: !!access.data, queryFn: () => readPlatform('access') })
   if (auth.status === 'signedOut') return <Navigate to="/login" replace state={{ from: '/platform' }} />
   if (access.isPending) return <p className="p-6">Checking platform access...</p>
   if (access.isError) return <div className="p-6"><InlineError message={toAppError(access.error).message} /><Button onClick={() => void access.refetch()}>Retry</Button><Link to="/">Return to ERP</Link></div>
-  if (!access.data) return <div className="p-6"><p>Platform operator access is required.</p><Link to="/">Return to ERP</Link></div>
+  if (!access.data) return <div className="p-6"><p>Platform operator access is required. If your session was revoked, sign out and sign in again.</p><Button onClick={() => void signOut()}>Sign out</Button><Link to="/">Return to ERP</Link></div>
   return <div data-platform-theme={dark ? 'dark' : 'light'} className="min-h-screen bg-slate-50">
     <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b bg-white p-4 sm:px-8">
       <Button className="lg:hidden" variant="secondary" aria-expanded={menu} onClick={() => setMenu(!menu)}>Menu</Button>

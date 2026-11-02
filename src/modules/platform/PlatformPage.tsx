@@ -5,6 +5,9 @@ import { Button, Field, Input, InlineError, Modal, PageHeader, useToast } from '
 import { collectPlatformExport, exportRecords, readPlatform, textValue, writePlatform, type RecordData } from './api'
 import { UserRoleEditor } from './UserRoleEditor'
 import { OrganizationDetail } from './OrganizationDetail'
+import { PlanFeatures } from './PlanFeatures'
+import { UserSessions } from './UserSessions'
+import { RenewalScheduler } from './RenewalScheduler'
 import { RevenueSummary } from './RevenueSummary'
 
 type FormField = { key: string; label: string; type?: string; options?: string[] }
@@ -28,7 +31,7 @@ const sections: Record<string, { title: string; columns: string[]; create?: stri
   users: { title: 'Users', columns: ['name', 'email', 'organization', 'roles', 'is_active'] },
   operators: { title: 'Platform administrators', columns: ['email', 'permissions', 'is_active'], create: 'operator.save' },
   plans: { title: 'Subscription plans', columns: ['id', 'name', 'currency', 'monthly_price', 'annual_price', 'user_limit', 'branch_limit', 'warehouse_limit', 'is_active'], create: 'plan.save' },
-  subscriptions: { title: 'Organization subscriptions', columns: ['organization', 'plan', 'cycle', 'status', 'starts_on', 'ends_on'], create: 'subscription.save' },
+  subscriptions: { title: 'Organization subscriptions', columns: ['organization', 'plan', 'cycle', 'status', 'starts_on', 'ends_on', 'auto_renew', 'renewal_checked_at', 'renewal_error'], create: 'subscription.save' },
   tickets: { title: 'Support tickets', columns: ['subject', 'priority', 'status', 'assigned_to', 'created_at'], create: 'ticket.create' },
   announcements: { title: 'Announcements', columns: ['title', 'body', 'tenant_visible', 'published_at', 'expires_at'], create: 'announcement.create' },
   audit: { title: 'Audit log', columns: ['created_at', 'actor_id', 'action', 'organization_id', 'result', 'metadata'] },
@@ -40,6 +43,8 @@ export function PlatformPage({ section }: { section: string }) {
   const qc = useQueryClient(); const toast = useToast()
   const [search, setSearch] = useState(''); const [page, setPage] = useState(0)
   const [filter, setFilter] = useState('ALL')
+  const [featurePlan, setFeaturePlan] = useState<string | null>(null)
+  const [sessionUser, setSessionUser] = useState<string | null>(null)
   const [roleUser, setRoleUser] = useState<string | null>(null)
   const exportController = useRef<AbortController | null>(null)
   const [exportCount, setExportCount] = useState<number | null>(null)
@@ -63,8 +68,11 @@ export function PlatformPage({ section }: { section: string }) {
   const title = sections[section]?.title ?? ({ revenue: 'Revenue', overview: 'Platform overview', organization: 'Organization details', settings: 'General settings', ticket: 'Ticket details' }[section] ?? section)
   const rows = query.data?.rows ?? []
   return <div className="space-y-6">
+    {featurePlan && <PlanFeatures plan={featurePlan} onClose={() => setFeaturePlan(null)} />}
+    {sessionUser && <UserSessions user={sessionUser} onClose={() => setSessionUser(null)} />}
     {roleUser && <UserRoleEditor user={roleUser} onClose={() => setRoleUser(null)} />}
     <PageHeader title={title} description="Platform management • Live database records" />
+    {section === 'subscriptions' && <RenewalScheduler />}
     {query.data && section === 'revenue' && <RevenueSummary data={query.data} />}
     {['subscriptions', 'plans'].includes(section) && <p className="rounded-lg border border-slate-200 p-3 text-sm">Assigned plans limit active users, branches and warehouses. Organizations without an assigned plan retain their existing access. Payment collection remains unconfigured.</p>}
     {['invoices', 'payments'].includes(section) && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Payment collection is unconfigured. Invoices are internal records; no payment is marked successful by this console.</p>}
@@ -101,13 +109,16 @@ export function PlatformPage({ section }: { section: string }) {
     {sections[section] && <div className="overflow-x-auto rounded-xl border bg-white"><table className="w-full text-left text-sm"><thead className="bg-slate-50"><tr>{sections[section]!.columns.map(c => <th key={c} className="whitespace-nowrap p-3 font-medium capitalize">{c.replaceAll('_', ' ')}</th>)}<th className="p-3">Actions</th></tr></thead><tbody>{rows.map((row, i) => <tr key={textValue(row.id ?? row.organization_id) || i} className="border-t">{sections[section]!.columns.map(c => <td key={c} className="max-w-xs break-words p-3">{typeof row[c] === 'boolean' ? row[c] ? 'Yes' : 'No' : (c === 'assigned_to' ? textValue(assignees.data?.rows.find(a => a.id === row[c])?.email ?? row[c]) : textValue(row[c])) || '—'}</td>)}<td className="p-3"><div className="flex flex-wrap gap-2">
       {section === 'organizations' && <><Link className="text-emerald-700 underline" to={`/platform/organizations/${textValue(row.id)}`}>View</Link>{!row.archived_at && <><Button variant="secondary" onClick={() => open(row.is_active ? 'organization.suspend' : 'organization.reactivate', row)}>{row.is_active ? 'Suspend' : 'Reactivate'}</Button><Button variant="secondary" onClick={() => open('organization.archive', row)}>Archive</Button></>}</>}
       {section === 'users' && <Button variant="secondary" onClick={() => open(row.is_active ? 'user.deactivate' : 'user.activate', row)}>{row.is_active ? 'Deactivate' : 'Activate'}</Button>}
+      {section === 'plans' && <Button variant="secondary" onClick={() => setFeaturePlan(textValue(row.id))}>Features</Button>}
       {section === 'plans' && <Button variant="secondary" onClick={() => open('plan.save', row)}>Edit</Button>}
+      {section === 'users' && <Button variant="secondary" onClick={() => setSessionUser(textValue(row.id))}>Sessions and history</Button>}
+      {section === 'users' && <Button variant="secondary" onClick={() => open('user.revoke_sessions', row)}>Revoke ERP sessions</Button>}
       {section === 'users' && <Button variant="secondary" onClick={() => setRoleUser(textValue(row.id))}>Roles</Button>}
       {section === 'invoices' && row.status === 'OPEN' && <Button variant="secondary" onClick={() => open('invoice.void', row)}>Void invoice</Button>}
       {section === 'announcements' && <Button variant="secondary" onClick={() => open(row.tenant_visible ? 'announcement.withdraw' : 'announcement.publish', row)}>{row.tenant_visible ? 'Withdraw from tenants' : 'Publish to all tenants'}</Button>}
       {section === 'onboarding' && <>{['PENDING', 'FAILED'].includes(textValue(row.status)) && <><Button onClick={() => open('onboarding.approve', row)}>{row.status === 'FAILED' ? 'Retry approval' : 'Approve'}</Button><Button variant="secondary" onClick={() => open('onboarding.reject', row)}>Reject</Button></>}{row.organization_id && <Link to={`/platform/organizations/${textValue(row.organization_id)}`}>View organization</Link>}</>}
       {section === 'operators' && <Button variant="secondary" onClick={() => open('operator.save', row)}>Edit access</Button>}
-      {section === 'subscriptions' && <><Button variant="secondary" onClick={() => open('subscription.save', row)}>Change</Button><Button variant="secondary" onClick={() => open('invoice.create', row)}>Issue invoice</Button>{row.can_renew === true && <Button variant="secondary" onClick={() => open('subscription.renew', row)}>Renew next period</Button>}</>}
+      {section === 'subscriptions' && <><Button variant="secondary" onClick={() => open(row.auto_renew ? 'subscription.auto_disable' : 'subscription.auto_enable', row)}>{row.auto_renew ? 'Disable automatic renewal' : 'Enable automatic renewal'}</Button><Button variant="secondary" onClick={() => open('subscription.save', row)}>Change</Button><Button variant="secondary" onClick={() => open('invoice.create', row)}>Issue invoice</Button>{row.can_renew === true && <Button variant="secondary" onClick={() => open('subscription.renew', row)}>Renew next period</Button>}</>}
       {section === 'tickets' && <><Link to={`/platform/tickets/${textValue(row.id)}`} className="text-emerald-700 underline">View</Link><Button variant="secondary" onClick={() => open('ticket.update', row)}>Update</Button></>}
       {section === 'notifications' && !row.is_read && <Button variant="secondary" onClick={() => open('notification.read', row)}>Mark read</Button>}
     </div></td></tr>)}</tbody></table>{!query.isPending && !rows.length && <p className="p-6 text-slate-500">No records found.</p>}</div>}
@@ -120,7 +131,7 @@ export function PlatformPage({ section }: { section: string }) {
       {edit && (formFields[edit.action] ?? []).map(field => <Field key={field.key} label={field.label}><>{['organization_id', 'plan_id'].includes(field.key) ? <select required className="w-full rounded border p-2" value={textValue(edit.data[field.key])} onChange={e => setEdit({ ...edit, data: { ...edit.data, [field.key]: e.target.value } })}><option value="">Select…</option>{((options.data?.[field.key === 'plan_id' ? 'plans' : 'organizations'] ?? []) as RecordData[]).map(o => <option key={textValue(o.id)} value={textValue(o.id)}>{textValue(o.name)}</option>)}</select> : field.options ? <select required className="w-full rounded border p-2" value={textValue(edit.data[field.key])} onChange={e => setEdit({ ...edit, data: { ...edit.data, [field.key]: e.target.value } })}><option value="">Select…</option>{field.options.map(o => <option key={o}>{o}</option>)}</select> : <Input required={!['email', 'phone', 'address', 'support_email', 'support_phone'].includes(field.key)} type={field.type ?? 'text'} step={field.type === 'number' ? '0.01' : undefined} value={textValue(edit.data[field.key])} onChange={e => setEdit({ ...edit, data: { ...edit.data, [field.key]: e.target.value } })} />}</></Field>)}
       {options.isError && edit?.action === 'subscription.save' && <InlineError message={options.error.message} />}
       {edit?.action === 'ticket.update' && <><Field label="Assigned administrator"><select className="w-full rounded border p-2" value={textValue(edit.data.assigned_to)} onChange={e => setEdit({ ...edit, data: { ...edit.data, assigned_to: e.target.value || null } })}><option value="">Unassigned</option>{edit.data.assigned_to && !assignees.data?.rows.some(a => a.id === edit.data.assigned_to) && <option value={textValue(edit.data.assigned_to)}>Current assignee (unavailable)</option>}{assignees.data?.rows.map(a => <option key={textValue(a.id)} value={textValue(a.id)}>{textValue(a.email)}</option>)}</select></Field><InlineError message={assignees.isError ? assignees.error.message : null} /></>}
-      {edit?.action === 'subscription.renew' && <p>Advance the subscription after {textValue(edit.data.ends_on)} by one billing cycle and issue an unpaid invoice at the agreed price. No payment will be collected.</p>}{edit && !formFields[edit.action] && edit.action !== 'subscription.renew' && <p>Confirm {edit.action} for {textValue(edit.data.name ?? edit.data.id)}. This changes access immediately.</p>}
+      {edit?.action === 'subscription.renew' && <p>Advance the subscription after {textValue(edit.data.ends_on)} by one billing cycle and issue an unpaid invoice at the agreed price. No payment will be collected.</p>}{edit?.action === 'user.revoke_sessions' && <p>Block this user?s existing sessions from ERP and platform APIs. A new sign-in is required. This does not revoke access to unrelated applications.</p>}{edit?.action === 'subscription.auto_enable' && <p>Enable scheduled renewal at the agreed price. Each renewal creates an unpaid invoice; no payment is collected. The scheduler must be installed.</p>}{edit?.action === 'subscription.auto_disable' && <p>Stop future automatic renewals. Existing periods and invoices are retained.</p>}{edit && !formFields[edit.action] && !['subscription.renew', 'subscription.auto_enable', 'subscription.auto_disable', 'user.revoke_sessions'].includes(edit.action) && <p>Confirm {edit.action} for {textValue(edit.data.name ?? edit.data.id)}. This changes access immediately.</p>}
       {edit?.action === 'operator.save' && <fieldset className="space-y-2"><legend>Platform permissions</legend>{['overview', 'organizations', 'users', 'billing', 'support', 'settings', 'audit', 'operators'].map(permission => <label key={permission} className="flex items-center gap-2"><input type="checkbox" checked={(edit.data.permissions as string[] ?? []).includes(permission)} onChange={e => setEdit({ ...edit, data: { ...edit.data, permissions: e.target.checked ? [...(edit.data.permissions as string[] ?? []), permission] : (edit.data.permissions as string[] ?? []).filter(p => p !== permission) } })} />{permission}</label>)}</fieldset>}
       {edit && ['operator.save', 'plan.save'].includes(edit.action) && <label className="flex gap-2"><input type="checkbox" checked={edit.data.is_active !== false} onChange={e => setEdit({ ...edit, data: { ...edit.data, is_active: e.target.checked } })} />Active</label>}
       <Field label="Reason for this action"><Input required minLength={3} maxLength={500} value={reason} onChange={e => setReason(e.target.value)} /></Field><div className="flex gap-3"><Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Confirm and save'}</Button><Button variant="secondary" disabled={busy} onClick={close}>Cancel</Button></div>

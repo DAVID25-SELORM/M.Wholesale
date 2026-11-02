@@ -2674,6 +2674,12 @@ isOneToOne: false
           Functions: {
             platform_user_roles: { Args: { p_user: string }; Returns: Json }
             platform_subscriptions: { Args: { p_search?: string; p_page?: number; p_filter?: string }; Returns: Json }
+            platform_plan_features: { Args: { p_plan: string }; Returns: Json }
+            platform_set_plan_features: { Args: { p_plan: string; p_disabled: string[]; p_reason: string }; Returns: undefined }
+            platform_user_sessions: { Args: { p_user: string }; Returns: Json }
+            platform_revoke_sessions: { Args: { p_user: string; p_reason: string }; Returns: undefined }
+            platform_set_auto_renew: { Args: { p_organization: string; p_enabled: boolean; p_reason: string }; Returns: undefined }
+            platform_renewal_scheduler: { Args: Record<string, never>; Returns: Json }
             platform_renew_subscription: { Args: { p_organization: string; p_expected_end: string; p_reason: string }; Returns: string }
             platform_organization_records: { Args: { p_organization: string; p_section: string; p_page?: number }; Returns: Json }
             platform_organization_activity: { Args: { p_organization: string; p_page?: number }; Returns: Json }

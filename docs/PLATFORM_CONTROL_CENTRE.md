@@ -146,3 +146,18 @@ Frontend regression for the November changes: all 37 suites / 215 tests passed. 
 Deployment update: the user confirmed both November migrations applied successfully to the hosted database. All DrugXOne containers were restarted after the temporary stop attempt. Database, Auth, storage, Studio, metadata, Realtime, mailbox, Kong and analytics returned healthy. Vector remains in a restart loop because its configured host.docker.internal:2375 endpoint refuses connections; Docker daemon security configuration was not changed.
 
 Final fresh local database regression: all 50 suites / 473 tests passed (296 seconds), including the previously timed-out refund test, with unchanged test timeouts. Frontend: 37 suites / 215 tests passed. Both November migrations are confirmed applied by the user. This verifies this release increment; outstanding scope and business acceptance remain open.
+
+
+## Automatic renewal and session administration (2026-11-01)
+
+Local migrations 20261101000300 and 20261101000400 add opt-in automatic subscription renewal, scheduler visibility, ERP-session revocation and a session/authentication-history viewer. Renewal preserves agreed prices, creates unpaid invoices, rejects overlaps and retains sanitized failure codes. It renews at most one period per subscription per run, bounded to 100 candidates. Authorization is checked against the enabling operator at execution. Existing subscriptions remain opted out. If pg_cron is already enabled, migration 003 installs the daily job; otherwise the UI explicitly reports scheduling unavailable. A trusted operator must enable pg_cron and schedule `select private.run_subscription_renewals()` before automatic processing can occur.
+
+Session revocation blocks existing Auth session IDs at the tenant and platform database boundaries, including refreshed tokens belonging to those sessions. A new Auth session created after revocation is eligible. It does not invalidate Auth tokens for unrelated apps or external services. The history viewer returns limited metadata and retained action names, never raw tokens/payloads. Revoking/viewing a platform operator additionally requires operator-management permission. Tenant session context refreshes every minute for prompt UI feedback; database enforcement applies on each request.
+
+Focused database verification passed 34 tests across renewal, sessions, schema audit, API grants and tenant boundaries. Email, SMS and payment collection remain excluded by explicit user choice. Integrations navigation now opens the permission-checked configuration/status view instead of the generic unfinished route.
+
+## Final platform controls (2026-11-02)
+
+Migrations `20261101000300`, `20261101000400` and `20261101000500` add opt-in automatic renewal, ERP session revocation/history, and subscription plan feature controls. Plan feature restrictions remove the selected module permissions for subscribed organizations while preserving foundational administration; tenant callers cannot change plan features. The platform console exposes renewal status, session history/revocation, plan feature selection, real organization records, support, announcements, billing review and ownership/role workflows.
+
+Fresh Docker verification passed all 53 database suites / 480 tests. The frontend suite passed 38 files / 219 tests; TypeScript, lint, production build and whitespace checks passed. The build retains Vite's existing large-chunk warning. Apply migrations 003–005 to the hosted database before publishing the frontend commit. Email, SMS, payment collection and external integrations remain intentionally unconfigured.

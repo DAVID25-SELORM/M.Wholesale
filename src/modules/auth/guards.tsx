@@ -35,7 +35,7 @@ export function RequireAuth() {
   }
 
   const ctx = query.data
-  if (ctx.status === 'inactive_user' || ctx.status === 'inactive_organization' || ctx.status === 'trial_unavailable') {
+  if (ctx.status === 'inactive_user' || ctx.status === 'inactive_organization' || ctx.status === 'trial_unavailable' || ctx.status === 'session_revoked') {
     return <Navigate to="/access-disabled" replace state={{ reason: ctx.status }} />
   }
   if (ctx.status === 'no_profile') return <Navigate to="/no-access" replace />

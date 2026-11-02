@@ -15,6 +15,8 @@ export async function readPlatform(section: string, search = '', page = 0, from?
   return unwrap(await supabase.rpc('platform_read', { p_section: section, p_search: search, p_page: page, p_from: from, p_to: to, p_id: id, p_filter: filter }), 'platform.read') as unknown as PlatformResult
 }
 export async function writePlatform(action: string, data: RecordData, reason: string) {
+  if (action === 'user.revoke_sessions') return unwrap(await supabase.rpc('platform_revoke_sessions', { p_user: textValue(data.id), p_reason: reason }), 'platform.sessions.revoke')
+  if (action === 'subscription.auto_enable' || action === 'subscription.auto_disable') return unwrap(await supabase.rpc('platform_set_auto_renew', { p_organization: textValue(data.organization_id), p_enabled: action === 'subscription.auto_enable', p_reason: reason }), 'platform.subscription.auto_renew')
   if (action === 'subscription.renew') return unwrap(await supabase.rpc('platform_renew_subscription', { p_organization: textValue(data.organization_id), p_expected_end: textValue(data.ends_on), p_reason: reason }), 'platform.subscription.renew')
   if (action === 'invoice.void') return unwrap(await supabase.rpc('platform_void_invoice', { p_id: textValue(data.id), p_reason: reason }), 'platform.invoice.void')
   if (action === 'announcement.publish' || action === 'announcement.withdraw') return unwrap(await supabase.rpc('platform_publish_announcement', { p_id: textValue(data.id), p_publish: action === 'announcement.publish', p_reason: reason }), 'platform.announcement')

@@ -33,10 +33,10 @@ const META: Record<string, Meta> = {
 
 const same = (a: SettingValue, b: SettingValue) => a === b
 
-export function SettingsPage() {
+export function SettingsPage({ initialSection = 'documents' }: { initialSection?: SectionId } = {}) {
   const { ability, branches, selectedBranch } = useSession()
   const canView = ability.can('settings.view')
-  const [section, setSection] = useState<SectionId>('documents')
+  const [section, setSection] = useState<SectionId>(initialSection)
   const firstBranch = (selectedBranch !== 'ALL' ? selectedBranch : branches[0]?.id) ?? ''
   const [branchId, setBranchId] = useState(firstBranch)
   const overview = useQuery({ queryKey: ['settings-overview', branchId], queryFn: () => getSettingsOverview(branchId || null), enabled: canView })
@@ -97,7 +97,7 @@ export function SettingsPage() {
             <>
               <Card><CardHeader title="Notifications" /><CardBody><p className="text-sm text-slate-700">No notification channel (email, SMS or WhatsApp) is connected yet, so there is nothing to configure. Payment reminders are prepared as text you send yourself from Sales → Payment reminders.</p></CardBody></Card>
               <Card>
-                <CardHeader title="Integrations" description="Placeholders: none of these connections exists yet, so they have no settings." />
+                <CardHeader title="Integrations" description="External connections are unconfigured. No data is exchanged with these providers." />
                 <ul className="divide-y divide-slate-100">
                   {[['DrugXOne', 'Share availability and prices, receive pharmacy orders'], ['Ghana Revenue Authority e-VAT', 'Issue tax invoices to the authority (needs its specification and credentials)'], ['Payment gateways', 'Card and mobile-money collection']].map(([n, d]) => (
                     <li key={n} className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5"><div className="min-w-0 flex-1"><div className="font-medium text-slate-900">{n}</div><div className="text-xs text-slate-500">{d}</div></div><Badge>Not connected</Badge></li>

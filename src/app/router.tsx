@@ -81,7 +81,6 @@ import { SuppliersPage } from '@/modules/suppliers/SuppliersPage'
 import { UsersPage } from '@/modules/users/UsersPage'
 import { LocationsPage } from '@/modules/warehouses/LocationsPage'
 import { WarehousesPage } from '@/modules/warehouses/WarehousesPage'
-import { WorkspaceModulePage } from '@/modules/shared/WorkspaceModulePage'
 import { ApprovalsPage } from '@/modules/shared/ApprovalsPage'
 import { CreditControlPage } from '@/modules/sales/CreditControlPage'
 import { PurchaseRequestsPage } from '@/modules/purchasing/PurchaseRequestsPage'
@@ -115,7 +114,8 @@ export const routes = [
           { index: true, element: <DashboardPage /> },
           { path: 'support', element: <TenantSupportPage /> },
           { path: 'announcements', element: <TenantAnnouncementsPage /> },
-          { path: 'workspace/:module', element: <WorkspaceModulePage /> },
+          { path: 'workspace/:module', element: <NotFoundPage /> },
+          { element: <RequirePermission anyOf={['settings.view']} />, children: [{ path: 'workspace/integrations', element: <SettingsPage key="integrations" initialSection="integrations" /> }] },
           { path: 'workspace/approvals', element: <ApprovalsPage /> },
           { element: <RequirePermission anyOf={['accounting.view']} />, children: [{ path: 'workspace/expenses', element: <ExpensesPage /> }] },
           { element: <RequirePermission anyOf={['pricing.view']} />, children: [{ path: 'workspace/price-agreements', element: <PriceAgreementsPage /> }] },

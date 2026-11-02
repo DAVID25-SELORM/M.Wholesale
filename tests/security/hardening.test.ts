@@ -154,7 +154,7 @@ describe('catalog hardening', () => {
       'public.crm_workspace', 'public.decide_expense', 'public.decide_purchase_request', 'public.onboard_tenant',
       'public.platform_billing', 'public.platform_change_user_role', 'public.platform_decide_onboarding', 'public.platform_issue_invoice',
       'public.platform_onboarding_requests', 'public.platform_operator_access', 'public.platform_organization_activity', 'public.platform_organization_records', 'public.platform_ownership_options',
-      'public.platform_publish_announcement', 'public.platform_read', 'public.platform_renew_subscription', 'public.platform_reply_to_tenant',
+      'public.platform_publish_announcement', 'public.platform_read', 'public.platform_renew_subscription', 'public.platform_renewal_scheduler', 'public.platform_revoke_sessions', 'public.platform_user_sessions', 'public.platform_plan_features', 'public.platform_set_plan_features', 'public.platform_set_auto_renew', 'public.platform_reply_to_tenant',
       'public.platform_submit_onboarding', 'public.platform_support_assignees', 'public.platform_tenants', 'public.platform_transfer_ownership',
       'public.platform_user_roles', 'public.platform_void_invoice', 'public.platform_write', 'public.procurement_insights',
       'public.record_recall_recovery', 'public.record_supplier_quotation', 'public.release_recall_batch', 'public.save_crm_record',

@@ -73,9 +73,9 @@ Other change: production source maps are now `hidden` (still generated for error
 
 **Your own copy (recommended weekly, kept off the platform):**
 ```bash
-pg_dump "postgresql://postgres:<DB_PASSWORD>@db.vrqanbbxkxvpegogsqej.supabase.co:5432/postgres" --no-owner --schema=public -Fc -f wholesale-$(date +%F).dump
+pg_dump "postgresql://postgres:<DB_PASSWORD>@db.vrqanbbxkxvpegogsqej.supabase.co:5432/postgres" --no-owner --schema=public --schema=private --schema=auth -Fc -f wholesale-$(date +%F).dump
 ```
-Store it encrypted (it contains customer and licence data), in two places.
+Store it encrypted (it contains customer, licence and authentication data), in two access-controlled places. This logical export includes tenant data, private platform records and Auth records. It does not include uploaded file contents, provider configuration, secrets, database roles or all extension configuration. Preserve those separately and rehearse restoration into an isolated compatible Supabase environment; do not restore Auth tables into a live project.
 
 **Restore drill (run quarterly):** create an empty database, `pg_restore --no-owner -d <scratch_db> wholesale-<date>.dump`, then compare row counts of `sales_invoices`, `products`, `audit_logs`, and the stock valuation against production. This was run on the local stack on 2026-10-15: dump 1.6 MB, restored, counts identical (143 invoices, 274 products, 3,742 audit rows in both).
 
@@ -86,3 +86,7 @@ Store it encrypted (it contains customer and licence data), in two places.
 - Volume figures come from a local database; hosted latency adds the network round trip (typically 50-150 ms per call) but not more database time. Re-run `npm run test:perf` after schema changes.
 - The perf test seeds data with triggers switched off for speed; it measures reads and one posting, not bulk-posting throughput.
 - Not yet done: GRA e-VAT integration and the customer portal (waiting on your inputs, see `docs/phase12/`). The accounting ledger and bank reconciliation are built (Phase 13, `docs/phase13/`).
+
+## Platform completion update (2026-11-02)
+
+The platform administration increment now includes automatic renewal controls, session revocation and limited session history, plan feature restrictions, organization records, onboarding review, support, announcements, ownership transfer, role management, subscription filters and audit activity. Local fresh-database verification passed 53 suites / 480 tests; the frontend passed 38 suites / 219 tests; lint, TypeScript and the production build passed. Email, SMS, payment collection and external provider connections remain deliberately unconfigured. Hosted deployment still requires applying migrations `20261101000300` through `20261101000500` and completing the named business acceptance checklist.

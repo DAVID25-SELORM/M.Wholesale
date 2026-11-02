@@ -79,7 +79,7 @@ export function AccessDisabledPage() {
   return (
     <CenteredCard icon={<UserX className="h-5 w-5" />} title="Access disabled">
       <p>
-        {reason === 'trial_unavailable' ? 'Your organization’s trial has ended or has not started yet. Ask your platform administrator to review the subscription.' : reason === 'inactive_organization'
+        {reason === 'session_revoked' ? 'An administrator revoked this session. Sign out and sign in again to continue.' : reason === 'trial_unavailable' ? 'Your organization’s trial has ended or has not started yet. Ask your platform administrator to review the subscription.' : reason === 'inactive_organization'
           ? 'Your organization is currently deactivated.'
           : 'Your account has been deactivated.'}{' '}
         Contact your administrator if you believe this is a mistake.

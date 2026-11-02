@@ -99,6 +99,7 @@ describe('tenant sweep: functions and the platform boundary', () => {
       platform_ownership_options: 'select public.platform_ownership_options($1)',
       platform_organization_records: "select public.platform_organization_records($1,'security')",
       platform_organization_activity: 'select public.platform_organization_activity($1)',
+      platform_set_auto_renew: 'select public.platform_set_auto_renew($1,true,null)',
       platform_renew_subscription: 'select public.platform_renew_subscription($1,null,null)',
     }
     const rows = await q(`select p.proname from pg_proc p where p.pronamespace = 'public'::regnamespace and has_function_privilege('authenticated', p.oid, 'execute')

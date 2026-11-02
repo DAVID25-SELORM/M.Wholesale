@@ -26,8 +26,8 @@ export interface NavGroup {
   collapsedByDefault?: boolean
 }
 
+
 const modulePath = (label: string) => `/workspace/${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
-const planned = (id: string, label: string): NavItem => ({ id, label, to: modulePath(label) })
 
 export const NAV_TOP: NavItem = { id: 'dashboard', label: 'Dashboard', to: '/', icon: LayoutDashboard }
 
@@ -48,8 +48,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'products', label: 'Products', to: '/catalog/products', anyOf: ['products.view'] },
       { id: 'catalog-setup', label: 'Catalogue setup', to: '/catalog/setup', anyOf: ['products.view'] },
       { id: 'import', label: 'Import data', to: '/admin/import', anyOf: ['products.create', 'suppliers.create', 'inventory.opening_stock'] },
-      planned('approvals', 'Approvals'),
-      planned('integrations', 'Integrations'),
+      { id: 'approvals', label: 'Approvals', to: '/workspace/approvals' },
+      { id: 'integrations', label: 'Integrations', to: '/workspace/integrations', anyOf: ['settings.view'] },
       { id: 'settings', label: 'Settings', to: '/admin/settings', anyOf: ['settings.view'] },
     ],
   },

@@ -32,6 +32,7 @@ export function useSessionContextQuery() {
     queryKey: [...SESSION_QUERY_KEY, userId],
     enabled: userId !== null,
     staleTime: 60_000,
+    refetchInterval: 60_000,
     queryFn: async (): Promise<SessionContext> => {
       const { data, error } = await supabase.rpc('get_session_context')
       if (error) { logError('get_session_context', error); throw toAppError(error) }
