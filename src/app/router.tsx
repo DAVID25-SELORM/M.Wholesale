@@ -115,7 +115,7 @@ export const routes = [
           { path: 'support', element: <TenantSupportPage /> },
           { path: 'announcements', element: <TenantAnnouncementsPage /> },
           { path: 'workspace/:module', element: <NotFoundPage /> },
-          { element: <RequirePermission anyOf={['settings.view']} />, children: [{ path: 'workspace/integrations', element: <SettingsPage key="integrations" initialSection="integrations" /> }] },
+          { element: <RequirePermission anyOf={['settings.view', 'integrations.view', 'integrations.manage']} />, children: [{ path: 'workspace/integrations', element: <SettingsPage key="integrations" initialSection="integrations" /> }] },
           { path: 'workspace/approvals', element: <ApprovalsPage /> },
           { element: <RequirePermission anyOf={['accounting.view']} />, children: [{ path: 'workspace/expenses', element: <ExpensesPage /> }] },
           { element: <RequirePermission anyOf={['pricing.view']} />, children: [{ path: 'workspace/price-agreements', element: <PriceAgreementsPage /> }] },
