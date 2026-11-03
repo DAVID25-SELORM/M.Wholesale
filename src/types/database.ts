@@ -2676,6 +2676,7 @@ isOneToOne: false
             drugxone_set_connection: { Args: { p_environment: string; p_base_url: string; p_external_business_id: string; p_status: string; p_reason: string }; Returns: undefined }
             drugxone_set_product_mapping: { Args: { p_product_id: string; p_external_product_id: string; p_external_offer_id: string; p_external_sku: string; p_external_name: string; p_reason: string }; Returns: undefined }
             drugxone_sync_queue: { Args: { p_page?: number }; Returns: Json }
+            drugxone_queue_catalogue: { Args: { p_product_ids?: string[] | null; p_reason?: string | null }; Returns: Json }
             platform_user_roles: { Args: { p_user: string }; Returns: Json }
             platform_subscriptions: { Args: { p_search?: string; p_page?: number; p_filter?: string }; Returns: Json }
             platform_plan_features: { Args: { p_plan: string }; Returns: Json }

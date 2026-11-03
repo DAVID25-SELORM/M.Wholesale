@@ -32,3 +32,7 @@ export async function setDrugXoneConnection(input: {
     p_reason: input.reason,
   }), 'drugxone.connection.save')
 }
+
+export async function queueDrugXoneCatalogue(reason: string, productIds?: string[]): Promise<{ queued: number; event_ids: string[] }> {
+  return unwrap(await supabase.rpc('drugxone_queue_catalogue', { p_product_ids: productIds ?? null, p_reason: reason }), 'drugxone.catalogue.queue') as { queued: number; event_ids: string[] }
+}

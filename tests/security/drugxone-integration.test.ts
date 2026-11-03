@@ -38,3 +38,11 @@ it('is tenant isolated and makes sync events idempotent', async () => {
   expect((await withUser(org.ownerId, c => c.attempt("select public.drugxone_set_connection('PRODUCTION','http://prod.example','business-1','Invalid URL')", []))).ok).toBe(false)
   expect((await withUser(null, c => c.attempt('select public.drugxone_connection_read()'))).ok).toBe(false)
 })
+
+it('queues a deterministic catalogue event without exposing its payload in the queue report', async () => {
+  const result = (await withUser(org.ownerId, c => c.q("select public.drugxone_queue_catalogue(null,'Prepare sandbox catalogue') data"), { commit: true })).rows[0].data
+  expect(result.queued).toBe(1)
+  const queue = (await withUser(org.ownerId, c => c.q('select public.drugxone_sync_queue() data'))).rows[0].data
+  expect(queue.total).toBe(2)
+  expect(queue.rows.some((row: { entity_type: string; status: string }) => row.entity_type === 'CATALOGUE' && row.status === 'QUEUED')).toBe(true)
+})

@@ -161,7 +161,7 @@ describe('catalog hardening', () => {
       'public.submit_expense', 'public.submit_purchase_request', 'public.tenant_announcements', 'public.tenant_read_announcement',
       'public.tenant_support_read', 'public.tenant_support_write',
       'public.platform_subscriptions',
-      'public.drugxone_connection_read', 'public.drugxone_set_connection', 'public.drugxone_set_product_mapping', 'public.drugxone_sync_queue',
+      'public.drugxone_connection_read', 'public.drugxone_queue_catalogue', 'public.drugxone_set_connection', 'public.drugxone_set_product_mapping', 'public.drugxone_sync_queue',
     ].sort())
     const service = rows.filter((r) => r.service).map((r) => r.fn)
     expect(service).toEqual(expect.arrayContaining(['public.provision_organization', 'public.provision_user', 'public.complete_invitation']))
