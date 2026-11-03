@@ -16,6 +16,16 @@ The integration uses a trusted server adapter with credentials held only in serv
 4. **Status projection:** send accepted, picking, packed, dispatched, cancelled and completed states back to DrugXone. Partial fulfilment and backorders must carry line quantities.
 5. **Pilot expansion:** enable one tenant, then multiple tenants only after cross-tenant, duplicate, replay, expiry, recalled-batch and failure-retry tests pass.
 
+## Queue worker
+
+The `supabase/functions/drugxone-sync` worker drains queued catalogue events. It requires these server-only secrets:
+
+- `DRUGXONE_SYNC_SECRET`: scheduler-to-worker bearer secret.
+- `DRUGXONE_PARTNER_TOKENS_JSON`: JSON map from each DrugXOne external business ID to its partner token.
+- `DRUGXONE_CATALOGUE_PATH`: optional path, default `/api/integrations/erp/catalogue`.
+
+The worker claims queued events, sends an idempotency key and correlation ID, retries with bounded backoff, and moves repeated failures to `DEAD_LETTER`. It records only sanitized error codes and never stores or logs partner tokens.
+
 ## Required partner API properties
 
 - TLS and a per-tenant credential; no credentials in browser code or normal settings.
