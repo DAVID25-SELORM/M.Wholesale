@@ -96,8 +96,11 @@ the user has no provider credentials available yet.
 - Remaining planned navigation includes approvals, price agreements, purchasing requests,
   supplier quotations, expenses, CRM and additional intelligence screens. Their presence
   in the roadmap must not be represented as implemented functionality.
-- Roadmap features such as offline operations, temperature logging, richer proof of
-  delivery, subscriptions and the customer portal still need scope-by-scope completion.
+- Cold-chain temperature logging for packages is implemented locally (migration `20261104000200`,
+  `docs/phase17/COLD_CHAIN.md`, not yet applied hosted). Per-organization limits, probe import,
+  driver capture on runs and storage-room monitoring remain open.
+- Roadmap features such as offline operations, richer proof of delivery, subscriptions and the
+  customer portal still need scope-by-scope completion.
 
 ## External release dependencies
 

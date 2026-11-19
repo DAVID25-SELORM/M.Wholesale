@@ -26,6 +26,18 @@ export type Database = {
               Update: never
               Relationships: []
             }
+            temperature_readings: {
+              Row: { id: string; organization_id: string; branch_id: string; fulfilment_order_id: string; package_id: string; stage: string; temperature_c: number; storage_condition: string; limit_min_c: number; limit_max_c: number; within_range: boolean; note: string | null; recorded_by: string; recorded_at: string }
+              Insert: never
+              Update: never
+              Relationships: []
+            }
+            temperature_excursions: {
+              Row: { id: string; organization_id: string; branch_id: string; fulfilment_order_id: string; package_id: string; reading_id: string; status: string; decision: string | null; decision_reason: string | null; decided_by: string | null; decided_at: string | null; created_at: string }
+              Insert: never
+              Update: never
+              Relationships: []
+            }
             recall_recoveries: {
               Row: { id: string; organization_id: string; recall_batch_scope_id: string; sales_invoice_id: string; customer_id: string; batch_id: string; quantity: number; status: string; notes: string; created_at: string; created_by: string; updated_at: string; updated_by: string }
               Insert: never
@@ -2736,6 +2748,9 @@ isOneToOne: false
             close_recall: { Args: { p_recall_id: string }; Returns: undefined }
             cancel_recall: { Args: { p_recall_id: string; p_reason: string }; Returns: undefined }
             release_recall_batch: { Args: { p_scope_id: string; p_reason: string }; Returns: Json }
+            record_temperature_reading: { Args: { p_package_id: string; p_stage: string; p_temperature: number; p_note?: string }; Returns: Json }
+            resolve_temperature_excursion: { Args: { p_excursion_id: string; p_decision: string; p_reason: string }; Returns: undefined }
+            cold_chain_packages: { Args: Record<string, never>; Returns: Json }
             record_recall_recovery: { Args: { p_scope_id: string; p_invoice_id: string; p_quantity: number; p_status: string; p_notes: string }; Returns: string }
             add_recall_batch: { Args: { p_recall_id: string; p_batch_id: string }; Returns: string }
             quarantine_recall_batch: { Args: { p_scope_id: string; p_reason: string }; Returns: Json }

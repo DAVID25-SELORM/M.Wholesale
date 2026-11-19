@@ -87,6 +87,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'wh-exceptions', label: 'Fulfilment exceptions', to: '/warehouse/exceptions', anyOf: ['fulfilment.view', 'fulfilment.exception'] },
       { id: 'wh-packing', label: 'Packing', to: '/warehouse/packing', anyOf: ['fulfilment.view'] },
       { id: 'wh-dispatch', label: 'Dispatch', to: '/warehouse/dispatch', anyOf: ['fulfilment.view'] },
+      { id: 'wh-cold-chain', label: 'Cold chain', to: '/warehouse/cold-chain', anyOf: ['temperature.view'] },
     ],
   },
   {
