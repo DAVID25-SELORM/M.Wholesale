@@ -157,7 +157,7 @@ describe('catalog hardening', () => {
       'public.platform_publish_announcement', 'public.platform_read', 'public.platform_renew_subscription', 'public.platform_renewal_scheduler', 'public.platform_revoke_sessions', 'public.platform_user_sessions', 'public.platform_plan_features', 'public.platform_set_plan_features', 'public.platform_set_auto_renew', 'public.platform_reply_to_tenant',
       'public.platform_submit_onboarding', 'public.platform_support_assignees', 'public.platform_tenants', 'public.platform_transfer_ownership',
       'public.platform_user_roles', 'public.platform_void_invoice', 'public.platform_write', 'public.procurement_insights',
-      'public.record_recall_recovery', 'public.cold_chain_packages', 'public.record_temperature_reading', 'public.resolve_temperature_excursion', 'public.record_supplier_quotation', 'public.release_recall_batch', 'public.save_crm_record',
+      'public.record_recall_recovery', 'public.cold_chain_packages', 'public.record_run_temperature', 'public.run_cold_packages', 'public.record_temperature_reading', 'public.resolve_temperature_excursion', 'public.record_supplier_quotation', 'public.release_recall_batch', 'public.save_crm_record',
       'public.submit_expense', 'public.submit_purchase_request', 'public.tenant_announcements', 'public.tenant_read_announcement',
       'public.tenant_support_read', 'public.tenant_support_write',
       'public.platform_subscriptions',

@@ -5,6 +5,7 @@ import { Badge, Button, Card, CardBody, DataTable, EmptyState, ErrorState, Field
 import { toAppError } from '@/lib/errors'
 import { useSession } from '@/modules/session/SessionProvider'
 import { ReasonDialog } from '@/modules/purchasing/shared'
+import { RunTemperaturePanel } from '@/modules/fleet/RunTemperaturePanel'
 import { addStop, cancelRun, createRun, dispatchRun, listRuns, loadStop, recordOutcome, removeStop, reorderStops, returnStop, runOptions, runStops, startLoading, type DeliveryRun, type RunStop } from '@/services/runs'
 
 export function DeliveryRunsPage() {
@@ -91,6 +92,7 @@ function RunTask({ run }: { run: DeliveryRun }) {
       <Field label="Measured load weight (kg)"><Input type="number" min="0.01" step="0.01" value={weight} onChange={e => setWeight(e.target.value)} /></Field>
       <Button disabled={!note || !Number.isFinite(Number(weight)) || Number(weight) <= 0} loading={action.isPending} onClick={() => action.mutate(() => addStop(run.id, note, Number(weight)))}>Add stop</Button>
     </CardBody></Card>}
+    {active.some(s => s.cold_chain) && ['LOADING', 'ON_ROAD', 'COMPLETED'].includes(run.status) && <RunTemperaturePanel runId={run.id} canRecord={outcome && run.status === 'ON_ROAD'} />}
     <div className="space-y-4">{active.map((s, index) => <Card key={s.id}><CardBody>
       <div className="flex flex-wrap justify-between gap-2"><h2 className="font-semibold">{index + 1}. {s.customer_name}</h2><Badge>{s.status}</Badge></div>
       <p>{s.note_number} · Invoice {s.invoice_number}</p><p>{s.delivery_address ?? 'No address recorded'}</p><p>{s.contact_name} {s.contact_phone}</p>

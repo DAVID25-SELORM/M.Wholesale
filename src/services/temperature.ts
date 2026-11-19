@@ -34,3 +34,15 @@ export async function recordReading(packageId: string, stage: TemperatureStage, 
 export async function resolveExcursion(id: string, decision: 'ACCEPT_USE' | 'REJECT_GOODS', reason: string) {
   unwrap(await supabase.rpc('resolve_temperature_excursion', { p_excursion_id: id, p_decision: decision, p_reason: reason.trim() }), 'temperature.resolve')
 }
+
+export interface RunColdPackage {
+  stop_id: string; stop_position: number; stop_status: string; customer_name: string; package_id: string; package_number: string
+  latest_temperature_c: number | null; latest_within_range: boolean | null; latest_stage: string | null; latest_recorded_at: string | null
+  open_excursions: number; rejected_excursions: number
+}
+export async function listRunColdPackages(runId: string): Promise<RunColdPackage[]> {
+  return unwrap(await supabase.rpc('run_cold_packages', { p_run_id: runId }), 'temperature.runPackages') as unknown as RunColdPackage[]
+}
+export async function recordRunTemperature(runId: string, packageId: string, stage: 'TRANSIT' | 'DELIVERY', temperature: number, note: string): Promise<ReadingResult> {
+  return unwrap(await supabase.rpc('record_run_temperature', { p_run_id: runId, p_package_id: packageId, p_stage: stage, p_temperature: temperature, p_note: note.trim() || undefined }), 'temperature.runRecord') as unknown as ReadingResult
+}

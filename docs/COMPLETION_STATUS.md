@@ -97,8 +97,9 @@ the user has no provider credentials available yet.
   supplier quotations, expenses, CRM and additional intelligence screens. Their presence
   in the roadmap must not be represented as implemented functionality.
 - Cold-chain temperature logging for packages is implemented locally (migration `20261104000200`,
-  `docs/phase17/COLD_CHAIN.md`, not yet applied hosted). Per-organization limits, probe import,
-  driver capture on runs and storage-room monitoring remain open.
+  `docs/phase17/COLD_CHAIN.md`, not yet applied hosted). Driver capture on runs is built locally
+  (migration `20261105000100`, not yet applied hosted). Per-organization limits, probe import
+  and storage-room monitoring remain open.
 - Roadmap features such as offline operations, richer proof of delivery, subscriptions and the
   customer portal still need scope-by-scope completion.
 

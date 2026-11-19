@@ -107,7 +107,7 @@ Plans dispatch
 
 Delivers goods
 
-**branches**: view · **runs**: drive · **temperature**: record, view
+**branches**: view · **runs**: drive
 
 ### GENERAL_MANAGER — General Manager
 
@@ -288,8 +288,8 @@ Picks stock
 | `suppliers.edit` |  |  |  |  |  |  |  |  | ● | ● |  | ● | ● |  |  |  | ● |  |  |  |
 | `suppliers.view` | ● | ● | ● | ● |  |  |  |  | ● | ● | ● | ● | ● | ● |  |  | ● | ● |  |  |
 | `temperature.decide` |  |  |  | ● |  |  |  |  | ● | ● | ● |  |  |  |  |  | ● | ● |  |  |
-| `temperature.record` |  |  |  | ● |  |  | ● | ● | ● | ● |  |  |  |  |  |  | ● | ● | ● |  |
-| `temperature.view` |  |  | ● | ● |  |  | ● | ● | ● | ● | ● |  |  |  |  |  | ● | ● | ● |  |
+| `temperature.record` |  |  |  | ● |  |  | ● |  | ● | ● |  |  |  |  |  |  | ● | ● | ● |  |
+| `temperature.view` |  |  | ● | ● |  |  | ● |  | ● | ● | ● |  |  |  |  |  | ● | ● | ● |  |
 | `users.deactivate` |  |  |  |  |  |  |  |  | ● | ● |  |  |  |  |  |  | ● |  |  |  |
 | `users.edit` |  |  |  |  |  |  |  |  | ● | ● |  |  |  |  |  |  | ● |  |  |  |
 | `users.invite` |  |  |  |  |  |  |  |  | ● | ● |  |  |  |  |  |  | ● |  |  |  |

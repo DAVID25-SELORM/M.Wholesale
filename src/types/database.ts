@@ -2748,6 +2748,8 @@ isOneToOne: false
             close_recall: { Args: { p_recall_id: string }; Returns: undefined }
             cancel_recall: { Args: { p_recall_id: string; p_reason: string }; Returns: undefined }
             release_recall_batch: { Args: { p_scope_id: string; p_reason: string }; Returns: Json }
+            run_cold_packages: { Args: { p_run_id: string }; Returns: Json }
+            record_run_temperature: { Args: { p_run_id: string; p_package_id: string; p_stage: string; p_temperature: number; p_note?: string }; Returns: Json }
             record_temperature_reading: { Args: { p_package_id: string; p_stage: string; p_temperature: number; p_note?: string }; Returns: Json }
             resolve_temperature_excursion: { Args: { p_excursion_id: string; p_decision: string; p_reason: string }; Returns: undefined }
             cold_chain_packages: { Args: Record<string, never>; Returns: Json }
