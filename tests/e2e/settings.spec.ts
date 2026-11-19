@@ -85,6 +85,6 @@ test.describe('settings', () => {
     await page.goto('/admin/settings')
     await tab(page, 'Notifications and integrations').click()
     await expect(page.getByText(/nothing to configure/i)).toBeVisible()
-    await expect(page.getByText('Not connected')).toHaveCount(3)
+    await expect(page.getByText('Not connected')).toHaveCount(2)                  // DrugXone is a real, tenant-scoped form now
   })
 })

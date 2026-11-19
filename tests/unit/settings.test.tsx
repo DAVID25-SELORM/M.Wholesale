@@ -113,8 +113,8 @@ describe('Settings page', () => {
     renderWithApp(<SettingsPage />, { context: canManage })
     await user.click(await screen.findByRole('tab', { name: 'Notifications and integrations' }))
     expect(await screen.findByText(/nothing to configure/i)).toBeInTheDocument()
-    expect(screen.getAllByText('Not connected').length).toBe(3)
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Not connected').length).toBe(2)
+    // the DrugXone connection is a real, tenant-scoped form now, so only the notification channels and the other integrations remain placeholders
   })
 })
 

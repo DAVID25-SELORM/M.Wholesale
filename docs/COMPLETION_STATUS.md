@@ -77,9 +77,15 @@ the user has no provider credentials available yet.
 
 ## Remaining local work before completion
 
-- Partial-line substitution needs separate original/replacement batch quantities
-  throughout picking, package contents, labels and traceability. It is currently
-  rejected to avoid recording two batches as one.
+- Partial-line substitution: migration 029 (`partial_substitution_packing`) already keeps
+  original and replacement batch quantities separate through picking components,
+  package contents (`package_lines.batch_id`), per-batch packing and recall exposure; the
+  picking test "preserves both batches when replacing a partial shortage and packing"
+  covers it. Re-verified 2026-11-19 (27 picking tests). Gap found and closed the same day:
+  the dispatch recall guard ignored a partial replacement batch (migration
+  `20261104000100`, staged in `scripts/apply-partial-dispatch-guard.sql`, not yet applied
+  hosted); the test now recalls the replacement batch and expects dispatch to be refused.
+  Still open: printed labels and a customer-facing trace view showing both batches.
 - Recall recovery tracking and quarantine-release authorization
   are not a complete workflow yet. Current dispatch checks deliberately block even
   original allocated recalled batches after substitution, pending investigation.

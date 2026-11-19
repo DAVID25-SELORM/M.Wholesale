@@ -111,6 +111,11 @@ describe('fulfilment hold and substitution corrections', () => {
     await ok(call(independentVerifier, 'select public.verify_packed_line($1)', [line.id]))
     await ok(call(owner, 'select public.finish_packing($1)', [id]))
     expect((await order(id)).status).toBe('PACKED')
+    // a recall of the replacement batch (which is not the line's single actual batch) must still stop dispatch
+    const recall = (await ok(call(owner, `select public.create_recall('INTERNAL','II','Replacement recall','Hold replacement') id`)))[0].id
+    await ok(call(owner, 'select public.add_recall_batch($1,$2)', [recall, choices[0].id]))
+    const dn = (await ok(call(owner, `select public.prepare_packed_delivery($1,'Address','Contact','123',null) id`, [id])))[0].id
+    expect((await failure(call(owner, `select public.dispatch_delivery_note($1,'Driver','Vehicle')`, [dn]))).code).toBe('22023')
   })
   it('hands a controlled substitution to another approver and completes the pick', async () => {
     const p = await stocked()
@@ -539,3 +544,30 @@ describe('branch scope and tenants', () => {
   })
 })
 
+
+describe('recall recovery tracking', () => {
+  it('records recovery only against traced exposure, per organization, with an audit trail', async () => {
+    const p = await stocked()
+    const inv = await invoice([{ product: p.id, qty: 5 }])
+    const batchId = (await q(`select batch_id from public.sales_invoice_allocations where sales_invoice_id=$1`, [inv]))[0].batch_id
+    const recall = (await ok(call(owner, `select public.create_recall('INTERNAL','II','Recovery test','Recover from customers') id`)))[0].id
+    const scope = (await ok(call(owner, 'select public.add_recall_batch($1,$2) id', [recall, batchId])))[0].id
+
+    expect((await failure(call(auditor, `select public.record_recall_recovery($1,$2,5,'CONTACTED','Called pharmacy')`, [scope, inv]))).code).toBe('42501')
+    expect((await failure(call(ownerB, `select public.record_recall_recovery($1,$2,5,'CONTACTED','Foreign attempt')`, [scope, inv]))).code).toBe('P0002')
+    expect((await failure(call(owner, `select public.record_recall_recovery($1,$2,6,'CONTACTED','More than sold')`, [scope, inv]))).code).toBe('22023')
+    expect((await failure(call(owner, `select public.record_recall_recovery($1,$2,0,'CONTACTED','Zero quantity')`, [scope, inv]))).code).toBe('22023')
+    expect((await failure(call(owner, `select public.record_recall_recovery($1,$2,5,'DONE','Bad status')`, [scope, inv]))).code).toBe('22023')
+
+    const first = (await ok(call(owner, `select public.record_recall_recovery($1,$2,5,'CONTACTED','Called pharmacy') id`, [scope, inv])))[0].id
+    const second = (await ok(call(owner, `select public.record_recall_recovery($1,$2,5,'RECOVERED','Goods collected') id`, [scope, inv])))[0].id
+    expect(second).toBe(first)                                                   // one record per invoice and batch, updated in place
+    expect((await q(`select status from public.recall_recoveries where id=$1`, [first]))[0].status).toBe('RECOVERED')
+    expect((await q(`select count(*)::int n from public.audit_logs where entity_type='recall_recovery' and entity_id=$1`, [first]))[0].n).toBeGreaterThanOrEqual(2)
+
+    // other organizations cannot read it, and nobody can delete or write the table directly
+    expect((await ok(call(ownerB, `select id from public.recall_recoveries where id=$1`, [first]))).length).toBe(0)
+    expect((await failure(call(owner, `delete from public.recall_recoveries where id=$1`, [first]))).code).not.toBe('ok')
+    expect((await failure(call(owner, `update public.recall_recoveries set quantity=1 where id=$1`, [first]))).code).not.toBe('ok')
+  })
+})

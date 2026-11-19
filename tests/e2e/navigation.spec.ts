@@ -6,14 +6,14 @@ const nav = (page: Page) => page.locator('aside').first()
 // Permission-aware navigation and protected routes. The menu is a convenience; the unauthorized page proves the route itself is guarded.
 test.describe('owner', () => {
   test.use({ storageState: authFile('owner') })
-  test('sees the administration, accounting and settings entries, and future modules as non-links marked Soon', async ({ page }) => {
+  test('sees the administration, accounting and settings entries, and every module as a real link (no Soon placeholders left)', async ({ page }) => {
     await page.goto('/')
     for (const name of ['Users', 'Roles & permissions', 'Audit log', 'Application errors', 'Settings', 'Organization', 'Branches']) {
       await expect(nav(page).getByRole('link', { name, exact: true })).toBeVisible()
     }
     await page.getByRole('button', { name: /Accounting/ }).first().click().catch(() => undefined)
-    await expect(nav(page).getByText('Soon').first()).toBeVisible()
-    await expect(nav(page).getByRole('link', { name: 'Approvals' })).toHaveCount(0)             // a planned module has no route
+    await expect(nav(page).getByText('Soon')).toHaveCount(0)                                    // every planned module now has a page
+    await expect(nav(page).getByRole('link', { name: 'Approvals' })).toBeVisible()
   })
 })
 

@@ -27,7 +27,7 @@ remain open until their behavior, authorization, audit trail and tests are compl
 | 2 Inventory/procurement | Ledger, batches, orders/receipts, returns, transfers/counts, payables | Purchase requests and supplier quotations explicitly planned; destruction evidence, three-way matching and concurrency acceptance need review |
 | 3 Sales/pilot | Quotes/orders/invoices, POS, credit notes, receipts/refunds, reminders, reports | Price agreements planned; offline sales/sync, promise-to-pay, cheque lifecycle, real opening balance reconciliation and pilot UAT outstanding |
 | 4 Finance/compliance | Journals/statements, bank reconciliation, VAT report, controlled register, recalls | Expenses planned; petty cash, complaint/ADR, recall recovery/release/drill and accountant close acceptance outstanding |
-| 5 Fulfilment | Picking, packing, dispatch, delivery runs, fleet, exception UI | Partial/cross-bin substitution, temperature excursions, richer POD, on-site collection, offline rep work and week-long warehouse acceptance outstanding |
+| 5 Fulfilment | Picking, packing, dispatch, delivery runs, fleet, exception UI, partial/cross-bin substitution (verified 2026-11-19) | temperature excursions, richer POD, on-site collection, offline rep work and week-long warehouse acceptance outstanding |
 | 6 Scale/commercial | Role dashboard, stock/sales reports | Forecasting, schedules/saved views, subscription billing/licensing, self-service tenant onboarding, SSO, scale/DR acceptance outstanding |
 | 7 Integrations | No provider credentials supplied | DrugXOne/payment/accounting adapters require specifications and sandbox access; portal, second country pack and language support require implementation/scope validation |
 
