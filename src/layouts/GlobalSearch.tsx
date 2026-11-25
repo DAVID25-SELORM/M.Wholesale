@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
-import { useEffect, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toAppError } from '@/lib/errors'
 import { useSession } from '@/modules/session/SessionProvider'
@@ -13,6 +13,10 @@ export function GlobalSearch() {
   const [term, setTerm] = useState('')
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
+  // below the medium breakpoint the box is behind a button, and takes its own row when opened
+  const [expanded, setExpanded] = useState(false)
+  const input = useRef<HTMLInputElement>(null)
+  useEffect(() => { if (expanded) input.current?.focus() }, [expanded])
   useEffect(() => { const t = setTimeout(() => setTerm(cleanTerm(text)), 250); return () => clearTimeout(t) }, [text])
   const query = useQuery({
     queryKey: ['global-search', context.user_id, term],
@@ -22,7 +26,7 @@ export function GlobalSearch() {
   })
   const hits = term.length >= 2 ? (query.data ?? []) : []
   const showing = open && term.length >= 2
-  const go = (hit: SearchHit) => { setOpen(false); setText(''); setTerm(''); void navigate(hit.to) }
+  const go = (hit: SearchHit) => { setOpen(false); setExpanded(false); setText(''); setTerm(''); void navigate(hit.to) }
   function onKeyDown(e: KeyboardEvent) {
     if (e.key === 'Escape') { setOpen(false); return }
     if (!showing || hits.length === 0) return
@@ -31,10 +35,15 @@ export function GlobalSearch() {
     else if (e.key === 'Enter') { e.preventDefault(); const hit = hits[active]; if (hit) go(hit) }
   }
   return (
-    <div className="relative ml-auto hidden max-w-sm flex-1 md:block" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false) }}>
+    <>
+    <button type="button" onClick={() => setExpanded((v) => !v)} aria-label={expanded ? 'Close search' : 'Open search'} aria-expanded={expanded}
+      className="rounded-md p-2 text-slate-600 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 md:hidden">
+      <Search className="h-5 w-5" aria-hidden />
+    </button>
+    <div className={`relative md:order-none md:ml-auto md:block md:w-auto md:max-w-sm md:flex-1 ${expanded ? 'order-last block w-full' : 'hidden'}`} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false) }}>
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
       <input
-        type="search" role="combobox" aria-label="Global search" aria-expanded={showing} aria-controls="global-search-results" aria-autocomplete="list"
+        ref={input} type="search" role="combobox" aria-label="Global search" aria-expanded={showing} aria-controls="global-search-results" aria-autocomplete="list"
         aria-activedescendant={showing && hits[active] ? `search-hit-${active}` : undefined}
         value={text} placeholder="Search products, customers, orders…" maxLength={60}
         onChange={(e) => { setText(e.target.value); setOpen(true); setActive(0) }} onFocus={() => setOpen(true)} onKeyDown={onKeyDown}
@@ -59,5 +68,6 @@ export function GlobalSearch() {
         </div>
       )}
     </div>
+    </>
   )
 }

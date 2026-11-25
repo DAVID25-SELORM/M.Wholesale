@@ -14,14 +14,23 @@ function totp(secret: string, at = Date.now()): string {
   return String((h.readUInt32BE(o) & 0x7fffffff) % 1_000_000).padStart(6, '0')
 }
 
+/** On a phone the box sits behind a button. */
+async function openSearch(page: import('@playwright/test').Page) {
+  const toggle = page.getByRole('button', { name: 'Open search' })
+  await expect(page.getByRole('button', { name: 'User menu' })).toBeVisible()
+  if (await toggle.isVisible()) await toggle.click()
+  return page.getByRole('combobox', { name: 'Global search' })
+}
+
 test.describe('global search', () => {
   test.use({ storageState: authFile('owner') })
   test('finds a product by name and opens it, and says so when nothing matches', async ({ page }) => {
     await page.goto('/')
-    const box = page.getByRole('combobox', { name: 'Global search' })
+    let box = await openSearch(page)
     await box.fill('panadol')
     await page.getByRole('option').filter({ hasText: /panadol/i }).first().click()
     await expect(page).toHaveURL(/\/catalog\/products\/[0-9a-f-]{36}$/)
+    box = await openSearch(page)
     await box.fill('zzzz-nothing-here')
     await expect(page.getByText('No matches.')).toBeVisible()
     // characters with a meaning in a filter are neutralised, not passed through
@@ -36,7 +45,7 @@ test.describe('global search without supplier access', () => {
     await page.goto('/')
     const requests: string[] = []
     page.on('request', (r) => { if (r.url().includes('/rest/v1/')) requests.push(r.url()) })
-    await page.getByRole('combobox', { name: 'Global search' }).fill('pa')
+    await (await openSearch(page)).fill('pa')
     await expect(page.getByRole('listbox', { name: 'Search results' })).toBeAttached()
     await page.waitForTimeout(1500)
     expect(requests.some((u) => /\/rest\/v1\/(suppliers|purchase_orders)\?.*ilike/.test(u))).toBe(false)

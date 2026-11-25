@@ -17,7 +17,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:5273',
     channel: process.env.E2E_BROWSER ?? 'chrome',
-    viewport: { width: 1440, height: 900 },
+    // E2E_VIEWPORT=390x844 reruns the workflows at phone or tablet size
+    viewport: (([width, height]) => ({ width: Number(width), height: Number(height) }))((process.env.E2E_VIEWPORT ?? '1440x900').split('x')),
     screenshot: 'only-on-failure',
     trace: 'off',
   },
