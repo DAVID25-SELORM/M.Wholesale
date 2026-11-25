@@ -1,7 +1,9 @@
-import { Bell, Building2, LogOut, Menu, Search, UserCircle2 } from 'lucide-react'
+import { Bell, Building2, LogOut, Menu, ShieldCheck, UserCircle2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Dropdown } from '@/components/ui'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { ALL_BRANCHES, useSession } from '@/modules/session/SessionProvider'
+import { GlobalSearch } from './GlobalSearch'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 
 export function BranchSelector() {
@@ -31,6 +33,7 @@ export function BranchSelector() {
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { context } = useSession()
   const { signOut } = useAuth()
+  const navigate = useNavigate()
   const name = context.profile?.display_name ?? `${context.profile?.first_name ?? ''} ${context.profile?.last_name ?? ''}`.trim()
   const roleNames = (context.roles ?? []).map((r) => r.role_name)
 
@@ -48,17 +51,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
       <BranchSelector />
       <WorkspaceSwitcher />
 
-      {/* Global search is a placeholder until product/customer modules exist. */}
-      <div className="relative ml-auto hidden max-w-sm flex-1 md:block">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
-        <input
-          type="search"
-          disabled
-          aria-label="Global search (coming soon)"
-          placeholder="Search products, customers, orders… (coming soon)"
-          className="h-9 w-full cursor-not-allowed rounded-md border-0 bg-slate-50 pl-9 pr-3 text-sm text-slate-400 ring-1 ring-inset ring-slate-200"
-        />
-      </div>
+      <GlobalSearch />
 
       <div className="ml-auto flex items-center gap-1 md:ml-0">
         <button
@@ -79,6 +72,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           }
           items={[
             { id: 'who', label: <span className="block"><span className="block text-sm font-medium text-slate-800">{name}</span><span className="block text-xs text-slate-500">{roleNames.join(', ') || 'No roles'}</span></span>, onSelect: () => {}, disabled: true },
+            { id: 'security', label: <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" aria-hidden /> Sign-in security</span>, onSelect: () => void navigate('/account/security') },
             { id: 'signout', label: <span className="flex items-center gap-2"><LogOut className="h-4 w-4" aria-hidden /> Sign out</span>, onSelect: () => void signOut() },
           ]}
         />

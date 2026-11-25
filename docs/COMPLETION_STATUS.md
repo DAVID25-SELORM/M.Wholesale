@@ -111,3 +111,8 @@ the user has no provider credentials available yet.
 
 See `CUTOVER.md` for the operational acceptance steps. None are marked complete
 merely because a local build succeeds.
+
+## 2026-11-25
+
+See `HANDOVER_REVIEW_2026-11-25.md`: hosted schema drift found and closed, `drugxone-sync` token-routing
+flaw fixed before first deployment, two-step sign-in (database enforced, opt-in) and global search added.

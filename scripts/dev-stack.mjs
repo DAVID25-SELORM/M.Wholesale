@@ -127,6 +127,7 @@ async function up() {
       '-e', 'GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated',
       // No public registration: users are provisioned by administrators / the server.
       '-e', 'GOTRUE_DISABLE_SIGNUP=true', '-e', 'GOTRUE_MAILER_AUTOCONFIRM=true',
+      '-e', 'GOTRUE_MFA_TOTP_ENROLL_ENABLED=true', '-e', 'GOTRUE_MFA_TOTP_VERIFY_ENABLED=true',
       '-e', 'GOTRUE_EXTERNAL_EMAIL_ENABLED=true', '-e', 'GOTRUE_LOG_LEVEL=warn',
       GOTRUE_IMAGE,
     ])

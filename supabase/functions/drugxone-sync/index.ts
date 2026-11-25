@@ -22,10 +22,11 @@ type ConnectionRow = {
 }
 
 type DbResult = { data: unknown; error: { message?: string } | null }
-type Query = {
+type Query = PromiseLike<DbResult> & {
   select(columns: string): Query
   update(values: Record<string, unknown>): Query
   eq(column: string, value: unknown): Query
+  in(column: string, values: unknown[]): Query
   lte(column: string, value: unknown): Query
   order(column: string, options: { ascending: boolean }): Query
   limit(value: number): Query
@@ -53,6 +54,29 @@ function bearer(req: Request): string {
   return /^Bearer\s+\S+$/i.test(value) ? value.slice(7).trim() : ''
 }
 
+/** What the operator (never a tenant) has approved for one organization. */
+type Partner = { token: string; business_id: string }
+
+// The tenant controls base_url and external_business_id, so neither may decide which secret is sent or where.
+// The token is looked up by organization id (assigned by the database), the business id must match what the
+// operator registered for that organization, and the destination origin must be on the operator's allow list.
+function partnerFor(partners: Record<string, Partner>, organizationId: string, connection: ConnectionRow): Partner | null {
+  const partner = Object.prototype.hasOwnProperty.call(partners, organizationId) ? partners[organizationId] : undefined
+  if (!partner || typeof partner.token !== 'string' || !partner.token || partner.business_id !== connection.external_business_id) return null
+  return partner
+}
+
+function allowedDestination(base: string, allowedOrigins: string[]): boolean {
+  try {
+    const url = new URL(base)
+    return url.protocol === 'https:' && !url.username && !url.password && allowedOrigins.includes(url.origin)
+  } catch { return false }
+}
+
+function parseOrigins(value: string | undefined): string[] {
+  return (value ?? '').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean)
+}
+
 function targetUrl(base: string, path: string): string {
   return `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
 }
@@ -62,20 +86,23 @@ function retryAt(attempt: number): string {
   return new Date(Date.now() + seconds * 1000).toISOString()
 }
 
-async function processEvent(db: Db, event: EventRow, tokenMap: Record<string, string>, path: string, fetcher: typeof fetch): Promise<'succeeded' | 'failed' | 'skipped'> {
+async function processEvent(db: Db, event: EventRow, partners: Record<string, Partner>, allowedOrigins: string[], path: string, fetcher: typeof fetch): Promise<'succeeded' | 'failed' | 'skipped'> {
   const connectionResult = await db.from('drugxone_connections').select('id,organization_id,base_url,external_business_id,status').eq('id', event.connection_id).eq('organization_id', event.organization_id).maybeSingle()
   const connection = connectionResult.data as ConnectionRow | null
   if (connectionResult.error || !connection || connection.status !== 'READY' || !connection.base_url || !connection.external_business_id) return 'skipped'
-  const token = tokenMap[connection.external_business_id]
-  if (!token) return 'skipped'
+  const partner = partnerFor(partners, event.organization_id, connection)
+  if (!partner || !allowedDestination(connection.base_url, allowedOrigins)) return 'skipped'
 
-  const claimed = await db.from('drugxone_sync_events').update({ status: 'PROCESSING', attempts: event.attempts + 1, last_error_code: null, last_error: null }).eq('id', event.id).eq('organization_id', event.organization_id).eq('status', 'QUEUED').select('id').maybeSingle()
+  const claimed = await db.from('drugxone_sync_events').update({ status: 'PROCESSING', attempts: event.attempts + 1, last_error_code: null, last_error: null }).eq('id', event.id).eq('organization_id', event.organization_id).eq('status', event.status).select('id').maybeSingle()
   if (claimed.error || !claimed.data) return 'skipped'
 
   try {
     const response = await fetcher(targetUrl(connection.base_url, path), {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Idempotency-Key': event.idempotency_key, 'X-Request-ID': event.id },
+      // never follow a redirect: the credential goes only to the approved origin
+      redirect: 'error',
+      signal: AbortSignal.timeout(15_000),
+      headers: { 'Authorization': `Bearer ${partner.token}`, 'Content-Type': 'application/json', 'Idempotency-Key': event.idempotency_key, 'X-Request-ID': event.id },
       body: JSON.stringify({ version: 'v1', event_id: event.id, event_type: event.entity_type, external_id: event.external_id, payload: event.payload }),
     })
     if (!response.ok) throw new Error(`remote_http_${response.status}`)
@@ -106,21 +133,24 @@ async function main(req: Request, db: Db, env: Record<string, string | undefined
   if (!/^[0-9a-f-]{36}$/i.test(organizationId)) return json(400, { error: 'organization_id is required' })
   const max = typeof body.max_events === 'number' && Number.isInteger(body.max_events) ? Math.min(25, Math.max(1, body.max_events)) : 10
   const tokenText = env.DRUGXONE_PARTNER_TOKENS_JSON ?? '{}'
-  let tokenMap: Record<string, string>
-  try { tokenMap = JSON.parse(tokenText) as Record<string, string> } catch { return json(500, { error: 'Worker token configuration is invalid' }) }
-  const eventsResult = await db.from('drugxone_sync_events').select('id,organization_id,connection_id,entity_type,external_id,idempotency_key,payload,status,attempts').eq('organization_id', organizationId).eq('status', 'QUEUED').lte('next_attempt_at', new Date().toISOString()).order('created_at', { ascending: true }).limit(max)
+  let partners: Record<string, Partner>
+  try { partners = JSON.parse(tokenText) as Record<string, Partner> } catch { return json(500, { error: 'Worker token configuration is invalid' }) }
+  const allowedOrigins = parseOrigins(env.DRUGXONE_ALLOWED_ORIGINS)
+  const eventsResult = await db.from('drugxone_sync_events').select('id,organization_id,connection_id,entity_type,external_id,idempotency_key,payload,status,attempts').eq('organization_id', organizationId).in('status', ['QUEUED', 'FAILED']).lte('next_attempt_at', new Date().toISOString()).order('created_at', { ascending: true }).limit(max)
   if (eventsResult.error) return json(500, { error: 'Unable to read sync queue' })
   const counts = { succeeded: 0, failed: 0, skipped: 0 }
-  for (const event of (eventsResult.data ?? []) as EventRow[]) counts[await processEvent(db, event, tokenMap, env.DRUGXONE_CATALOGUE_PATH ?? '/api/integrations/erp/catalogue', fetcher)] += 1
+  for (const event of (eventsResult.data ?? []) as EventRow[]) counts[await processEvent(db, event, partners, allowedOrigins, env.DRUGXONE_CATALOGUE_PATH ?? '/api/integrations/erp/catalogue', fetcher)] += 1
   return json(200, { ok: true, organization_id: organizationId, ...counts })
 }
 
 const denoGlobal = (globalThis as { Deno?: { env: { get(k: string): string | undefined }; serve(handler: (req: Request) => Response | Promise<Response>): void } }).Deno
 if (denoGlobal) {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - the `npm:` scheme only exists in Deno; plain tsc cannot resolve it
   const { createClient } = await import(/* @vite-ignore */ 'npm:@supabase/supabase-js@2') as { createClient: (url: string, key: string, options?: Record<string, unknown>) => Db }
   const db = createClient(denoGlobal.env.get('SUPABASE_URL') ?? '', denoGlobal.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', { auth: { persistSession: false } })
-  const env = { DRUGXONE_SYNC_SECRET: denoGlobal.env.get('DRUGXONE_SYNC_SECRET'), DRUGXONE_PARTNER_TOKENS_JSON: denoGlobal.env.get('DRUGXONE_PARTNER_TOKENS_JSON'), DRUGXONE_CATALOGUE_PATH: denoGlobal.env.get('DRUGXONE_CATALOGUE_PATH') }
+  const env = { DRUGXONE_SYNC_SECRET: denoGlobal.env.get('DRUGXONE_SYNC_SECRET'), DRUGXONE_PARTNER_TOKENS_JSON: denoGlobal.env.get('DRUGXONE_PARTNER_TOKENS_JSON'), DRUGXONE_CATALOGUE_PATH: denoGlobal.env.get('DRUGXONE_CATALOGUE_PATH'), DRUGXONE_ALLOWED_ORIGINS: denoGlobal.env.get('DRUGXONE_ALLOWED_ORIGINS') }
   denoGlobal.serve((req) => main(req, db, env, fetch))
 }
 
-export { main, processEvent, retryAt, sameSecret, targetUrl }
+export { allowedDestination, main, partnerFor, processEvent, retryAt, sameSecret, targetUrl }

@@ -23,6 +23,7 @@ import { PickingQueuePage } from '@/modules/fulfilment/PickingQueuePage'
 import { PackingPage, PackingQueuePage } from '@/modules/fulfilment/PackingPage'
 import { ExceptionsPage } from '@/modules/fulfilment/ExceptionsPage'
 import { ColdChainPage } from '@/modules/fulfilment/ColdChainPage'
+import { SecurityPage } from '@/modules/auth/SecurityPage'
 import { RecallsPage } from '@/modules/inventory/RecallsPage'
 import { DriversPage } from '@/modules/fleet/DriversPage'
 import { VehiclesPage } from '@/modules/fleet/VehiclesPage'
@@ -113,6 +114,7 @@ export const routes = [
         element: <AppShell />,
         children: [
           { index: true, element: <DashboardPage /> },
+          { path: 'account/security', element: <SecurityPage /> },
           { path: 'support', element: <TenantSupportPage /> },
           { path: 'announcements', element: <TenantAnnouncementsPage /> },
           { path: 'workspace/:module', element: <NotFoundPage /> },

@@ -4,6 +4,7 @@ import { envProblem } from '@/lib/env'
 import { SessionProvider, useSessionContextQuery } from '@/modules/session/SessionProvider'
 import { useSession } from '@/modules/session/SessionProvider'
 import { useAuth } from './AuthProvider'
+import { MfaChallengePage } from './MfaChallengePage'
 
 /**
  * Gate for everything behind login:
@@ -35,6 +36,8 @@ export function RequireAuth() {
   }
 
   const ctx = query.data
+  // the database gives a password-only session nothing once an authenticator is set up; ask for the code
+  if (ctx.status === 'mfa_required') return <MfaChallengePage onVerified={() => query.refetch()} />
   if (ctx.status === 'inactive_user' || ctx.status === 'inactive_organization' || ctx.status === 'trial_unavailable' || ctx.status === 'session_revoked') {
     return <Navigate to="/access-disabled" replace state={{ reason: ctx.status }} />
   }

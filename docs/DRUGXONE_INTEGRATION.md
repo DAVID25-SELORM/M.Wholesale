@@ -21,7 +21,12 @@ The integration uses a trusted server adapter with credentials held only in serv
 The `supabase/functions/drugxone-sync` worker drains queued catalogue events. It requires these server-only secrets:
 
 - `DRUGXONE_SYNC_SECRET`: scheduler-to-worker bearer secret.
-- `DRUGXONE_PARTNER_TOKENS_JSON`: JSON map from each DrugXOne external business ID to its partner token.
+- `DRUGXONE_PARTNER_TOKENS_JSON`: JSON map keyed by **ERP organization id** (not by anything a tenant can type):
+  `{"<organization uuid>": {"token": "<partner token>", "business_id": "<DrugXOne business id>"}}`.
+  The organization's saved external business ID must equal `business_id`, or nothing is sent.
+- `DRUGXONE_ALLOWED_ORIGINS`: comma-separated list of the only origins a token may be sent to, for example
+  `https://api.example.com`. The tenant's base URL must match one. Empty or unset means nothing is sent.
+  (Changed 2026-11-25: keying tokens by business ID let one tenant redirect another tenant's token.)
 - `DRUGXONE_CATALOGUE_PATH`: optional path, default `/api/integrations/erp/catalogue`.
 
 The worker claims queued events, sends an idempotency key and correlation ID, retries with bounded backoff, and moves repeated failures to `DEAD_LETTER`. It records only sanitized error codes and never stores or logs partner tokens.

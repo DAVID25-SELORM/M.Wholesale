@@ -90,6 +90,11 @@ create table if not exists auth.users (
   email text,
   created_at timestamptz default now()
 );
+create table if not exists auth.mfa_factors (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  status text not null default 'unverified'
+);
 create or replace function auth.uid() returns uuid language sql stable as $$
   select coalesce(
     nullif(current_setting('request.jwt.claim.sub', true), ''),
